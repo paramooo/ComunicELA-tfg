@@ -1,0 +1,13 @@
+<ButtonRnd@Button>:
+    font_size: 32
+    size_hint: self.size_hint
+    height: 40
+    background_color: 0, 0, 0, 0  # Hace que el fondo del botón sea transparente
+    color_down: 0.1, 0.5, 0.7, 1  # El color del botón cuando se presiona
+    canvas.before:
+        Color:
+            rgba: self.color_down if self.state == 'down' else (0.2, 0.6, 0.8, 1)  # Cambia el color dependiendo del estado del botón
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [15,]
