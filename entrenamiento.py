@@ -137,7 +137,7 @@ def main():
 
     model.evaluate(input_test, output_test)
 
-    model.save('anns/ann_conj3_20k.keras')
+    model.save('anns/ann_conj3_50k.keras')
     
 
 

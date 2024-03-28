@@ -30,7 +30,7 @@ class Modelo:
         self.umbral_ear_bajo = 0.2
         self.umbral_ear_cerrado = 0.2
         self.contador_p = 0
-        self.suma_frames = 4
+        self.suma_frames = 1
         self.calibrado = False
         self.sonido = pygame.mixer.Sound('sonidos/click.wav')
 
@@ -42,9 +42,13 @@ class Modelo:
 
 
         # Variable para el modelo 
-        self.modelo = tf.keras.models.load_model('anns/ann_conj3_20k.keras')
+        self.modelo = tf.keras.models.load_model('anns/ann_conj3_50k.keras')
         self.pos_t = (0, 0)
         self.escanear = False
+
+        # Variables para suavizar el movimiento del circulo de la salida de la red neuronal
+        self.historial = []
+        self.cantidad_suavizado = 5
 
         
     #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
@@ -53,7 +57,7 @@ class Modelo:
         self.contador_r = 5
         self.pos_r = (0, 0)
         self.salto_bajo, self.salto_alto = 30, 80
-        self.velocidad = 25
+        self.velocidad = 10
         self.direccion = 1
 
     
@@ -132,7 +136,7 @@ class Modelo:
 
         elif self.estado_calibracion == 1:
             self.umbral_ear_cerrado = self.detector.calcular_ear_medio(coord_ear_izq, coord_ear_der)
-            self.umbral_ear = (self.umbral_ear_bajo*0.3 + self.umbral_ear_cerrado*0.7) #Se calcula el umbral final ponderado entre el cerrado y el abierto bajo
+            self.umbral_ear = (self.umbral_ear_bajo*0.5 + self.umbral_ear_cerrado*0.5) #Se calcula el umbral final ponderado entre el cerrado y el abierto bajo
             self.calibrado = True
 
 
@@ -280,7 +284,20 @@ class Modelo:
 
         # Se predice la posición de la mirada
         mirada = self.modelo.predict(entrada)
-        return mirada, click
+
+        # Añadir la nueva posición al historial
+        self.historial.append(mirada)
+
+        # Eliminar la posición más antigua si el historial es demasiado largo
+        if len(self.historial) > self.cantidad_suavizado:
+            self.historial.pop(0)
+
+        # Calcular la media ponderada de las posiciones en el historial
+        pesos = range(1, len(self.historial) + 1) 
+        mirada_suavizada = np.average(self.historial, weights=pesos, axis=0)
+
+        #Aqui cambiar entre mirada suavizada y mirada para ver los resultados reales de la red
+        return mirada_suavizada, click
  
             
     def transformar_a_conjunto3(self, datos):

@@ -15,13 +15,13 @@ Datos recopilacion:
 
 Modificaciones pendientes:
 columna 32 no la media de todas las medidas sino la distancia entre los puntos horizontales del ojo (2.2/2.5cm mas menos)
+ESTO ES COMPLETAMENTE NECESARIO, YA QUE AHORA LAS DISTANCIAS ESTAN ENTRE 0 Y 2 NO ENTRE 0 Y 1
+
 
 normalizar los datos en base a esa distancia, (buscar alguna formula o algo nose)
 
 
-otro conjunto con menos puntos de cada ojo ya que son demasiados y no va
-
-
-
-
-MODELO -> linea 200
+Informarme sobre las redes secuenciales, capas LSTM o GRU
+Ahora esta puesto suavizando la posicion reconocida con las posiciones reconocidas anteriormente pero vaya creo que asi ira mejor
+El problema de hacer esto es que creo que para el entrenamiento van a hacer falta datos con la pelota moviendose aleatoriamente por la pantalla
+No va a valer asi la secuencia de izquierda a derecha y de abajo a arriba
