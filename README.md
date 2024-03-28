@@ -25,3 +25,7 @@ Informarme sobre las redes secuenciales, capas LSTM o GRU
 Ahora esta puesto suavizando la posicion reconocida con las posiciones reconocidas anteriormente pero vaya creo que asi ira mejor
 El problema de hacer esto es que creo que para el entrenamiento van a hacer falta datos con la pelota moviendose aleatoriamente por la pantalla
 No va a valer asi la secuencia de izquierda a derecha y de abajo a arriba
+
+
+crear exe:
+pyinstaller --onefile --icon=imagenes/logo.ico --add-data "anns;./anns" --add-data "imagenes;./imagenes" --add-data "kivy;./kivy" --add-data "sonidos;./sonidos" main.py

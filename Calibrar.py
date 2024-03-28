@@ -14,8 +14,8 @@ class Calibrar(Screen):
 
         # Textos de calibración
         self.textos_calibracion = [
-            'Mire fijamente el punto amarillo y mientras tanto presione el boton de continuar',
-            'Ahora porfavor cierre los ojos y vuelva a presionar el boton de continuar',
+            'Mire fijamente el punto amarillo y mientras tanto haga click en el boton (mirando al punto)',
+            'Ahora porfavor cierre los ojos y mientras tanto vuelva a presionar el boton de continuar (con los ojos cerrados)',
             'Calibración completada, presione continuar para ir al inicio'
         ]     
 

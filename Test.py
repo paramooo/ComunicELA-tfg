@@ -14,6 +14,10 @@ class Test(Screen):
         self.background_color = (0, 0, 0, 1) 
         self.controlador.set_escanear(False)
 
+        texto_central = ("Mire al rededor de la pantalla y parpadee para confirmar el calibrado\n"+
+                        "Es un modelo en desarrollo, cuantos mas datos recopilemos, mejor funcionara en un futuro"+
+                        "El punto rojo deberia seguir su mirada, al parpadear debería escuchar un sonido de click y ver el punto verde")
+
         self.layout = BoxLayout(orientation='vertical')
 
         # El boton de inicio
@@ -21,7 +25,7 @@ class Test(Screen):
         self.layout.add_widget(btn_inicio)
 
         # El texto explicativo
-        self.texto_explicativo = Label(text="\"Mire al rededor de la pantalla\" y parpadee para confirmar el calibrado", font_size=self.controlador.get_font_txts(), size_hint=(1, .8))
+        self.texto_explicativo = Label(text=texto_central, font_size=self.controlador.get_font_txts(),halign='center', size_hint=(1, .8))
         self.layout.add_widget(self.texto_explicativo)
 
         # Añade la tarea de actualización al reloj

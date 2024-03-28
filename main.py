@@ -9,6 +9,9 @@ Config.set('input', 'mouse', 'mouse,disable_multitouch')
 
 class MyApp(App):
     def build(self):
+        self.title = 'ComunicELA'  
+        self.icon = 'imagenes/logo.png'  
+
         self.modelo = Modelo()
         vista = Vista()
         controlador = Controlador(self.modelo, vista)

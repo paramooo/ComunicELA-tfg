@@ -42,7 +42,7 @@ class Modelo:
 
 
         # Variable para el modelo 
-        self.modelo = tf.keras.models.load_model('anns/ann_conj3_50k.keras')
+        self.modelo = tf.keras.models.load_model('anns/ann_conj3_20k.keras')
         self.pos_t = (0, 0)
         self.escanear = False
 
