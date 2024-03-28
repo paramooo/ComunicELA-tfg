@@ -4,6 +4,7 @@ from Calibrar import Calibrar
 from Test import Test
 from Tableros import Tableros
 from Recopilar import Recopilar
+from Reentrenar import Reentrenar
 
 class Vista:
     def __init__(self):
@@ -34,6 +35,8 @@ class Vista:
         self.recopilar = Recopilar(self.controlador, name='recopilar')
         self.sm.add_widget(self.recopilar)
 
+        self.reentrenar = Reentrenar(self.controlador, name='reentrenar')
+        self.sm.add_widget(self.reentrenar)
 
     def change_screen(self, nombre):
         self.sm.current = nombre

@@ -7,6 +7,8 @@ import numpy as np
 import os
 from kivy.app import App
 from Mensajes import Mensajes
+import tensorflow as tf
+tf.get_logger().setLevel('ERROR')
 
 
 class Modelo:
@@ -20,7 +22,7 @@ class Modelo:
         self.iniciar_camara()
 
         # Variables de control para el tamaño de la fuente de los textos
-        self.tamaño_fuente_txts = 19
+        self.tamaño_fuente_txts = 23
 
         # Variables de control para la calibracion del parpadeo
         self.estado_calibracion = 0
@@ -28,7 +30,7 @@ class Modelo:
         self.umbral_ear_bajo = 0.2
         self.umbral_ear_cerrado = 0.2
         self.contador_p = 0
-        self.suma_frames = 7
+        self.suma_frames = 4
         self.calibrado = False
         self.sonido = pygame.mixer.Sound('sonidos/click.wav')
 
@@ -38,6 +40,12 @@ class Modelo:
         self.input = []
         self.output = []
 
+
+        # Variable para el modelo 
+        self.modelo = tf.keras.models.load_model('anns/ann_conj3_20k.keras')
+        self.pos_t = (0, 0)
+        self.escanear = False
+
         
     #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
     def reiniciar_datos_r(self):
@@ -45,7 +53,7 @@ class Modelo:
         self.contador_r = 5
         self.pos_r = (0, 0)
         self.salto_bajo, self.salto_alto = 30, 80
-        self.velocidad = 50
+        self.velocidad = 25
         self.direccion = 1
 
     
@@ -77,7 +85,7 @@ class Modelo:
         return self.camara.camara_activa()
     
     def get_frame(self):
-        return self.camara.frame
+        return self.camara.get_frame()
 
 
 
@@ -97,69 +105,50 @@ class Modelo:
         return self.estado_calibracion        
 
 
+
+
 # ---------------------------   FUNCIONES DE CONTROL DEL EAR -------------------------------
 #-------------------------------------------------------------------------------------------
     
-    def capturar_ear(self, frame):
-        #Si aun no hay frame, se devuelve 0
-        if frame is None:
-            return 1
-        
-        # Se obtienen las coordenadas de los ojos de los indices de los ear
-        coordeanadas_ojo_izquierdo_ear, coordeanadas_ojo_derecho_ear = self.detector.obtener_coordenadas(frame, ear=True)
-        
-        # Si no se detecta cara, se devuelve 0
-        if len(coordeanadas_ojo_izquierdo_ear) == 0 or len(coordeanadas_ojo_derecho_ear) == 0:
-            return 1
-        
-        # Si sale bien se calcula el EAR medio
-        ear_medio = self.detector.calcular_ear_medio(coordeanadas_ojo_izquierdo_ear, coordeanadas_ojo_derecho_ear)
-        return ear_medio
+#Para la calibracion
+    def calibrar_ear(self):
+        #Si estamos en el estado 2, no se hace nada, sale al inicio
+        if self.estado_calibracion == 2:
+            return
 
+        # Se obtienen los datos
+        datos = self.detector.obtener_coordenadas_indices(self.get_frame())
 
-    def calibrar_ear(self, frame):
-        # Se captura el EAR actual
+        #Si no se detecta cara, se devuelve 1 indicando error
+        if datos is None:
+            return 1
+    
+        # Se desempaquetan los datos
+        _, _, coord_ear_izq, coord_ear_der, _, _ = self.detector.obtener_coordenadas_indices(self.get_frame())
+
+        # Se captura el EAR actual dependiendo del estado de la calibracion
         if self.estado_calibracion == 0:
-            self.umbral_ear_bajo = self.capturar_ear(frame)
+            self.umbral_ear_bajo = self.detector.calcular_ear_medio(coord_ear_izq, coord_ear_der)
+
         elif self.estado_calibracion == 1:
-            self.umbral_ear_cerrado = self.capturar_ear(frame)
+            self.umbral_ear_cerrado = self.detector.calcular_ear_medio(coord_ear_izq, coord_ear_der)
             self.umbral_ear = (self.umbral_ear_bajo*0.3 + self.umbral_ear_cerrado*0.7) #Se calcula el umbral final ponderado entre el cerrado y el abierto bajo
             self.calibrado = True
 
-            
-    def get_parpadeo(self):
-        frame = self.camara.frame
-        ear = self.capturar_ear(frame)
+
+#Para el test/tableros
+#Reproducimos sonido pasado un tiempo de parpadeo pero el color en tiempo real
+    def get_parpadeo(self, ear):
         if ear < self.umbral_ear:
             self.contador_p += 1
             if self.contador_p == self.suma_frames:
-                self.contador_p = -50
+                self.contador_p = -1000 #Asi evitamos dos toques consecutivos sin abrir el ojo
                 self.sonido.play()
             return 1
         else:
             self.contador_p = 0     
             return 0   
 
-
-# ---------------------------   FUNCIONES DE DISTANCIAS -------------------------------
-            
-    #Coge las distancias de los ojos con respecto a la pupila de los indices de Detector
-    def get_distancias_ojos(self, frame):
-        if frame is None:
-            return 
-        coordenadas_izq, coordenadas_der =  self.detector.obtener_coordenadas(frame, ear=False)
-        if len(coordenadas_izq) == 0 or len(coordenadas_der) == 0:
-            return
-        distancias_izq, distancias_der = self.detector.calcular_distancias_ojos(coordenadas_izq, coordenadas_der)
-        return distancias_izq, distancias_der
-    
-
-    def get_medida_ojo_media(self, distancias):
-        return self.detector.calcular_medida_ojo_media(distancias[0], distancias[1])
-
-
-
-    
 
 # ---------------------------   FUNCIONES DE RECOPILACION DE DATOS  -------------------------------
         
@@ -192,62 +181,34 @@ class Modelo:
             self.guardar_final()
             self.reiniciar_datos_r()
         else:
-            # Aquí se mandarán los datos a otra función para que los guarde en el txt junto con las distancias, etc.
-            frame = self.camara.frame
-
-            if frame is not None:
-                # DATOS A RECOPILAR:
-                # - Distancias de los ojos - ok
-                distancias = self.get_distancias_ojos(frame)
-
-                # - Medida del ojo medio - ok
-                medida_ojo_media = None
-                # Al comprobar asi el None, nos aseguramos de que todos los datos son validos
-                if distancias is None or distancias[0] is None or distancias[1] is None:
-                    distancias = None
-                else:
-                    medida_ojo_media = self.detector.calcular_medida_ojo_media(distancias[0], distancias[1])
-
-
-                # - Orientación de la cabeza - ok
-                orientacion_cabeza = self.detector.get_orientacion_cabeza(frame)
-
-
-                # - EAR - ok
-                #Este si no detecta cara marca 1, no hace falta asegurarse de que sea valido
-                ear = self.capturar_ear(frame)
-
-
-                # - Posición de la cabeza en el frame - ok
-                pos_cabeza = self.detector.obtener_posicion_cabeza(frame)
-
-                # Si todos los datos son validos, se guardan junto con las coordenadas de la pelota
-                if any(element is None for element in [distancias, medida_ojo_media, orientacion_cabeza, ear, pos_cabeza, self.pos_r]):
-                    pass
-                else:
-                    self.guardar_datos(distancias, medida_ojo_media, orientacion_cabeza, ear, pos_cabeza, self.pos_r/np.array(tamano_pantalla))
+            datos = self.obtener_datos("recop")
+            if datos is None:                
+                self.mensaje("No se detecta cara")	
+            else:
+                distancias_izq, distancias_der, medida_ojo_media, or_x, or_y, ear, coord_cab, self.pos_r = datos
+                self.guardar_datos(distancias_izq, distancias_der, medida_ojo_media, or_x, or_y, ear, coord_cab, self.pos_r/np.array(tamano_pantalla))
         return self.pos_r
 
 
 
-    def guardar_datos(self, distancias, medida_ojo_media, orientacion_cabeza, ear, pos_cabeza, pos_r):
+    def guardar_datos(self, distancias_izq, distancias_der, medida_ojo_media, or_x, or_y, ear, coord_cab, pos_r):
         # Preparar los datos para guardar
-        distancias_str = ', '.join([str(dist) for dist in distancias[0] + distancias[1]])
+        distancias_izq_str = ', '.join([str(dist) for dist in distancias_izq])
+        distancias_der_str = ', '.join([str(dist) for dist in distancias_der])
         medida_ojo_media_str = str(medida_ojo_media)
-        orientacion_cabeza_str = ', '.join([str(coord) for coord in orientacion_cabeza])
+        orientacion_cabeza_str = f'{or_x}, {or_y}'
         ear_str = str(ear)
         ear_umbral_str = str(self.umbral_ear) 
-        pos_cabeza_str = ', '.join([str(coord) for coord in pos_cabeza])
+        pos_cabeza_str = ', '.join([str(coord) for coord in coord_cab])
 
         # Guardar los datos en las listas
-        self.input.append(f'{distancias_str}, {medida_ojo_media_str}, {orientacion_cabeza_str}, {pos_cabeza_str}, {ear_str}, {ear_umbral_str}')
+        self.input.append(f'{distancias_izq_str}, {distancias_der_str}, {medida_ojo_media_str}, {orientacion_cabeza_str}, {pos_cabeza_str}, {ear_str}, {ear_umbral_str}')
         self.output.append(f'{pos_r[0]}, {pos_r[1]}')
 
 
 
-
-
     def guardar_final(self):
+        #Si no existe la carpeta txts, se crea
         os.makedirs('txts', exist_ok=True)
 
         # Guardar los datos en los archivos
@@ -262,3 +223,82 @@ class Modelo:
         # Limpiar las listas para la próxima vez
         self.input = []
         self.output = []
+
+
+# ---------------------------   FUNCIONES DE OBTENCION DE DATOS  -------------------------------
+    def obtener_datos(self, modo):
+        frame = self.get_frame()
+        datos = self.detector.obtener_coordenadas_indices(frame)
+        
+        #Si no se detecta cara, se devuelve None
+        if datos is None:
+            return None
+        
+        # Se desempaquetan los datos
+        coord_o_izq, coord_o_der, coord_ear_izq, coord_ear_der, coord_cab, coord_o = datos
+
+        # - Distancias de los ojos 
+        distancias_izq, distancias_der = self.detector.calcular_distancias_ojos(coord_o_izq, coord_o_der)
+
+        # - Medida del ojo medio 
+        medida_ojo_media = self.detector.calcular_medida_ojo_media(distancias_izq, distancias_der)
+
+
+        # - Orientación de la cabeza entre 0 y 1
+        or_x, or_y = self.detector.get_orientacion_cabeza(coord_o, frame)
+
+        # - EAR 
+        ear = self.detector.calcular_ear_medio(coord_ear_izq, coord_ear_der)
+
+        # Pasamos la posicion de la pantalla normalizada
+        if modo == "recop":
+            return distancias_izq, distancias_der, medida_ojo_media, or_x, or_y, ear, coord_cab, self.pos_r
+        elif modo == "test":
+            return distancias_izq, distancias_der, medida_ojo_media, or_x, or_y, ear, coord_cab/np.array(frame.shape[:2])
+
+
+
+# ---------------------------   FUNCIONES DE CONTROL DEL MOVIMIENTO DEL CIRCULO EN TEST  -------------------------------
+#-----------------------------------------------------------------------------------------------------------------------
+        
+    def obtener_posicion_mirada_ear(self):
+        click = 0
+
+        # Se obtienen los datos
+        datos = self.obtener_datos("test")
+
+        #Si no se detecta cara, se devuelve None, None, None, None, None, None
+        if datos is None:
+            return None
+        
+        # Se desempaquetan los datos del ear para el click
+        _, _, _, _, _, ear, _ = datos
+        click = self.get_parpadeo(ear)
+        
+        # Se transforman los datos de entrada para el modelo
+        entrada = self.transformar_a_conjunto3(datos)
+
+        # Se predice la posición de la mirada
+        mirada = self.modelo.predict(entrada)
+        return mirada, click
+ 
+            
+    def transformar_a_conjunto3(self, datos):
+        distancias_izq, distancias_der, medida_ojo_media, or_x, or_y, ear, coord_cab = datos
+
+        # Calcular la media de las distancias de los dos ojos
+        dist = [(i + j) / 2 for i, j in zip(distancias_izq, distancias_der)]
+
+        # Normaliza las distancias con la medida del ojo medio
+        dist = [distancia / medida_ojo_media for distancia in dist]
+
+        # Concatenar todos los datos en un solo array y ordenadas como el conjunto 3
+        datos_transformados = np.concatenate([dist, [or_x], [or_y], coord_cab, [ear], [self.umbral_ear]])
+
+        # Añadir una dimensión para que sea compatible con el modelo
+        datos_transformados = np.expand_dims(datos_transformados, axis=0)
+        
+        # Redondear los datos a 10 decimales 
+        datos_transformados = np.round(datos_transformados, 3)
+
+        return datos_transformados

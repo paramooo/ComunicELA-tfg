@@ -38,7 +38,7 @@ class Recopilar(Screen):
         self.add_widget(self.layout)
 
     def on_enter(self, *args):
-        self.controlador.reiniciar_datos()
+        self.controlador.reiniciar_datos_r()
         # Añade la tarea de actualización al reloj
         Clock.schedule_interval(self.update, 1.0 / 30.0)  # 30 FPS  
         # Se crea el circulo rojo y se añade

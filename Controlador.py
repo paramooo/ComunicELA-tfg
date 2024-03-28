@@ -35,6 +35,7 @@ class Controlador:
 
     def camara_activa(self):
         return self.modelo.camara_activa()
+    
 
 # FUNCIONES PARA EL MENU DE CALIBRACION DEL PARPADEO
     def cambiar_estado_calibracion(self, numero=-1):
@@ -54,25 +55,28 @@ class Controlador:
         return self.modelo.obtener_estado_calibracion()
     
     def on_continuar_calibracion(self):
-        self.modelo.calibrar_ear(self.modelo.get_frame())
-        self.cambiar_estado_calibracion()    
+        if self.modelo.calibrar_ear() == 1:
+            self.mensaje('Calibración fallida, intente de nuevo')
+            return
+        self.cambiar_estado_calibracion()
         self.vista.calibrar.update_view(self.obtener_estado_cal())
 
 
 
-# ---------------------------- FUNCIONES PARA EL MODO DE TEST -------------------------
+# ---------------------------- FUNCIONES PARA EL MODO DE TEST/TABLEROS -------------------------
 
 # Funcion para reconocer el parpadeo
-    def get_parpadeo(self):
-        return self.modelo.get_parpadeo()
-
-
-# Funcion para obtener las distancias de los ojos
-    def get_distancias_ojos(self):
-        return self.modelo.get_distancias_ojos()
+    def get_escanear(self):
+        return self.modelo.escanear
     
+    def set_escanear(self, valor):
+        self.modelo.escanear = valor
 
-
+    #tamaño pantalla creo falta
+    def obtener_posicion_mirada_ear(self):
+        return self.modelo.obtener_posicion_mirada_ear()
+        
+    
 
 
 
@@ -107,5 +111,5 @@ class Controlador:
     def get_recopilando(self):
         return self.modelo.recopilar
 
-    def reiniciar_datos(self):
+    def reiniciar_datos_r(self):
         self.modelo.reiniciar_datos_r() 

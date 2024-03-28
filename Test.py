@@ -5,13 +5,14 @@ from kivy.uix.screenmanager import Screen
 from Custom import ButtonRnd
 from kivy.uix.label import Label
 from kivy.graphics import InstructionGroup
+import numpy as np
 
 class Test(Screen):
     def __init__(self, controlador, **kwargs):
         super(Test, self).__init__(**kwargs)
         self.controlador = controlador
         self.background_color = (0, 0, 0, 1) 
-        self.escanear = False
+        self.controlador.set_escanear(False)
 
         self.layout = BoxLayout(orientation='vertical')
 
@@ -32,42 +33,51 @@ class Test(Screen):
 
     # Funcion para dibujar el circulo amarillo una vez abierta la ventana(para centrarlo bien)
     def on_enter(self, *args):  
+        # Añade la tarea de actualización al reloj
+        #Clock.schedule_interval(self.update, 1.0 / 30.0)  # 30 FPS  
+        
         # Se crea el circulo rojo y se añade
+        self.circulo = Ellipse(pos=self.center, size=(50, 50))
         with self.canvas:
-            self.circulo = Ellipse(pos=self.center, size=(100, 100))
-
             self.circulo_color = Color(1, 0, 0)  # Rojo
             self.circulo_instr = InstructionGroup()
             self.circulo_instr.add(self.circulo_color)
             self.circulo_instr.add(self.circulo)
             if self.circulo_instr not in self.layout.canvas.children:
                 self.layout.canvas.add(self.circulo_instr)
-        self.escanear = True
+        self.controlador.set_escanear(True)
 
     # Funcion para dejar de escanear y volver al inicio
     def on_inicio(self, *args):
-        self.escanear = False
+        self.controlador.set_escanear(False)
         self.controlador.change_screen('inicio')
         self.circulo_instr.clear()
 
-    
     # Funcion para actualizar la posición del círculo y el color
     def update(self, dt):
-        if self.escanear:
-            # Obtiene las nuevas coordenadas del controlador
-            #x, y = self.controlador.get_coordinates()
-            # Actualiza la posición del círculo
-            #self.circulo.pos = (x * self.width, y * self.height)
+        if self.controlador.get_escanear():
+            # Obtiene la posición de la mirada y el ear
+            datos = self.controlador.obtener_posicion_mirada_ear()
 
-            # Obtiene el color del controlador
-            color = self.controlador.get_parpadeo()
+            # Si no se detecta cara, no hacer nada
+            if datos is None:
+                self.controlador.mensaje("No se detecta cara")
+                return
+            
+            # Desempaqueta los datos
+            proxima_pos_t, click = datos
 
             # Actualiza el color del círculo
-            if color == 0:  # Rojo
+            if click == 0:  # Rojo
                 self.circulo_color.rgba = (1, 0, 0, 1)
-            elif color == 1:  # Verde
+            elif click == 1:  # Verde
                 self.circulo_color.rgba = (0, 1, 0, 1)
 
-            # distancias = self.controlador.get_distancias_ojos()
-            # if distancias is not None:
-            #     self.texto_explicativo.text = "Distancia ojo izquierdo: " + str(distancias[0][0]) + "\nDistancia ojo derecho: " + str(distancias[1][0])
+            # La posición del circulo no excede las dimensiones de la pantalla
+            proxima_pos_t = np.minimum(proxima_pos_t*self.size, self.size - np.array([50, 50]))
+            
+            #Indice 2 ya que tiene el color en 1, no como recopilar:
+            self.circulo_instr.children[2].pos =  (proxima_pos_t).flatten()
+
+
+                
