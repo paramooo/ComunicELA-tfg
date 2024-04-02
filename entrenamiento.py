@@ -105,12 +105,12 @@ def comparar_columnas(data_con_gauss, data_sin_gauss, columna):
 def main():
     # Cargar los datos
     #Datos: d0, d2, ....., d31, media_tamaño_ojos, or_X, or_Y, p_X, p_Y, ear, thresh_ear
-    data_input = np.loadtxt('txts/input.txt', delimiter=',')
-    output = np.loadtxt('txts/output.txt', delimiter=',')
+    data_input = np.loadtxt('./txts/input.txt', delimiter=',')
+    output = np.loadtxt('./txts/output.txt', delimiter=',')
 
     #Datos de test
-    input_test = np.loadtxt('txts/input2.txt', delimiter=',')
-    output_test = np.loadtxt('txts/output2.txt', delimiter=',')
+    input_test = np.loadtxt('./txts/input2.txt', delimiter=',')
+    output_test = np.loadtxt('./txts/output2.txt', delimiter=',')
 
     #comparar_columnas(conjunto_1(np.copy(data_input)), data_input, 0)
 
@@ -137,7 +137,7 @@ def main():
 
     model.evaluate(input_test, output_test)
 
-    model.save('anns/ann_conj3_50k.keras')
+    model.save('./anns/ann_conj3_50k.keras')
     
 
 

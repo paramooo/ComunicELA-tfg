@@ -9,11 +9,26 @@ class Camara:
         self.cap = None
         self.thread = None
 
-    def start(self):
-        self.cap = cv2.VideoCapture(0)
+    def obtener_camaras(self):
+        if self.camara_activa():
+            self.stop()
+        camaras = []
+        for i in range(10):
+            cap = cv2.VideoCapture(i)
+            if cap.isOpened():
+                camaras.append(i)
+                cap.release()
+        return camaras
+
+    def start_aux(self, index):
+        self.cap = cv2.VideoCapture(index)
         self.running = True
         self.thread = threading.Thread(target=self.update_frame, args=())
         self.thread.start()
+
+    # Al iniciar la camara, se inicia en otro hilo para evitar lag al usar la app
+    def start(self, index):
+        threading.Thread(target=self.start_aux, args=(index,)).start()
 
     def stop(self):
         self.running = False

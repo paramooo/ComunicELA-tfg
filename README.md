@@ -28,4 +28,10 @@ No va a valer asi la secuencia de izquierda a derecha y de abajo a arriba
 
 
 crear exe:
-pyinstaller --onefile --icon=imagenes/logo.ico --add-data "anns;./anns" --add-data "imagenes;./imagenes" --add-data "kivy;./kivy" --add-data "sonidos;./sonidos" main.py
+python -m PyInstaller --onefile --icon=imagenes/logo.ico --add-data "anns;./anns" --add-data "imagenes;./imagenes" --add-data "kivy;./kivy" --add-data "sonidos;./sonidos" main.py
+
+
+
+falta pantalla completa
+
+no poder entrar en los menus si no hay camara activa

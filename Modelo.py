@@ -19,7 +19,6 @@ class Modelo:
         # Se inicializa el detector
         self.detector = Detector()
         self.camara = Camara()
-        self.iniciar_camara()
 
         # Variables de control para el tamaño de la fuente de los textos
         self.tamaño_fuente_txts = 23
@@ -32,7 +31,7 @@ class Modelo:
         self.contador_p = 0
         self.suma_frames = 1
         self.calibrado = False
-        self.sonido = pygame.mixer.Sound('sonidos/click.wav')
+        self.sonido = pygame.mixer.Sound('./sonidos/click.wav')
 
 
         # Variables para la recopilacion de datos 
@@ -42,7 +41,7 @@ class Modelo:
 
 
         # Variable para el modelo 
-        self.modelo = tf.keras.models.load_model('anns/ann_conj3_20k.keras')
+        self.modelo = tf.keras.models.load_model('./anns/ann_conj3_20k.keras')
         self.pos_t = (0, 0)
         self.escanear = False
 
@@ -77,9 +76,9 @@ class Modelo:
 # ---------------------------   FUNCIONES DE CONTROL DE LA CAMARA    -------------------------------
 #-------------------------------------------------------------------------------------------
 
-    def iniciar_camara(self):
+    def iniciar_camara(self, index):
         # Se inicia el escaneo de los ojos
-        self.camara.start()
+        self.camara.start(index)
 
     def detener_camara(self):
         # Se detiene el escaneo de los ojos
@@ -90,7 +89,14 @@ class Modelo:
     
     def get_frame(self):
         return self.camara.get_frame()
-
+    
+    def obtener_camaras(self):
+        return self.camara.obtener_camaras()
+    
+    def seleccionar_camara(self, camara):
+        if self.camara_activa():
+            self.detener_camara()
+        self.iniciar_camara(camara)
 
 
 
@@ -216,11 +222,11 @@ class Modelo:
         os.makedirs('txts', exist_ok=True)
 
         # Guardar los datos en los archivos
-        with open('txts/input.txt', 'a') as f:
+        with open('./txts/input.txt', 'a') as f:
             for linea in self.input:
                 f.write(linea + '\n')
 
-        with open('txts/output.txt', 'a') as f:
+        with open('./txts/output.txt', 'a') as f:
             for linea in self.output:
                 f.write(linea + '\n')
 

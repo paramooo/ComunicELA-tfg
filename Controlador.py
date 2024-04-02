@@ -1,4 +1,5 @@
 from kivy.clock import Clock
+import threading
 
 class Controlador:
     def __init__(self, modelo, vista):
@@ -35,6 +36,22 @@ class Controlador:
 
     def camara_activa(self):
         return self.modelo.camara_activa()
+    
+    def obtener_camaras(self):
+        self.vista.inicio.camera_spinner.text = 'Cargando cámaras...'
+        threading.Thread(target=self._obtener_camaras_aux).start()
+
+    def _obtener_camaras_aux(self):
+        camaras = self.modelo.obtener_camaras()
+        # Programamos la actualización de la interfaz de usuario en el hilo principal
+        Clock.schedule_once(lambda dt: self._actualizar_spinner(camaras))
+
+    def _actualizar_spinner(self, camaras):
+        self.vista.inicio.camera_spinner.values = [str(i) for i in camaras] + ['Actualizar cámaras']
+        self.vista.inicio.camera_spinner.text = 'Seleccionar cámara'
+
+    def seleccionar_camara(self, camara):
+        self.modelo.seleccionar_camara(camara)
     
 
 # FUNCIONES PARA EL MENU DE CALIBRACION DEL PARPADEO

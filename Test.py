@@ -15,7 +15,7 @@ class Test(Screen):
         self.controlador.set_escanear(False)
 
         texto_central = ("Mire al rededor de la pantalla y parpadee para confirmar el calibrado\n"+
-                        "Es un modelo en desarrollo, cuantos mas datos recopilemos, mejor funcionara en un futuro"+
+                        "Es un modelo en desarrollo, cuantos mas datos recopilemos, mejor funcionara en un futuro\n"+
                         "El punto rojo deberia seguir su mirada, al parpadear debería escuchar un sonido de click y ver el punto verde")
 
         self.layout = BoxLayout(orientation='vertical')
