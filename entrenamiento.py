@@ -122,7 +122,23 @@ def main():
     input_test = conjunto_3(input_test)
     
     # Cargar la rna
-    #model = tf.keras.models.load_model('rna_20k_ord.keras')
+    model2 = tf.keras.models.load_model('./anns/ann_conj3_20k.keras')
+    model3 = tf.keras.models.load_model('./anns/ann_conj3_50k.keras')
+    model4 = tf.keras.models.load_model('./anns/ann_conj3_71k.keras')
+    model5 = tf.keras.models.load_model('./anns/ann_conj3_l0.05.keras')
+
+    # Evaluar el modelo
+    print('Modelo 2')
+    model2.evaluate(input_test, output_test)
+
+    print('Modelo 3')
+    model3.evaluate(input_test, output_test)
+
+    print('Modelo 4')
+    model4.evaluate(input_test, output_test)
+
+    print('Modelo 5')
+    model5.evaluate(input_test, output_test)
     
     #Evaluar el modelo
     #evaluar_modelo(model, input_test, output_test)
@@ -131,13 +147,13 @@ def main():
     #entrenar_y_guardar_anns(input, output, input_test, output_test)
 
     # Entenar ann
-    model = crear_ann([20, 15, 4], 0.005, 22, 2)
+    #model = crear_ann([20, 15, 4], 0.01, 22, 2)
 
-    model.fit(input, output, epochs=500, verbose=1)
+    #model.fit(input, output, epochs=500, verbose=1)
 
-    model.evaluate(input_test, output_test)
+    #model.evaluate(input_test, output_test)
 
-    model.save('./anns/ann_conj3_50k.keras')
+    #model.save('./anns/ann_conj3_71k.keras')
     
 
 

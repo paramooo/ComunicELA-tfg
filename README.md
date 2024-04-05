@@ -35,3 +35,5 @@ python -m PyInstaller --onefile --icon=imagenes/logo.ico --add-data "anns;./anns
 falta pantalla completa
 
 no poder entrar en los menus si no hay camara activa
+
+incorporar posibilidad de guardar diferentes usuarios despues de calibrar

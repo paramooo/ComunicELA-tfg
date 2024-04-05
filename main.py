@@ -4,8 +4,6 @@ from Vista import Vista
 from Controlador import Controlador
 from kivy.config import Config
 
-#Config.set('input', 'mouse', 'mouse,disable_multitouch')
-
 class MyApp(App):
     def build(self):
         self.title = 'ComunicELA'  
@@ -24,5 +22,6 @@ class MyApp(App):
             self.modelo.detener_camara()
 
 if __name__ == '__main__':
-    Config.set('graphics', 'fullscreen', 'fake')
+    Config.set('graphics', 'fullscreen', 'auto')
+    Config.set('input', 'mouse', 'mouse, disable_multitouch')
     MyApp().run()

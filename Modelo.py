@@ -56,7 +56,7 @@ class Modelo:
         self.contador_r = 5
         self.pos_r = (0, 0)
         self.salto_bajo, self.salto_alto = 30, 80
-        self.velocidad = 10
+        self.velocidad = 25
         self.direccion = 1
 
     
