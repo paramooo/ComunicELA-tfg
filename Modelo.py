@@ -7,6 +7,7 @@ import numpy as np
 import os
 from kivy.app import App
 from Mensajes import Mensajes
+from Conjuntos import Conjuntos
 import tensorflow as tf
 tf.get_logger().setLevel('ERROR')
 
@@ -19,6 +20,10 @@ class Modelo:
         # Se inicializa el detector
         self.detector = Detector()
         self.camara = Camara()
+
+        # Variables para el modelo de test
+        self.conjunto = 3
+        self.modelo = tf.keras.models.load_model('./anns/conj3_bien.keras')
 
         # Variables de control para el tamaño de la fuente de los textos
         self.tamaño_fuente_txts = 23
@@ -40,12 +45,11 @@ class Modelo:
         self.output = []
 
 
-        # Variable para el modelo 
-        self.modelo = tf.keras.models.load_model('./anns/ann_conj3_20k.keras')
+        # Variable para el modelo
         self.pos_t = (0, 0)
         self.escanear = False
 
-        # Variables para suavizar el movimiento del circulo de la salida de la red neuronal
+        # Variables para suavizar la mirada en el test
         self.historial = []
         self.cantidad_suavizado = 5
 
@@ -56,7 +60,7 @@ class Modelo:
         self.contador_r = 5
         self.pos_r = (0, 0)
         self.salto_bajo, self.salto_alto = 30, 80
-        self.velocidad = 25
+        self.velocidad = 50
         self.direccion = 1
 
     
@@ -195,25 +199,24 @@ class Modelo:
             if datos is None:                
                 self.mensaje("No se detecta cara")	
             else:
-                distancias_izq, distancias_der, medida_ojo_media, or_x, or_y, ear, coord_cab, self.pos_r = datos
-                self.guardar_datos(distancias_izq, distancias_der, medida_ojo_media, or_x, or_y, ear, coord_cab, self.pos_r/np.array(tamano_pantalla))
+                distancias_izq, distancias_der, or_x, or_y, ear, umbral_ear, coord_cab, self.pos_r = datos
+                self.guardar_datos(distancias_izq, distancias_der, or_x, or_y, ear, umbral_ear, coord_cab, self.pos_r/np.array(tamano_pantalla))
         return self.pos_r
 
 
 
-    def guardar_datos(self, distancias_izq, distancias_der, medida_ojo_media, or_x, or_y, ear, coord_cab, pos_r):
+    def guardar_datos(self, distancias_izq, distancias_der, or_x, or_y, ear, umbral_ear, coord_cab, pos_r_norm):
         # Preparar los datos para guardar
         distancias_izq_str = ', '.join([str(dist) for dist in distancias_izq])
         distancias_der_str = ', '.join([str(dist) for dist in distancias_der])
-        medida_ojo_media_str = str(medida_ojo_media)
         orientacion_cabeza_str = f'{or_x}, {or_y}'
         ear_str = str(ear)
-        ear_umbral_str = str(self.umbral_ear) 
+        ear_umbral_str = str(umbral_ear) 
         pos_cabeza_str = ', '.join([str(coord) for coord in coord_cab])
 
         # Guardar los datos en las listas
-        self.input.append(f'{distancias_izq_str}, {distancias_der_str}, {medida_ojo_media_str}, {orientacion_cabeza_str}, {pos_cabeza_str}, {ear_str}, {ear_umbral_str}')
-        self.output.append(f'{pos_r[0]}, {pos_r[1]}')
+        self.input.append(f'{distancias_izq_str}, {distancias_der_str}, {orientacion_cabeza_str}, {pos_cabeza_str}, {ear_str}, {ear_umbral_str}')
+        self.output.append(f'{pos_r_norm[0]}, {pos_r_norm[1]}')
 
 
 
@@ -250,10 +253,6 @@ class Modelo:
         # - Distancias de los ojos 
         distancias_izq, distancias_der = self.detector.calcular_distancias_ojos(coord_o_izq, coord_o_der)
 
-        # - Medida del ojo medio 
-        medida_ojo_media = self.detector.calcular_medida_ojo_media(distancias_izq, distancias_der)
-
-
         # - Orientación de la cabeza entre 0 y 1
         or_x, or_y = self.detector.get_orientacion_cabeza(coord_o, frame)
 
@@ -262,9 +261,9 @@ class Modelo:
 
         # Pasamos la posicion de la pantalla normalizada
         if modo == "recop":
-            return distancias_izq, distancias_der, medida_ojo_media, or_x, or_y, ear, coord_cab, self.pos_r
+            return distancias_izq, distancias_der, or_x, or_y, ear, self.umbral_ear, coord_cab, self.pos_r
         elif modo == "test":
-            return distancias_izq, distancias_der, medida_ojo_media, or_x, or_y, ear, coord_cab/np.array(frame.shape[:2])
+            return distancias_izq, distancias_der, or_x, or_y, ear, self.umbral_ear, coord_cab
 
 
 
@@ -282,14 +281,19 @@ class Modelo:
             return None
         
         # Se desempaquetan los datos del ear para el click
-        _, _, _, _, _, ear, _ = datos
+        _, _, _, _, ear, _, _ = datos
         click = self.get_parpadeo(ear)
+
+        # Se transforman los datos a un conjunto
+        datos_array = Conjuntos.datos_as_array(datos)
+
+        # Normalizar los datos
+        normalizar_funcion = getattr(Conjuntos, f'conjunto_{self.conjunto}')
         
-        # Se transforman los datos de entrada para el modelo
-        entrada = self.transformar_a_conjunto3(datos)
+        datos_array = normalizar_funcion(datos_array)
 
         # Se predice la posición de la mirada
-        mirada = self.modelo.predict(entrada)
+        mirada = self.modelo.predict(datos_array)
 
         # Añadir la nueva posición al historial
         self.historial.append(mirada)
@@ -306,22 +310,4 @@ class Modelo:
         return mirada_suavizada, click
  
             
-    def transformar_a_conjunto3(self, datos):
-        distancias_izq, distancias_der, medida_ojo_media, or_x, or_y, ear, coord_cab = datos
-
-        # Calcular la media de las distancias de los dos ojos
-        dist = [(i + j) / 2 for i, j in zip(distancias_izq, distancias_der)]
-
-        # Normaliza las distancias con la medida del ojo medio
-        dist = [distancia / medida_ojo_media for distancia in dist]
-
-        # Concatenar todos los datos en un solo array y ordenadas como el conjunto 3
-        datos_transformados = np.concatenate([dist, [or_x], [or_y], coord_cab, [ear], [self.umbral_ear]])
-
-        # Añadir una dimensión para que sea compatible con el modelo
-        datos_transformados = np.expand_dims(datos_transformados, axis=0)
-        
-        # Redondear los datos a 10 decimales 
-        datos_transformados = np.round(datos_transformados, 3)
-
-        return datos_transformados
+   

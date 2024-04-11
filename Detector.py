@@ -21,6 +21,8 @@ class Detector:
         
     #Funcion principal de obtener coordeandas de los ojos
     def obtener_coordenadas_indices(self, frame):
+        if frame is None:
+            return None
         altura, ancho, _ = frame.shape              
         resultados = self.deteccion_cara.process(frame)  
 
@@ -44,8 +46,8 @@ class Detector:
                     y = int(puntos_de_referencia_cara.landmark[indice].y * altura)
                     coordenadas_ojo_der.append((x, y))
                 for indice in self.incide_central:
-                    x = int(puntos_de_referencia_cara.landmark[indice].x * ancho)
-                    y = int(puntos_de_referencia_cara.landmark[indice].y * altura)
+                    x = puntos_de_referencia_cara.landmark[indice].x
+                    y = puntos_de_referencia_cara.landmark[indice].y
                     coordenadas_central = (x, y)
                 for indice in self.indices_orientacion:
                     x = int(puntos_de_referencia_cara.landmark[indice].x * ancho)
@@ -96,13 +98,6 @@ class Detector:
             distancias_der.append(np.linalg.norm(np.array(coord_o_der[0]) - np.array(coord_o_der[i])))
         return distancias_izq, distancias_der
 
-
-    # Funcion para medir el largo de los ojos medio
-    def calcular_medida_ojo_media(self, distancias_izq, distancias_der):
-        medida_ojo_izq = np.mean(distancias_izq)
-        medida_ojo_der = np.mean(distancias_der)
-        medida_ojo_media = (medida_ojo_izq + medida_ojo_der) / 2.0
-        return medida_ojo_media
     
 
     # Funcion para detectar la posicion de la cabeza en la pantalla
@@ -137,7 +132,7 @@ class Detector:
                 [0, focal_length, center[1]],
                 [0, 0, 1]], dtype = "double"
             )
-            dist_coeffs = np.zeros((4,1)) # No hay distortion
+            dist_coeffs = np.zeros((4,1)) # Se da por hecho que no hay distortion
 
             # Estimamos la pose de la cabeza
             (_, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
@@ -154,3 +149,17 @@ class Detector:
             euler_angles_normalized = np.clip(euler_angles_normalized, 0, 1)
 
             return euler_angles_normalized[0, 0], euler_angles_normalized[1, 0]  # Devolvemos los ángulos de Euler normalizados para la orientación de la cabeza
+    
+
+
+    # ------------------- FUNCIONES PROPIAS DE CONJUNTOS --------------------------
+    #CONJUNTO 1----------
+    # Funcion para medir el largo de los ojos medio
+    def calcular_medida_ojo_media(self, distancias_izq, distancias_der):
+        medida_ojo_izq = np.mean(distancias_izq)
+        medida_ojo_der = np.mean(distancias_der)
+        medida_ojo_media = (medida_ojo_izq + medida_ojo_der) / 2.0
+        return medida_ojo_media
+    
+
+    #CONJUNTO 3----------

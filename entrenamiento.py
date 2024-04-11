@@ -6,9 +6,9 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 import tensorflow as tf
 import os
-#print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+from Conjuntos import Conjuntos
 
-#Aproximacion solo distancias
+# Funcion para crear la ANN
 def crear_ann(topology, learning_rate, input_shape, output_shape):
     model = tf.keras.models.Sequential()
     model.add(tf.keras.layers.Dense(topology[0], activation='relu', input_shape=(input_shape,)))  #Entrada
@@ -20,63 +20,14 @@ def crear_ann(topology, learning_rate, input_shape, output_shape):
     return model
 
 
-
+# Funcion para aplicar un filtro gaussiano a las columnas de las distancias para suavizar el trazado de los datos de entrenamiento
 def gauss(data, sigma):
     # Aplicar filtro gaussiano con cv2 a las columnas de las distancias (32)
     for i in range(32):
         data[:, i] = cv2.GaussianBlur(data[:, i], (1, sigma), 0).flatten()
     return data
 
-#Conjunto general con todos los datos suavizados sin normalizar
-#SOL -> Una mierda, al no normalizar 0.5 de accuracy
-def conjunto_1(data):
-    # Gaussiano y datos a 10 decimales
-    data = gauss(data, 21)
-
-    data = np.round(data, 10)
-
-    return data
-
-
-def conjunto_2(data):
-    # Aplicar el filtro gaussiano
-    data = gauss(data, 21)
-
-    # Normalizar las columnas 0-31 basándose en la columna 32
-    for i in range(32):
-        data[:, i] = data[:, i] / data[:, 32]
-
-    # Eliminar la columna 32 y desplazar las columnas restantes una posición hacia atrás
-    data = np.delete(data, 32, axis=1)
-
-    # Redondear los datos a 10 decimales
-    data = np.round(data, 10)
-
-    return data
-
-
-def conjunto_3(data):
-    # Aplicar el filtro gaussiano
-    data = gauss(data, 21)
-
-    # Calcular la media de cada columna con la columna 16 y eliminar la columna 16
-    for i in range(16):
-        data[:, i] = np.mean(data[:, [i, 16]], axis=1)
-        data = np.delete(data, 16, axis=1)
-
-    # Normalizar las primeras 16 columnas basándose en la columna 17
-    for i in range(16):
-        data[:, i] = data[:, i] / data[:, 16]
-
-    # Eliminar la columna 16
-    data = np.delete(data, 16, axis=1)
-
-    # Redondear los datos a 10 decimales
-    data = np.round(data, 10)
-
-    return data
-
-
+# Funcion PROVISIONAL PARA MOSTRAR GRAFICAS EN LA MEMORIA
 def comparar_columnas(data_con_gauss, data_sin_gauss, columna):
     # Extraer la columna especificada de cada conjunto de datos
     columna_sin_gauss = data_sin_gauss[:, columna]
@@ -101,60 +52,86 @@ def comparar_columnas(data_con_gauss, data_sin_gauss, columna):
     plt.show()
 
 
-#main
-def main():
+def entrenar(arquitectura, learning_rate, epochs, input, output):
+    # Crear el modelo
+    model = crear_ann(arquitectura[1:-1], learning_rate, arquitectura[0], arquitectura[-1])
+
+    # Entrenar el modelo
+    model.fit(input, output, epochs=epochs, verbose=1)
+
+    return model
+    
+
+
+def eval():
+    modelo = tf.keras.models.load_model('./anns/ann_conj3_71_norm.keras')
+
+    # Datos de test
+    input_test = np.loadtxt('./txts/input2_n.txt', delimiter=',')
+    output_test = np.loadtxt('./txts/output2.txt', delimiter=',')
+
+    # Normalizar los datos
+    input_test_t = Conjuntos.conjunto_3(input_test)
+
+    modelo.evaluate(input_test_t, output_test)
+
+
+
+def entrenar_bucle(conjuntos, arquitecturas, learning_rates, epochs):
     # Cargar los datos
-    #Datos: d0, d2, ....., d31, media_tamaño_ojos, or_X, or_Y, p_X, p_Y, ear, thresh_ear
-    data_input = np.loadtxt('./txts/input.txt', delimiter=',')
+    input = np.loadtxt('./txts/input.txt', delimiter=',')
     output = np.loadtxt('./txts/output.txt', delimiter=',')
 
     #Datos de test
     input_test = np.loadtxt('./txts/input2.txt', delimiter=',')
     output_test = np.loadtxt('./txts/output2.txt', delimiter=',')
 
-    #comparar_columnas(conjunto_1(np.copy(data_input)), data_input, 0)
+    total_anns = len(conjuntos) * len(arquitecturas) * len(learning_rates) * len(epochs)
+    current_ann = 0
 
+    for conjunto in conjuntos:
+        # Normalizar los datos
+        normalizar_funcion = getattr(Conjuntos, f'conjunto_{conjunto}')
+        input_norm = normalizar_funcion(input)
+        input_test_norm = normalizar_funcion(input_test)
 
+        for i, arquitectura in enumerate(arquitecturas[conjunto-1]):
+            for j, lr in enumerate(learning_rates):
+                for k, ep in enumerate(epochs):
+                    current_ann += 1
+                    print(f"Entrenando conjunto:{conjunto} arquitectura {arquitectura} lr:{lr} ep:{ep} ({current_ann}/{total_anns})")
+                    model = entrenar(arquitectura, lr, ep, input_norm, output)
+                    # Guardar el modelo
+                    model_name = f"conj{conjunto}_{'_'.join(map(str, arquitectura[1:-1]))}_Lr{lr}_Epo{ep}"
+                    model.save(f'./anns/{model_name}.keras')
+                    # Evaluar el modelo e ir añadiendo los resultados a un archivo de texto
+                    results = model.evaluate(input_test_norm, output_test)
+                    with open('./anns/results.txt', 'a') as f:
+                        f.write(f"{model_name}: {results}\n")
 
-
-    # Normalizar los datos
-    input = conjunto_3(data_input)
-    input_test = conjunto_3(input_test)
+def main():
+    # Definimos las arquitecturas que vamos a probar
+    conjuntos = [3]
+    arquitecturas= [#Las del conjunto 1
+                    []
+                    #Las del conjunto 2
+                    ,[]
+                    #Las del conjunto 3
+                    ,[[22, 20, 15, 4, 2], [22, 15, 10, 2],  [22, 10, 6, 2], [22, 12, 2], [22, 20, 2]]]
     
-    # Cargar la rna
-    model2 = tf.keras.models.load_model('./anns/ann_conj3_20k.keras')
-    model3 = tf.keras.models.load_model('./anns/ann_conj3_50k.keras')
-    model4 = tf.keras.models.load_model('./anns/ann_conj3_71k.keras')
-    model5 = tf.keras.models.load_model('./anns/ann_conj3_l0.05.keras')
+    learning_rates = [0.1, 0.05, 0.01, 0.005, 0.001]
+    epochs = [100, 200, 500, 1000]
 
-    # Evaluar el modelo
-    print('Modelo 2')
-    model2.evaluate(input_test, output_test)
+    # Entrenar las arquitecturas
+    entrenar_bucle(conjuntos, arquitecturas, learning_rates, epochs)
 
-    print('Modelo 3')
-    model3.evaluate(input_test, output_test)
 
-    print('Modelo 4')
-    model4.evaluate(input_test, output_test)
 
-    print('Modelo 5')
-    model5.evaluate(input_test, output_test)
-    
-    #Evaluar el modelo
-    #evaluar_modelo(model, input_test, output_test)
 
-    # Entrenar y guardar las ANN
-    #entrenar_y_guardar_anns(input, output, input_test, output_test)
 
-    # Entenar ann
-    #model = crear_ann([20, 15, 4], 0.01, 22, 2)
-
-    #model.fit(input, output, epochs=500, verbose=1)
-
-    #model.evaluate(input_test, output_test)
-
-    #model.save('./anns/ann_conj3_71k.keras')
-    
+def pruebas():
+    import tensorflow as tf
+    print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 
 if __name__ == "__main__":
