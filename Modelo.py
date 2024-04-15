@@ -7,10 +7,8 @@ import numpy as np
 import os
 from kivy.app import App
 from Mensajes import Mensajes
-from Conjuntos import Conjuntos
+from entrenamiento.Conjuntos import Conjuntos
 import tensorflow as tf
-tf.get_logger().setLevel('ERROR')
-
 
 class Modelo:
     def __init__(self):
@@ -23,7 +21,7 @@ class Modelo:
 
         # Variables para el modelo de test
         self.conjunto = 3
-        self.modelo = tf.keras.models.load_model('./anns/conj3_bien.keras')
+        self.modelo = tf.keras.models.load_model('./anns/primeras_eval/conj3_20_15_4_Lr0.01_Epo100.keras')
 
         # Variables de control para el tamaño de la fuente de los textos
         self.tamaño_fuente_txts = 23
@@ -294,6 +292,7 @@ class Modelo:
 
         # Se predice la posición de la mirada
         mirada = self.modelo.predict(datos_array)
+        print(mirada)
 
         # Añadir la nueva posición al historial
         self.historial.append(mirada)

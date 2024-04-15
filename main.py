@@ -2,7 +2,8 @@ from kivy.app import App
 from Modelo import Modelo
 from Vista import Vista
 from Controlador import Controlador
-from kivy.config import Config
+from kivy.core.window import Window
+Window.fullscreen = 'auto'
 
 class MyApp(App):
     def build(self):
@@ -22,6 +23,4 @@ class MyApp(App):
             self.modelo.detener_camara()
 
 if __name__ == '__main__':
-    Config.set('graphics', 'fullscreen', 'auto')
-    Config.set('input', 'mouse', 'mouse, disable_multitouch')
     MyApp().run()
