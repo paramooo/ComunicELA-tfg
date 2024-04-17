@@ -14,10 +14,10 @@ class Recopilar(Screen):
         self.background_color = (0, 0, 0, 1) 
 
         self.escaneado = False
-        self.textos = ["Presiona Continuar para empezar a recopilar datos, debes mirar fijamente a la pelota roja.\n" + 
-                        "Cuando presiones continuar, en 5 segundos empezara a moverse por toda la pantalla.\n" + 
+        self.textos = ["Presiona Recopilar para empezar a recopilar datos, debes mirar fijamente a la pelota roja.\n" + 
+                        "Cuando presiones Recopilar, en 5 segundos empezara a moverse por toda la pantalla.\n" + 
                         "Mirala fijamente hasta que termine de moverse, ¡Muchas gracias! (no tardará más de 3 minutos)",
-                        "¡¡¡Muchas gracias!!!, presiona Inicio para volver o Continuar para volver a recopilar datos"]
+                        "¡¡¡Muchas gracias!!!, presiona Inicio para volver o Recopilar para volver a recopilar datos"]
 
         self.layout = BoxLayout(orientation='vertical')
 
@@ -30,8 +30,8 @@ class Recopilar(Screen):
         self.layout.add_widget(self.texto_explicativo)
 
         # El boton de continuar
-        btn_continuar = ButtonRnd(text='Continuar', size_hint=(.2, .1), pos_hint={'right': 1, 'top': 0}, on_press= self.on_continuar)
-        self.layout.add_widget(btn_continuar)
+        btn_recopilar = ButtonRnd(text='Recopilar', size_hint=(.2, .1), pos_hint={'right': 1, 'top': 0}, on_press= self.on_recopilar)
+        self.layout.add_widget(btn_recopilar)
 
 
 
@@ -61,10 +61,10 @@ class Recopilar(Screen):
         self.circulo_instr.clear()
 
 
-    # Funcion para el boton continuar, pone recopilar a true e inicia la cuanta atras
-    def on_continuar(self, *args):
+    # Funcion para el boton recopilar, pone recopilar a true e inicia la cuanta atras
+    def on_recopilar(self, *args):
         self.controlador.recopilar_datos()
-        self.controlador.on_continuar_reco()
+        self.controlador.on_recopilar()
 
     def update(self, dt):
         #Si recopilar, actualiza el texto explicativo a la cuenta atras

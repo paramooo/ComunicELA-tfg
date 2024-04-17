@@ -54,12 +54,12 @@ class Modelo:
         
     #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
     def reiniciar_datos_r(self):
-        self.recopilar = False
-        self.contador_r = 5
-        self.pos_r = (0, 0)
-        self.salto_bajo, self.salto_alto = 30, 80
-        self.velocidad = 50
-        self.direccion = 1
+        self.recopilar = False #Variable para saber si se esta recopilando datos
+        self.contador_r = 5 #Contador para la cuenta atras
+        self.pos_r = (0, 0) #Posicion de la pelota roja
+        self.salto_bajo, self.salto_alto = 30, 80 #Salto de la pelota roja
+        self.velocidad = 30
+        self.direccion = 1 
 
     
 # ---------------------------   FUNCIONES DE CONTROL GENERAL    -------------------------------

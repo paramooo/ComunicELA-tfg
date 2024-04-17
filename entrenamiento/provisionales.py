@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Conjuntos import *
 from entrenamiento import cargar_datos
+import tensorflow as tf
 
 
 # Funcion PROVISIONAL PARA MOSTRAR GRAFICAS EN LA MEMORIA
@@ -106,3 +107,10 @@ def evaluar_todos_los_modelos(conjunto, hor_div, ver_div):
 
     # Devolver el nombre del mejor modelo
     return mejor_modelo
+
+
+
+# Haz el main
+if __name__ == '__main__':
+    # Comprueba que tf reconoce la grafica
+    print(tf.config.list_physical_devices('GPU'))

@@ -100,7 +100,7 @@ class Controlador:
 
 #-------------------------------FUNCIONES PARA LA RECOPILACION DE DATOS-----------------------------
 
-    def on_continuar_reco(self):
+    def on_recopilar(self):
         # Inicia la cuenta atrás
         Clock.schedule_interval(self.modelo.cuenta_atras, 1)
 

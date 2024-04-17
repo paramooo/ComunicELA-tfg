@@ -15,7 +15,8 @@ class Inicio(Screen):
 
         self.primera = True
         self.texto_inicio = ("Bienvenido a ComunicELA, una aplicación en desarrollo para ayudar a personas con ELA.\n" + 
-                            "Para empezar, comienza calibrando el parpadeo para que la aplicacion se ajuste a tu perfil.\n" +
+                            "Para empezar, seleccione la cámara que quiera usar, despues, comienza calibrando el\n" + 
+                            "parpadeo para que la aplicacion se ajuste a tu perfil.\n" +
                             "Una vez calibrado, puedes realizar un test para comprobar que todo funciona correctamente.\n" +
                             "Si todo va bien, puedes empezar a recopilar datos, muchas gracias!\n" + 
                             "Presione ESC en cuaquier momento para cerrar la aplicación")
