@@ -8,6 +8,20 @@ class Conjuntos:
         datos_transformados = np.expand_dims(np.concatenate([distancias_izq, distancias_der, [or_x], [or_y], coord_cab, [ear], [umbral_ear]]), axis=0)
         return datos_transformados
 
+# ------------ CONJUNTO 1 ----------------
+# Funcion para transformar el input.txt
+    def conjunto_1(data):
+        """
+        Entradas: 14
+        [0-5] Distancias entre los puntos de referencia del ojo izquierdo 
+        [6-11] Distancias entre los puntos de referencia del ojo derecho
+        [18] EAR
+        [19] Umbral EAR
+        """
+        # Coje los puntos 0,2,4,6,8,10 (ojo izquierdo) y 1,3,5,7,9,11 (ojo derecho)
+        data = np.concatenate((data[:, 0:12:2], data[:, 1:12:2], data[:, 18:20]), axis=1)
+
+        return data
 
 # ------------ CONJUNTO 3 ----------------
 # Funcion para transformar el input.txt           

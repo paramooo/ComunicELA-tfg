@@ -59,7 +59,8 @@ class Test(Screen):
 
     # Funcion para actualizar la posición del círculo y el color
     def update(self, dt):
-        if self.controlador.get_escanear():
+        # Si se ha activado el escaneo y estamso en esta pantalla
+        if self.controlador.get_escanear() and self.controlador.get_screen() == 'test':
             # Obtiene la posición de la mirada y el ear
             datos = self.controlador.obtener_posicion_mirada_ear()
 

@@ -2,31 +2,67 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from Conjuntos import *
-from entrenamiento import cargar_datos
 import tensorflow as tf
+from scipy.ndimage import gaussian_filter1d
 
 
-# Funcion PROVISIONAL PARA MOSTRAR GRAFICAS EN LA MEMORIA
-def comparar_columnas(data_con_gauss, data_sin_gauss, columna):
-    # Extraer la columna especificada de cada conjunto de datos
-    columna_sin_gauss = data_sin_gauss[:, columna]
-    columna_con_gauss = data_con_gauss[:, columna]
 
-    # Crear la gráfica
-    plt.figure(figsize=(10, 5))
+#------------------ FUNCIONES PARA LOS DATOS ------------------
+#--------------------------------------------------------------
 
-    plt.subplot(1, 2, 1)
-    plt.plot(columna_sin_gauss)
-    plt.title('Sin Gauss')
-    plt.xlabel('Índice de línea')
-    plt.ylabel('Valor en la columna {}'.format(columna))
+# Funcion para cargar los datos de entrenamiento
+def cargar_datos():
+    # Cargar los datos
+    input = np.loadtxt('./txts/input.txt', delimiter=',')
+    output = np.loadtxt('./txts/output.txt', delimiter=',')
 
-    plt.subplot(1, 2, 2)
-    plt.plot(columna_con_gauss)
-    plt.title('Con Gauss')
-    plt.xlabel('Índice de línea')
-    plt.ylabel('Valor en la columna {}'.format(columna))
+    return input, output
 
+# Funcion para cargar los datos de test
+def cargar_datos_test():
+    # Cargar los datos
+    input = np.loadtxt('./txts/input2.txt', delimiter=',')
+    output = np.loadtxt('./txts/output2.txt', delimiter=',')
+
+    return input, output
+
+
+def suavizar_datos(data, sigma):
+    # Aplicar filtro gaussiano a cada columna
+    for i in range(data.shape[1]):
+        data[:, i] = gaussian_filter1d(data[:, i], sigma)
+    return data
+
+
+#------------------ FUNCIONES PARA LAS GRAFICAS ------------------
+#---------------------------------------------------------------
+
+# Funcion para mostrar las gráficas de los datos suaizados
+def mostrar_graficas_suavizado_datos():
+    input, output = cargar_datos()
+    # Puntos a graficar
+    puntos = [0, 3]
+
+    # Sigmas para suavizar los datos
+    sigmas = [5, 11, 15, 21]
+
+    # Crear una figura para las gráficas
+    fig, axs = plt.subplots(len(sigmas), len(puntos), figsize=(15, 15))
+
+    for i, sigma in enumerate(sigmas):
+        # Suavizar los datos
+        datos_suavizados = suavizar_datos(input.copy()[:], sigma)
+
+        for j, punto in enumerate(puntos):
+            # Crear la gráfica
+            axs[i, j].plot(input[:100, punto], label='Real')
+            axs[i, j].plot(datos_suavizados[:100, punto], label='Suavizado')
+            axs[i, j].legend()
+
+            # Establecer el título de la gráfica
+            axs[i, j].set_title(f'Sigma: {sigma}, Punto: {punto}')
+
+    # Mostrar las gráficas
     plt.tight_layout()
     plt.show()
 
@@ -36,8 +72,6 @@ def comparar_columnas(data_con_gauss, data_sin_gauss, columna):
 # No es una buena manera de evaluar ya que los puntos que estan en el borde entre dos zonas logicamente no los va a acertar 
 # bien siempre, entonces va a dar una media mas baja de la que realmente tendría, hay que evaluar con metricas como las de loss, error medio, etc.
 #----------------------------------------------------------------------------
-
-
 # Funcion para evaluar por zonas en pantalla la precision de un modelo
 def evaluar_zonas(conjunto, model, hor_div, ver_div):
     # Cargar los datos
@@ -78,36 +112,6 @@ def evaluar_zonas(conjunto, model, hor_div, ver_div):
             results[i, j] = round(accuracy,2)
 
     return results
-
-
-def evaluar_todos_los_modelos(conjunto, hor_div, ver_div):
-    # Inicializar el mejor resultado
-    mejor_media = -np.inf
-    mejor_modelo = None
-
-    # Recorrer todos los archivos en la carpeta 'anns/'
-    for filename in os.listdir('./anns/'):
-        if filename.endswith('.keras'):
-            # Cargar el modelo
-            model = tf.keras.models.load_model(f'./anns/{filename}')
-
-            # Ejecutar la función de evaluación
-            results = evaluar_zonas(conjunto, model, hor_div, ver_div)
-
-            # Calcular la media de los resultados
-            media = np.mean(results)
-
-            print(f'Conjunto: {filename} - Precision: {media}')
-
-            # Si esta media es la mejor hasta ahora, guardar este modelo
-            if media > mejor_media:
-                print("Nueva mejor media!!")
-                mejor_media = media
-                mejor_modelo = filename
-
-    # Devolver el nombre del mejor modelo
-    return mejor_modelo
-
 
 
 # Haz el main

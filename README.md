@@ -25,9 +25,12 @@ crear exe:
 python -m PyInstaller --onefile --icon=imagenes/logo.ico --add-data "anns;./anns" --add-data "imagenes;./imagenes" --add-data "kivy;./kivy" --add-data "sonidos;./sonidos" main.py
 
 
-
-falta pantalla completa
-
 no poder entrar en los menus si no hay camara activa
 
 incorporar posibilidad de guardar diferentes usuarios despues de calibrar
+
+
+
+pytorch2.2.2
+cuda12.1
+cudnn8.9.7

@@ -40,3 +40,6 @@ class Vista:
 
     def change_screen(self, nombre):
         self.sm.current = nombre
+
+    def get_screen(self):
+        return self.sm.current 

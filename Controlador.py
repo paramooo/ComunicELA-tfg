@@ -15,6 +15,8 @@ class Controlador:
             self.change_screen(screen_name)
         else:
             self.mensaje('Primero debe calibrar el parpadeo')
+    def get_screen(self):
+        return self.vista.get_screen()
 
 
 
@@ -92,11 +94,7 @@ class Controlador:
     #tamaño pantalla creo falta
     def obtener_posicion_mirada_ear(self):
         return self.modelo.obtener_posicion_mirada_ear()
-        
     
-
-
-
 
 #-------------------------------FUNCIONES PARA LA RECOPILACION DE DATOS-----------------------------
 
@@ -115,9 +113,6 @@ class Controlador:
 
     def get_escaneado(self):
         return self.modelo.escaneado  
-    
-
-
 
     def actualizar_pos_circle_r(self, tamano_pantalla):
             return self.modelo.actualizar_pos_circle_r(tamano_pantalla)
@@ -130,3 +125,32 @@ class Controlador:
 
     def reiniciar_datos_r(self):
         self.modelo.reiniciar_datos_r() 
+
+
+
+# ---------------------------- FUNCIONES PARA EL MODO DE TABLEROS -------------------------
+#------------------------------------------------------------------------------------------
+    def on_casilla_tab(self, texto_boton):
+            if texto_boton.startswith('TAB.'):
+                nombre_tablero = texto_boton[5:]
+                print(nombre_tablero)   
+                nuevo_tablero = self.modelo.obtener_tablero(nombre_tablero)
+                if nuevo_tablero is not None:
+                    self.vista.tableros.cambiar_tablero(nuevo_tablero)
+            else:
+                self.modelo.añadir_palabra(texto_boton)
+                self.vista.tableros.label.text = self.modelo.get_frase()
+    
+    def borrar_palabra(self):
+        self.modelo.borrar_palabra()  
+        self.vista.tableros.label.text = self.modelo.get_frase()
+
+    def borrar_todo(self):
+        self.modelo.borrar_todo()
+        self.vista.tableros.label.text = self.modelo.get_frase()
+
+    def obtener_tablero(self, nombre_tablero):
+        return self.modelo.obtener_tablero(nombre_tablero)
+    
+    def get_frase(self):
+        return self.modelo.get_frase()

@@ -9,6 +9,7 @@ from kivy.app import App
 from Mensajes import Mensajes
 from entrenamiento.Conjuntos import Conjuntos
 import tensorflow as tf
+from Tablero import Tablero
 
 class Modelo:
     def __init__(self):
@@ -49,8 +50,14 @@ class Modelo:
 
         # Variables para suavizar la mirada en el test
         self.historial = []
-        self.cantidad_suavizado = 5
+        self.cantidad_suavizado = 3
+        self.hist_max = 10
+        self.retroceso_click = 6
 
+        # Variables para uso de los tableros
+        self.tableros = {}
+        self.cargar_tableros()
+        self.frase = ""
         
     #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
     def reiniciar_datos_r(self):
@@ -193,7 +200,7 @@ class Modelo:
             self.guardar_final()
             self.reiniciar_datos_r()
         else:
-            datos = self.obtener_datos("recop")
+            datos = self.obtener_datos()
             if datos is None:                
                 self.mensaje("No se detecta cara")	
             else:
@@ -237,7 +244,8 @@ class Modelo:
 
 
 # ---------------------------   FUNCIONES DE OBTENCION DE DATOS  -------------------------------
-    def obtener_datos(self, modo):
+#-----------------------------------------------------------------------------------------------
+    def obtener_datos(self):
         frame = self.get_frame()
         datos = self.detector.obtener_coordenadas_indices(frame)
         
@@ -258,26 +266,20 @@ class Modelo:
         ear = self.detector.calcular_ear_medio(coord_ear_izq, coord_ear_der)
 
         # Pasamos la posicion de la pantalla normalizada
-        if modo == "recop":
-            return distancias_izq, distancias_der, or_x, or_y, ear, self.umbral_ear, coord_cab, self.pos_r
-        elif modo == "test":
-            return distancias_izq, distancias_der, or_x, or_y, ear, self.umbral_ear, coord_cab
+        return distancias_izq, distancias_der, or_x, or_y, ear, self.umbral_ear, coord_cab
 
 
-
-# ---------------------------   FUNCIONES DE CONTROL DEL MOVIMIENTO DEL CIRCULO EN TEST  -------------------------------
-#-----------------------------------------------------------------------------------------------------------------------
-        
+    #Funcion para obtener la posicion de la mirada en el test
+    #Se obtiene la posición de la mirada y si se ha hecho click
+    #Se suaviza la posición de la mirada y si se hace click, se retrocede self.retroceso_click frames para evitar la desviación
     def obtener_posicion_mirada_ear(self):
-        click = 0
-
         # Se obtienen los datos
-        datos = self.obtener_datos("test")
+        datos = self.obtener_datos()
 
-        #Si no se detecta cara, se devuelve None, None, None, None, None, None
+        # Si no se detecta cara, se devuelve None, None
         if datos is None:
             return None
-        
+
         # Se desempaquetan los datos del ear para el click
         _, _, _, _, ear, _, _ = datos
         click = self.get_parpadeo(ear)
@@ -287,26 +289,54 @@ class Modelo:
 
         # Normalizar los datos
         normalizar_funcion = getattr(Conjuntos, f'conjunto_{self.conjunto}')
-        
         datos_array = normalizar_funcion(datos_array)
 
         # Se predice la posición de la mirada
         mirada = self.modelo.predict(datos_array)
-        print(mirada)
 
         # Añadir la nueva posición al historial
         self.historial.append(mirada)
 
         # Eliminar la posición más antigua si el historial es demasiado largo
-        if len(self.historial) > self.cantidad_suavizado:
+        if len(self.historial) > self.hist_max:
             self.historial.pop(0)
 
-        # Calcular la media ponderada de las posiciones en el historial
-        pesos = range(1, len(self.historial) + 1) 
-        mirada_suavizada = np.average(self.historial, weights=pesos, axis=0)
+        # Calcular la media ponderada de las posiciones en el historial para suavizar
+        if len(self.historial) > self.cantidad_suavizado:
+            pesos = range(1, len(self.historial[-self.cantidad_suavizado:]) + 1)
+            mirada = np.average(self.historial[-self.cantidad_suavizado:], weights=pesos, axis=0)
 
-        #Aqui cambiar entre mirada suavizada y mirada para ver los resultados reales de la red
-        return mirada_suavizada, click
- 
-            
+        # Si se detecta un parpadeo, se coge la posición de self.retroceso_click frames atrás
+        if click == 1 and len(self.historial) >= self.retroceso_click:
+            mirada = self.historial[-self.retroceso_click]
+
+        return mirada, click
+
+
+                
    
+#--------------------------------FUNCIONES PARA LOS TABLEROS--------------------------------
+#-------------------------------------------------------------------------------------------
+
+    def cargar_tableros(self):
+        for filename in os.listdir('./tableros'):
+            if filename.endswith('.txt'):
+                with open(os.path.join('./tableros', filename), 'r') as f:
+                    palabras = [line.strip().split(';') for line in f]
+                    self.tableros[filename[:-4]] = palabras  # Añade el tablero al diccionario
+
+
+    def obtener_tablero(self, nombre):
+        return self.tableros.get(nombre.lower())
+    
+    def get_frase(self):
+        return self.frase
+    
+    def añadir_palabra(self, palabra):
+        self.frase += palabra + ' '
+
+    def borrar_palabra(self):
+        self.frase = ' '.join(self.frase.rstrip().split(' ')[:-1]) + ' '
+
+    def borrar_todo(self):
+        self.frase = ''
