@@ -5,10 +5,11 @@ Datos recopilacion:
 [16 - 31] -> Distancias de los puntos de control del ojo izquierdo a la pupila derecha  (en pixeles)
 [32] -> Inclinación de la cabeza sobre el eje X        (entre 0 y 1, max 45º para cada lado)
 [33] -> Inclinación de la cabeza sobre el eje Y        (entre 0 y 1, max 45º para dada lado)
-[34] -> Posicion de la cabeza en la camara en el eje X        (entre 0 y 1)
-[35] -> Posicion de la cabeza en la camara en el eje Y        (entre 0 y 1)
-[36] -> Medida EAR      (entre 0 y 1)
-[37] -> Umbral EAR      (calibrado por la persona anteriormente)
+[34] -> Inclinación de la cabeza sobre el eje Z        (entre 0 y 1, max 45º para cada lado)
+[35] -> Posicion de la cabeza en la camara en el eje X        (entre 0 y 1)
+[36] -> Posicion de la cabeza en la camara en el eje Y        (entre 0 y 1)
+[37] -> Medida EAR      (entre 0 y 1)
+[38] -> Umbral EAR      (calibrado por la persona anteriormente)
 
 
 
@@ -34,3 +35,15 @@ incorporar posibilidad de guardar diferentes usuarios despues de calibrar
 pytorch2.2.2
 cuda12.1
 cudnn8.9.7
+
+
+
+una vez la persona hace la calibracion que opciones de personalizacion interesan? 
+-Elegir el tipo de tablero
+
+
+INPUTS EXPLICADOS
+        | libertad |  |distancia  |  camara a altura de los ojos |  | inclinacion pantalla a comodidad del usuario |       luz directa   |
+input0 ->    15%   |  |  50/60  cm|            si                |  |                   si                         |            si       |
+ipnut1 ->   30%    |  |  50/60  cm|            si                |  |                   si                         |            si       |
+input2 ->   50%   |  |    70    cm|            no                |  |                   si                         |            no       |

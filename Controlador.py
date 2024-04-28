@@ -39,6 +39,9 @@ class Controlador:
     def camara_activa(self):
         return self.modelo.camara_activa()
     
+    def get_frame(self):
+        return self.modelo.get_frame()
+    
     def obtener_camaras(self):
         self.vista.inicio.camera_spinner.text = 'Cargando cámaras...'
         threading.Thread(target=self._obtener_camaras_aux).start()
@@ -80,6 +83,11 @@ class Controlador:
         self.cambiar_estado_calibracion()
         self.vista.calibrar.update_view(self.obtener_estado_cal())
 
+    def get_punto_central(self, frame):
+        return self.modelo.get_punto_central(frame)
+    
+    def get_frame_editado(self, porcentaje):
+        return self.modelo.get_frame_editado(porcentaje)
 
 
 # ---------------------------- FUNCIONES PARA EL MODO DE TEST/TABLEROS -------------------------
@@ -114,8 +122,8 @@ class Controlador:
     def get_escaneado(self):
         return self.modelo.escaneado  
 
-    def actualizar_pos_circle_r(self, tamano_pantalla):
-            return self.modelo.actualizar_pos_circle_r(tamano_pantalla)
+    def actualizar_pos_circle_r(self, tamano_pantalla, fichero):
+            return self.modelo.actualizar_pos_circle_r(tamano_pantalla, fichero)
     
     def recopilar_datos(self):
         self.modelo.recopilar = True
@@ -125,7 +133,6 @@ class Controlador:
 
     def reiniciar_datos_r(self):
         self.modelo.reiniciar_datos_r() 
-
 
 
 # ---------------------------- FUNCIONES PARA EL MODO DE TABLEROS -------------------------

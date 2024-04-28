@@ -106,8 +106,10 @@ class Tableros(Screen):
             # Desempaqueta los datos
             pos, click = datos
 
+            pos = pos.flatten()
+
             # Actualiza la posición de la mirada, si se hace click, coge la posición del click de hace 10 frames
-            x, y = pos[0]*self.size
+            x, y = pos*self.size
             
             # Si parpadea, coge la posicion de 5 frames atras, para no desviar la mirada al parpadear
             self.emular_movimiento_y_clic(x,y, click)

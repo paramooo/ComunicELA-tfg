@@ -1,6 +1,5 @@
 from Detector import Detector
 from Camara import Camara
-from kivy.uix.label import Label
 import pygame
 import random
 import numpy as np
@@ -8,8 +7,8 @@ import os
 from kivy.app import App
 from Mensajes import Mensajes
 from entrenamiento.Conjuntos import Conjuntos
-import tensorflow as tf
-from Tablero import Tablero
+import cv2
+import torch
 
 class Modelo:
     def __init__(self):
@@ -21,8 +20,8 @@ class Modelo:
         self.camara = Camara()
 
         # Variables para el modelo de test
-        self.conjunto = 3
-        self.modelo = tf.keras.models.load_model('./anns/primeras_eval/conj3_20_15_4_Lr0.01_Epo100.keras')
+        self.conjunto = 2
+        self.modelo = torch.load('./anns/pytorch/modelo.pth')
 
         # Variables de control para el tamaño de la fuente de los textos
         self.tamaño_fuente_txts = 23
@@ -65,7 +64,7 @@ class Modelo:
         self.contador_r = 5 #Contador para la cuenta atras
         self.pos_r = (0, 0) #Posicion de la pelota roja
         self.salto_bajo, self.salto_alto = 30, 80 #Salto de la pelota roja
-        self.velocidad = 30
+        self.velocidad = 25
         self.direccion = 1 
 
     
@@ -122,6 +121,47 @@ class Modelo:
                 
     def obtener_estado_calibracion(self):
         return self.estado_calibracion        
+    
+    def get_punto_central(self, frame):
+        return self.detector.get_punto_central(frame)
+    
+    def get_frame_editado(self, porcentaje):
+        frame = self.get_frame()
+        if frame is None:
+            return None
+        
+        # Rojo por defecto
+        color = (0, 0, 255)  
+        
+        # Poner el punto en el centro
+        coord_central = self.get_punto_central(frame)
+        if coord_central is not None:
+            x = round(frame.shape[1]*coord_central[0])
+            y = round(frame.shape[0]*coord_central[1])
+
+            # Si el punto central esta en el centro de la pantalla del tamaño del porcentaje esta en verde el punto central y en rojo si no
+            if 0.5 - porcentaje/2 < coord_central[0] < 0.5 + porcentaje/2 and 0.5 - porcentaje/2 < coord_central[1] < 0.5 + porcentaje/2:
+                color = (0, 255, 0)
+            else:
+                color = (0, 0, 255)
+            frame[y - 3:y + 3, x - 3:x + 3, :] = color
+
+        # Poner los pixeles centrales del frame para linea horizontal de la cruz
+        frame[frame.shape[0]//2 - 1:frame.shape[0]//2 + 1, :, :] = color
+        # Poner los pixeles centrales del frame para linea vertical de la cruz
+        frame[:, frame.shape[1]//2 - 1:frame.shape[1]//2 + 1, :] = color
+        
+        # Calcular las coordenadas del cuadrado
+        x_start = int(frame.shape[1] * (0.5 - porcentaje / 2))
+        x_end = int(frame.shape[1] * (0.5 + porcentaje / 2))
+        y_start = int(frame.shape[0] * (0.5 - porcentaje / 2))
+        y_end = int(frame.shape[0] * (0.5 + porcentaje / 2))
+
+        # Dibujar el cuadrado en el frame
+        cv2.rectangle(frame, (x_start, y_start), (x_end, y_end), color, 2)
+
+        return frame
+
 
 
 
@@ -178,7 +218,7 @@ class Modelo:
             self.recopilar = True
             return False
 
-    def actualizar_pos_circle_r(self, tamano_pantalla):
+    def actualizar_pos_circle_r(self, tamano_pantalla, fichero):
         # Actualiza la posición x de la pelota
         self.pos_r = (self.pos_r[0] + self.velocidad * self.direccion, self.pos_r[1])
 
@@ -197,24 +237,24 @@ class Modelo:
 
         # Si la pelota toca el borde inferior de la pantalla, reiniciamos los datos y la posición
         if self.pos_r[1] < 0:
-            self.guardar_final()
+            self.guardar_final(fichero)
             self.reiniciar_datos_r()
         else:
             datos = self.obtener_datos()
             if datos is None:                
                 self.mensaje("No se detecta cara")	
             else:
-                distancias_izq, distancias_der, or_x, or_y, ear, umbral_ear, coord_cab, self.pos_r = datos
-                self.guardar_datos(distancias_izq, distancias_der, or_x, or_y, ear, umbral_ear, coord_cab, self.pos_r/np.array(tamano_pantalla))
+                distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab = datos
+                self.guardar_datos(distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, self.pos_r/np.array(tamano_pantalla))
         return self.pos_r
 
 
 
-    def guardar_datos(self, distancias_izq, distancias_der, or_x, or_y, ear, umbral_ear, coord_cab, pos_r_norm):
+    def guardar_datos(self, distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, pos_r_norm):
         # Preparar los datos para guardar
         distancias_izq_str = ', '.join([str(dist) for dist in distancias_izq])
         distancias_der_str = ', '.join([str(dist) for dist in distancias_der])
-        orientacion_cabeza_str = f'{or_x}, {or_y}'
+        orientacion_cabeza_str = f'{or_x}, {or_y}, {or_z}'
         ear_str = str(ear)
         ear_umbral_str = str(umbral_ear) 
         pos_cabeza_str = ', '.join([str(coord) for coord in coord_cab])
@@ -225,16 +265,16 @@ class Modelo:
 
 
 
-    def guardar_final(self):
+    def guardar_final(self, fichero):
         #Si no existe la carpeta txts, se crea
         os.makedirs('txts', exist_ok=True)
-
+        
         # Guardar los datos en los archivos
-        with open('./txts/input.txt', 'a') as f:
+        with open(f'./txts/input{fichero}.txt', 'a') as f:
             for linea in self.input:
                 f.write(linea + '\n')
 
-        with open('./txts/output.txt', 'a') as f:
+        with open(f'./txts/output{fichero}.txt', 'a') as f:
             for linea in self.output:
                 f.write(linea + '\n')
 
@@ -260,13 +300,13 @@ class Modelo:
         distancias_izq, distancias_der = self.detector.calcular_distancias_ojos(coord_o_izq, coord_o_der)
 
         # - Orientación de la cabeza entre 0 y 1
-        or_x, or_y = self.detector.get_orientacion_cabeza(coord_o, frame)
+        or_x, or_y, or_z = self.detector.get_orientacion_cabeza(coord_o, frame)
 
         # - EAR 
         ear = self.detector.calcular_ear_medio(coord_ear_izq, coord_ear_der)
 
         # Pasamos la posicion de la pantalla normalizada
-        return distancias_izq, distancias_der, or_x, or_y, ear, self.umbral_ear, coord_cab
+        return distancias_izq, distancias_der, or_x, or_y, or_z, ear, self.umbral_ear, coord_cab
 
 
     #Funcion para obtener la posicion de la mirada en el test
@@ -281,7 +321,7 @@ class Modelo:
             return None
 
         # Se desempaquetan los datos del ear para el click
-        _, _, _, _, ear, _, _ = datos
+        _, _, _, _, _, ear, _, _ = datos
         click = self.get_parpadeo(ear)
 
         # Se transforman los datos a un conjunto
@@ -291,8 +331,13 @@ class Modelo:
         normalizar_funcion = getattr(Conjuntos, f'conjunto_{self.conjunto}')
         datos_array = normalizar_funcion(datos_array)
 
+        datos_array = torch.from_numpy(datos_array).float()
+
         # Se predice la posición de la mirada
-        mirada = self.modelo.predict(datos_array)
+        mirada = self.modelo(datos_array)
+
+        # Se desempaqueta la posición de la mirada
+        mirada = mirada.data.numpy()[0]
 
         # Añadir la nueva posición al historial
         self.historial.append(mirada)

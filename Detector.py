@@ -148,18 +148,21 @@ class Detector:
             # Nos aseguramos de que los ángulos normalizados estén en el rango [0, 1]
             euler_angles_normalized = np.clip(euler_angles_normalized, 0, 1)
 
-            return euler_angles_normalized[0, 0], euler_angles_normalized[1, 0]  # Devolvemos los ángulos de Euler normalizados para la orientación de la cabeza
+            #Devolvemos normalizados los agunlos de los ejes X, Y, Z
+            return euler_angles_normalized[0, 0], euler_angles_normalized[2, 0], euler_angles_normalized[1, 0]  # Devolvemos los ángulos de Euler normalizados para la orientación de la cabeza
     
 
-
-    # ------------------- FUNCIONES PROPIAS DE CONJUNTOS --------------------------
-    #CONJUNTO 1----------
-    # Funcion para medir el largo de los ojos medio
-    def calcular_medida_ojo_media(self, distancias_izq, distancias_der):
-        medida_ojo_izq = np.mean(distancias_izq)
-        medida_ojo_der = np.mean(distancias_der)
-        medida_ojo_media = (medida_ojo_izq + medida_ojo_der) / 2.0
-        return medida_ojo_media
-    
-
-    #CONJUNTO 3----------
+# Funcion para obtener el punto central de la cara(entremedio de las cejas)
+    def get_punto_central(self, frame):
+        if frame is None:
+            return None
+        resultados = self.deteccion_cara.process(frame)  
+        coordenadas_central = None
+        if resultados.multi_face_landmarks is not None:
+            for puntos_de_referencia_cara in resultados.multi_face_landmarks:
+                for indice in self.incide_central:
+                    x = puntos_de_referencia_cara.landmark[indice].x
+                    y = puntos_de_referencia_cara.landmark[indice].y
+                    coordenadas_central = (x, y)
+            return coordenadas_central
+        return None

@@ -16,16 +16,16 @@ from sklearn.model_selection import KFold
 # Funcion para cargar los datos de entrenamiento
 def cargar_datos():
     # Cargar los datos
-    input = np.loadtxt('./txts/input.txt', delimiter=',')
-    output = np.loadtxt('./txts/output.txt', delimiter=',')
+    input = np.loadtxt('./txts/input0.txt', delimiter=',')
+    output = np.loadtxt('./txts/output0.txt', delimiter=',')
 
     return input, output
 
 # Funcion para cargar los datos de test
 def cargar_datos_test():
     # Cargar los datos
-    input = np.loadtxt('./txts/input2.txt', delimiter=',')
-    output = np.loadtxt('./txts/output2.txt', delimiter=',')
+    input = np.loadtxt('./txts/input_test0.txt', delimiter=',')
+    output = np.loadtxt('./txts/output_test0.txt', delimiter=',')
 
     return input, output
 
@@ -65,7 +65,7 @@ def crear_ann(entradas, topology):
     model.add_module("sigmoid_out", nn.Sigmoid())
     return model
 
-
+#Entrena la red y devuelve los errores de entrenamiento, validación y test
 def entrenar(model, optimizer, loss_function, input_train, output_train, input_val, output_val, input_test, output_test, epochs):
     train_losses = []
     val_losses = []
@@ -130,91 +130,100 @@ def graficar_perdidas(train_losses, val_losses, test_losses):
 
 
 
-# Para el conjunto 1
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# Definir la red neuronal
-entradas = 14
-topology = [17, 10, 5]
-
-# Cargar los datos, procesarlos y moverlos a la GPU
-input, output = cargar_datos()
-input_final = Conjuntos.conjunto_1(input)
-
-# Convertir los datos a tensores de PyTorch y moverlos a la GPU
-input_final = torch.from_numpy(input_final).float().to(device)
-output = torch.from_numpy(output).float().to(device)
-
-# Definir el número de folds
-n_folds = 5
-
-# Crear el objeto KFold
-kf = KFold(n_splits=n_folds)
-
-# Listas para guardar las pérdidas de cada fold
-train_losses = []
-val_losses = []
-
-for train_index, val_index in kf.split(input_final):
-    # Crear un nuevo modelo para cada fold
-    model = crear_ann(entradas, topology)
-    model = model.to(device)
-
-    # Definir el optimizador
-    optimizer = optim.Adam(model.parameters(), lr=0.01)
-
-    # Dividir los datos en entrenamiento y validación
-    input_train, input_val = input_final[train_index], input_final[val_index]
-    output_train, output_val = output[train_index], output[val_index]
-
-    # Entrenar la red
-    model, train_loss, val_loss = entrenar_k(model, optimizer, mse_loss, input_train, output_train, input_val, output_val, 1000)
-
-    # Guardar las pérdidas de entrenamiento y validación
-    train_losses = train_losses + train_loss
-    val_losses = val_losses + val_loss
-
-# Calcular el error medio de todos los folds
-mean_train_loss = sum(train_losses) / len(train_losses)
-mean_val_loss = sum(val_losses) / len(val_losses)
-
-print(f'Error medio de entrenamiento: {mean_train_loss}')
-print(f'Error medio de validación: {mean_val_loss}')
-
-
 # # Para el conjunto 1
 # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # # Definir la red neuronal
 # entradas = 14
 # topology = [17, 10, 5]
-# model = crear_ann(entradas, topology)
-# model = model.to(device)  
 
 # # Cargar los datos, procesarlos y moverlos a la GPU
 # input, output = cargar_datos()
 # input_final = Conjuntos.conjunto_1(input)
 
-# # Dividir los datos en entrenamiento y validación
-# input_train, input_val, output_train, output_val = train_test_split(input_final, output, test_size=0.2)
-
 # # Convertir los datos a tensores de PyTorch y moverlos a la GPU
-# input_train = torch.from_numpy(suavizar_datos(input_train,5)).float().to(device)
-# output_train = torch.from_numpy(output_train).float().to(device)
-# input_val = torch.from_numpy(input_val).float().to(device)
-# output_val = torch.from_numpy(output_val).float().to(device)
+# input_final = torch.from_numpy(input_final).float().to(device)
+# output = torch.from_numpy(output).float().to(device)
 
-# # Cargar los datos de prueba, procesarlos y moverlos a la GPU
-# input_test, output_test = cargar_datos_test()
-# input_test = Conjuntos.conjunto_1(input_test)
-# input_test = torch.from_numpy(input_test).float().to(device)
-# output_test = torch.from_numpy(output_test).float().to(device)
+# # Definir el número de folds
+# n_folds = 5
 
-# # Definir el optimizador
-# optimizer = optim.Adam(model.parameters(), lr=0.001)
+# # Crear el objeto KFold
+# kf = KFold(n_splits=n_folds)
 
-# # Entrenar la red
-# model, train_losses, val_losses, test_losses = entrenar(model, optimizer, mse_loss, input_train, output_train, input_val, output_val, input_test, output_test, 1000)
+# # Listas para guardar las pérdidas de cada fold
+# train_losses = []
+# val_losses = []
 
-# # Graficar las pérdidas
-# graficar_perdidas(train_losses, val_losses, test_losses)
+# for train_index, val_index in kf.split(input_final):
+#     # Crear un nuevo modelo para cada fold
+#     model = crear_ann(entradas, topology)
+#     model = model.to(device)
+
+#     # Definir el optimizador
+#     optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+#     # Dividir los datos en entrenamiento y validación
+#     input_train, input_val = input_final[train_index], input_final[val_index]
+#     output_train, output_val = output[train_index], output[val_index]
+
+#     # Entrenar la red
+#     model, train_loss, val_loss = entrenar_k(model, optimizer, mse_loss, input_train, output_train, input_val, output_val, 1000)
+
+#     # Guardar las pérdidas de entrenamiento y validación
+#     train_losses = train_losses + train_loss
+#     val_losses = val_losses + val_loss
+
+# # Calcular el error medio de todos los folds
+# mean_train_loss = sum(train_losses) / len(train_losses)
+# mean_val_loss = sum(val_losses) / len(val_losses)
+
+# print(f'Error medio de entrenamiento: {mean_train_loss}')
+# print(f'Error medio de validación: {mean_val_loss}')
+
+def entrenar1():
+    # Para el conjunto 1
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # Definir la red neuronal
+    entradas = 23
+    topology = [20, 15, 5]
+    model = crear_ann(entradas, topology)
+    model = model.to(device)  
+
+    # Cargar los datos, procesarlos y moverlos a la GPU
+    input, output = cargar_datos()
+    input_final = Conjuntos.conjunto_2(input)
+
+    # Dividir los datos en entrenamiento y validación
+    input_train, input_val, output_train, output_val = train_test_split(input_final, output, test_size=0.1)
+
+    # Convertir los datos a tensores de PyTorch y moverlos a la GPU
+    input_train = torch.from_numpy(suavizar_datos(input_train,5)).float().to(device)
+    output_train = torch.from_numpy(output_train).float().to(device)
+    input_val = torch.from_numpy(input_val).float().to(device)
+    output_val = torch.from_numpy(output_val).float().to(device)
+
+    # Cargar los datos de prueba, procesarlos y moverlos a la GPU
+    input_test, output_test = cargar_datos_test()
+    input_test = Conjuntos.conjunto_2(input_test)
+    input_test = torch.from_numpy(input_test).float().to(device)
+    output_test = torch.from_numpy(output_test).float().to(device)
+
+    # Definir el optimizador
+    optimizer = optim.Adam(model.parameters(), lr=0.003)
+
+    # Entrenar la red
+    model, train_losses, val_losses, test_losses = entrenar(model, optimizer, mse_loss, input_train, output_train, input_val, output_val, input_test, output_test, 1000)
+
+    # Graficar las pérdidas
+    graficar_perdidas(train_losses, val_losses, test_losses)
+
+    # Mover el modelo a la CPU
+    model = model.to("cpu")  
+
+    # Guardar el modelo
+    torch.save(model, './anns/pytorch/modelo.pth')
+
+if __name__ == '__main__':
+    entrenar1()
