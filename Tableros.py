@@ -82,7 +82,7 @@ class Tableros(Screen):
 
     def on_reproducir(self, instance):
         #Aqui leer el texto en alto
-        pass
+        self.controlador.reproducir_texto()
 
 
     # Cambia el tablero
@@ -108,10 +108,10 @@ class Tableros(Screen):
 
             pos = pos.flatten()
 
-            # Actualiza la posición de la mirada, si se hace click, coge la posición del click de hace 10 frames
+            # Actualiza la posición de la mirada
             x, y = pos*self.size
             
-            # Si parpadea, coge la posicion de 5 frames atras, para no desviar la mirada al parpadear
+            # Si parpadea, se cogera el de 30 frames atras
             self.emular_movimiento_y_clic(x,y, click)
 
 

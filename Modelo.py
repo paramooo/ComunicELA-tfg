@@ -9,6 +9,9 @@ from Mensajes import Mensajes
 from entrenamiento.Conjuntos import Conjuntos
 import cv2
 import torch
+import pyttsx3
+import threading
+import asyncio
 
 class Modelo:
     def __init__(self):
@@ -57,6 +60,8 @@ class Modelo:
         self.tableros = {}
         self.cargar_tableros()
         self.frase = ""
+        self.lock = threading.Lock()
+        self.engine = pyttsx3.init()
         
     #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
     def reiniciar_datos_r(self):
@@ -122,9 +127,6 @@ class Modelo:
     def obtener_estado_calibracion(self):
         return self.estado_calibracion        
     
-    def get_punto_central(self, frame):
-        return self.detector.get_punto_central(frame)
-    
     def get_frame_editado(self, porcentaje):
         frame = self.get_frame()
         if frame is None:
@@ -134,7 +136,8 @@ class Modelo:
         color = (0, 0, 255)  
         
         # Poner el punto en el centro
-        coord_central = self.get_punto_central(frame)
+        coord_central = self.detector.get_punto_central(frame)
+        puntos_or = self.detector.get_puntos_or(frame)
         if coord_central is not None:
             x = round(frame.shape[1]*coord_central[0])
             y = round(frame.shape[0]*coord_central[1])
@@ -144,7 +147,13 @@ class Modelo:
                 color = (0, 255, 0)
             else:
                 color = (0, 0, 255)
-            frame[y - 3:y + 3, x - 3:x + 3, :] = color
+            frame[y - 4:y + 4, x - 4:x + 4, :] = color
+
+        if puntos_or is not None:
+            for punto in puntos_or:
+                x = round(frame.shape[1]*punto[0])
+                y = round(frame.shape[0]*punto[1])
+                frame[y - 1:y + 1, x - 1:x + 1, :] = color
 
         # Poner los pixeles centrales del frame para linea horizontal de la cruz
         frame[frame.shape[0]//2 - 1:frame.shape[0]//2 + 1, :, :] = color
@@ -305,6 +314,8 @@ class Modelo:
         # - EAR 
         ear = self.detector.calcular_ear_medio(coord_ear_izq, coord_ear_der)
 
+        #print("ORX: ", round(or_x,3), "ORY: ", round(or_y,3), "ORZ: ", round(or_z,3), "coord_cab: ", coord_cab)
+
         # Pasamos la posicion de la pantalla normalizada
         return distancias_izq, distancias_der, or_x, or_y, or_z, ear, self.umbral_ear, coord_cab
 
@@ -385,3 +396,9 @@ class Modelo:
 
     def borrar_todo(self):
         self.frase = ''
+
+    def reproducir_texto(self):
+        engine = pyttsx3.init()
+        engine.setProperty('voice', 'spanish')
+        engine.say(self.frase)
+        engine.runAndWait()

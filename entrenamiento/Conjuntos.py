@@ -1,4 +1,3 @@
-PORCENTAJEDISP = 0.15
 import numpy as np
 class Conjuntos:
 
@@ -47,11 +46,11 @@ class Conjuntos:
         # Normalizar cada valor de los primeros 16 de cada fila entre ellos mismos
         data[:, :16] = (data[:, :16] - np.min(data[:, :16], axis=1, keepdims=True)) / (np.max(data[:, :16], axis=1, keepdims=True) - np.min(data[:, :16], axis=1, keepdims=True))
 
-        # Normalizar las coordenadas de la orientación de la cara dando mas a los angulos por ser mas importantes que la posición
-        data[:, 16:19] = np.clip((data[:, 16:19] - 0.5 + PORCENTAJEDISP) / PORCENTAJEDISP, 0, 1)
-        
-        # Normalizar las coordenadas del centro de la cara
-        data[:, 19:21] = np.clip((data[:, 19:21] - 0.5 + PORCENTAJEDISP / 2) / PORCENTAJEDISP, 0, 1)
+        # Pasar las cifras de entre 0.3 y 0.7 a 0 y 1
+        data[:, 16:21] = (data[:, 16:21] - 0.3) / (0.7 - 0.3)
+        # A 0 y 1
+        data[:, 16:21] = np.clip(data[:, 16:21], 0, 1)
 
         return data
+    
         

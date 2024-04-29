@@ -2,7 +2,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from Conjuntos import *
-import tensorflow as tf
 from scipy.ndimage import gaussian_filter1d
 
 
@@ -117,4 +116,4 @@ def evaluar_zonas(conjunto, model, hor_div, ver_div):
 # Haz el main
 if __name__ == '__main__':
     # Comprueba que tf reconoce la grafica
-    print(tf.config.list_physical_devices('GPU'))
+    pass

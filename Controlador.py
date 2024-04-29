@@ -103,6 +103,9 @@ class Controlador:
     def obtener_posicion_mirada_ear(self):
         return self.modelo.obtener_posicion_mirada_ear()
     
+    def reproducir_texto(self):
+        self.modelo.reproducir_texto()
+    
 
 #-------------------------------FUNCIONES PARA LA RECOPILACION DE DATOS-----------------------------
 

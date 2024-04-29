@@ -8,6 +8,8 @@ from Conjuntos import Conjuntos
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
+import pandas as pd
+
 
 
 #------------------ FUNCIONES PARA LOS DATOS ------------------
@@ -126,10 +128,6 @@ def graficar_perdidas(train_losses, val_losses, test_losses):
     plt.legend()
     plt.show()
 
-
-
-
-
 # # Para el conjunto 1
 # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -192,7 +190,7 @@ def entrenar1():
     model = model.to(device)  
 
     # Cargar los datos, procesarlos y moverlos a la GPU
-    input, output = cargar_datos()
+    input, output = cargar_datos()    
     input_final = Conjuntos.conjunto_2(input)
 
     # Dividir los datos en entrenamiento y validación
@@ -224,6 +222,72 @@ def entrenar1():
 
     # Guardar el modelo
     torch.save(model, './anns/pytorch/modelo.pth')
+
+
+
+
+import matplotlib.pyplot as plt
+
+def analizar_datos_conjunto2():
+    # Cargar los datos
+    input, output = cargar_datos()
+    input_c = input
+    input = Conjuntos.conjunto_2(input)
+
+    # Crear un DataFrame vacío para almacenar los resultados
+    results = pd.DataFrame()
+
+    # Calcular y almacenar las estadísticas para cada columna
+    for i in enumerate({16,17,18,19,20,21,22}):
+        io = i[1] + 16
+        i = i[1]
+        stats = {
+            'Columna': i,
+            'Desviación (Transformado)': round(np.std(input[:,i]),4),
+            'Desviación (Original)': round(np.std(input_c[:,io]),4),
+            'Media (Transformado)': round(np.mean(input[:,i]),4),
+            'Media (Original)': round(np.mean(input_c[:,io]),4),
+            'Máximo (Transformado)': round(np.max(input[:,i]),4),
+            'Máximo (Original)': round(np.max(input_c[:,io]),4),
+            'Mínimo (Transformado)': round(np.min(input[:,i]),4),
+            'Mínimo (Original)': round(np.min(input_c[:,io]),4)
+        }
+        # Añadir las estadísticas al DataFrame con pd
+        results = pd.concat([results, pd.DataFrame(stats, index=[0])], ignore_index=True)
+
+    # Establecer la columna 'Columna' como el índice del DataFrame
+    results.set_index('Columna', inplace=True)
+
+    # Imprimir la tabla en un excel
+    results.to_excel('./estadisticas.xlsx')
+    print(results)
+
+    # Crear gráficos de barras para cada estadística
+    fig, axs = plt.subplots(4, figsize=(10,20))
+    fig.suptitle('Comparación de estadísticas')
+    axs[0].bar(results.index, results['Desviación (Transformado)'], label='Transformado')
+    axs[0].bar(results.index, results['Desviación (Original)'], label='Original', alpha=0.5)
+    axs[0].set_ylabel('Desviación')
+    axs[0].legend()
+
+    axs[1].bar(results.index, results['Media (Transformado)'], label='Transformado')
+    axs[1].bar(results.index, results['Media (Original)'], label='Original', alpha=0.5)
+    axs[1].set_ylabel('Media')
+    axs[1].legend()
+
+    axs[2].bar(results.index, results['Máximo (Transformado)'], label='Transformado')
+    axs[2].bar(results.index, results['Máximo (Original)'], label='Original', alpha=0.5)
+    axs[2].set_ylabel('Máximo')
+    axs[2].legend()
+
+    axs[3].bar(results.index, results['Mínimo (Transformado)'], label='Transformado')
+    axs[3].bar(results.index, results['Mínimo (Original)'], label='Original', alpha=0.5)
+    axs[3].set_ylabel('Mínimo')
+    axs[3].legend()
+
+    plt.show()
+
+
 
 if __name__ == '__main__':
     entrenar1()
