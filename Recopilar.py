@@ -16,15 +16,14 @@ class Recopilar(Screen):
         self.fichero = "0"
         self.controlador = controlador
         self.background_color = (0, 0, 0, 1) 
-        self.porcentajeDisp = 0.10
+        self.porcentajeDisp = 0.15
 
         self.escaneado = False
         self.textos = ["Primero elige el tipo de recopilado:\n" + 
                         "-  0 -> muy bien iluminado, mantener la cabeza casi quieta y distancia 50/60cm - (15%)\n" +
                         "-  1 -> sin importar demasiado la luz, mantener la cabeza por el centro y distancia maxima 70cm - (30%)\n" +
-                        "-  2 -> sin importar demasiado la luz, no importa la colocacion ni la luz y distancia maxima 70cm - (70%)\n" +  
-                        "EN LA 0 Y 1 ASEGURATE DE QUE LA CAMARA ESTA A LA ALTURA DE LOS OJOS\n" + 
-                        "Coloca tu cabeza a la distancia requerida de la camara y cuadra tu cabeza en el cuadro si te moviste despues del recopilado\n" +  
+                        "ASEGURATE DE QUE LA CAMARA ESTA A LA ALTURA DE LOS OJOS\n" + 
+                        "Coloca tu cabeza a la distancia requerida de la camara y cuadra tu cabeza en el cuadro si te moviste despues del calibrado\n" +  
                         "A continuación debes mirar fijamente a la pelota roja.\n" + 
                         "Cuando presiones Recopilar, en 5 segundos esta empezara a moverse por toda la pantalla.\n" + 
                         "Mirala fijamente hasta que termine de moverse, ¡Muchas gracias! (no tardará más de 3 minutos)",
@@ -53,16 +52,13 @@ class Recopilar(Screen):
         # Menu de seleccion de fichero
         self.camera_spinner = Spinner(
         text='Seleccione fichero',
-        values=["0","1","2"],
+        values=["0","1"],
         size_hint=(0.2, 0.1),
         pos_hint={'right': 1, 'top': 0.1},
         )
         self.layout.add_widget(self.camera_spinner)
 
         self.add_widget(self.layout)
-
-        self.update_image_box_scheduled = False
-
 
     def on_enter(self, *args):
         self.controlador.reiniciar_datos_r()
@@ -95,7 +91,6 @@ class Recopilar(Screen):
             self.controlador.mensaje('Seleccione un fichero')
             return
         self.image_box.opacity = 0  # Hide the image box
-        Clock.unschedule(self.update_image_box)
 
         self.controlador.recopilar_datos()
         self.controlador.on_recopilar()
@@ -128,9 +123,7 @@ class Recopilar(Screen):
             self.texto_explicativo.text = self.textos[1]
             #Volver a mostrar la imagen
             self.image_box.opacity = 1
-            if not self.update_image_box_scheduled:
-                Clock.schedule_interval(self.update_image_box, 1.0 / 30)
-                self.update_image_box_scheduled = True
+
         else:
             # Si no recolecto datos aun, muestra el texto explicativo normal
             self.texto_explicativo.text = self.textos[0]
@@ -138,13 +131,7 @@ class Recopilar(Screen):
 
     def update_image_box(self, dt):
             # Poner la zona donde se puede mover la persona
-            text = self.camera_spinner.text
-            if text == "1":
-                self.porcentajeDisp = 0.30
-            elif text == "2":
-                self.porcentajeDisp = 0.70
-            elif text == "0":
-                self.porcentajeDisp = 0.10
+            self.porcentajeDisp = 0.15 if self.camera_spinner.text == "0" else 0.30
 
             # Only update the image box in calibration state 0
             frame = self.controlador.get_frame_editado(self.porcentajeDisp)
@@ -163,4 +150,3 @@ class Recopilar(Screen):
     def on_leave(self, *args):
         Clock.unschedule(self.update)
         Clock.unschedule(self.update_image_box)
-        self.update_image_box_scheduled = False

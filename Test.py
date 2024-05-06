@@ -17,7 +17,7 @@ class Test(Screen):
         self.controlador = controlador
         self.background_color = (0, 0, 0, 1) 
         self.controlador.set_escanear(False)
-        self.porcentajeDisp = 0.10
+        self.porcentajeDisp = 0.15
 
         texto_central = ("Mire al rededor de la pantalla y parpadee para confirmar el calibrado\n"+
                         "Es un modelo en desarrollo, cuantos mas datos recopilemos, mejor funcionara en un futuro\n"+
@@ -44,7 +44,7 @@ class Test(Screen):
         # Menu de seleccion de fichero
         self.camera_spinner = Spinner(
         text='Seleccione fichero',
-        values=["0","1","2"],
+        values=["0","1"],
         size_hint=(0.2, 0.1),
         pos_hint={'right': 1, 'top': 0},
         )
@@ -111,15 +111,7 @@ class Test(Screen):
 
     def update_image_box(self, dt):
             # Poner la zona donde se puede mover la persona
-            text = self.camera_spinner.text
-            if text == "1":
-                self.porcentajeDisp = 0.30
-            elif text == "2":
-                self.porcentajeDisp = 0.70
-            elif text == "0":
-                self.porcentajeDisp = 0.10
-            else:
-                self.porcentajeDisp = 0.10
+            self.porcentajeDisp = 0.15 if self.porcentajeDisp == 0 else 0.30
 
             # Only update the image box in calibration state 0
             frame = self.controlador.get_frame_editado(self.porcentajeDisp)

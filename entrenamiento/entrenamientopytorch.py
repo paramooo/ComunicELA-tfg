@@ -191,6 +191,7 @@ def entrenar1():
 
     # Cargar los datos, procesarlos y moverlos a la GPU
     input, output = cargar_datos()    
+    print(input.shape)
     input_final = Conjuntos.conjunto_2(input)
 
     # Dividir los datos en entrenamiento y validación
