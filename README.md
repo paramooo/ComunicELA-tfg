@@ -42,17 +42,11 @@ una vez la persona hace la calibracion que opciones de personalizacion interesan
 -Elegir el tipo de tablero
 
 
-INPUTS EXPLICADOS
-        | libertad |  |distancia  |  camara a altura de los ojos |  | inclinacion pantalla a comodidad del usuario |       luz directa   |
-input0 ->    15%   |  |  50/60  cm|            si                |  |                   si                         |            si       |
-ipnut1 ->   30%    |  |  50/60  cm|            si                |  |                   si                         |            si       |
-input2 ->   50%   |  |    70    cm|            no                |  |                   si                         |            no       |
-
-
-
 
 
 PONER COMO UMBRAL PREDETERMINADO AL FINAL LA MEDIA DE TODOS LOS UMBRALES DE TODA LA GENTE AL CALIBRAR
 SUAVIZAR ORIENTACION PARA ENTENAR
 MIRAR TIME ENTRE CLICK Y CLICK
 MEDIR DESVIACION TIPICA MEDIA PARA LOS DIFERENTES CONJUNTOS DE DATOS
+
+capa sigmoide para que

@@ -41,7 +41,7 @@ class Tableros(Screen):
         layout_botones.add_widget(self.btn_inicio)
 
         # Espacio para texto
-        self.label = Label(text=self.controlador.get_frase(), size_hint=(.6, 1))
+        self.label = Label(text=self.controlador.get_frase(), size_hint=(.4, 1))
         layout_botones.add_widget(self.label)
 
         # El boton para borrar una palabra
@@ -57,7 +57,15 @@ class Tableros(Screen):
         layout_botones.add_widget(self.btn_reproducir)
 
         # Añade la tarea de actualización al reloj
-        Clock.schedule_interval(self.update, 1.0 / 60.0)  # 60 FPS
+        Clock.schedule_interval(self.update, 1.0 / 30.0)  
+
+        # Variables para emular el movimiento y clic
+        self.casilla_bloqueada = None
+        self.contador_frames = 0
+        self.casilla_anterior = None
+        self.frames_bloqueo = 10
+        self.botones = [self.btn_inicio, self.btn_borrar_palabra, self.btn_borrar_todo, self.btn_reproducir]
+
 
 
     # Funcion para escanear al entrar
@@ -90,6 +98,7 @@ class Tableros(Screen):
         self.layout_principal.remove_widget(self.tablero)
         self.tablero = Tablero(palabras, self.controlador)
         self.layout_principal.add_widget(self.tablero, index=1)
+        
 
 
     # Actualiza la posición de la mirada
@@ -117,11 +126,53 @@ class Tableros(Screen):
 
 
     def emular_movimiento_y_clic(self, x, y, click):
-        buttons = [self.btn_inicio, self.btn_borrar_palabra, self.btn_borrar_todo, self.btn_reproducir] + self.tablero.casillas
-        for btn in buttons:
-            if btn.collide_point(x, y):
+        #Si la y es mayor que 0.2, casillas:
+        if y > self.size[1] * 0.2:
+            # Calcula el tamaño de cada casilla
+            casilla_ancho = self.size[0] / self.tablero.cols
+            casilla_alto = (self.size[1] * 0.8) / self.tablero.rows  # Quita el 0.2 inferior
+
+            # Calcula a qué casilla corresponde la posición de la vista
+            casilla_x = int(x / casilla_ancho)
+            casilla_y = self.tablero.rows - 1 - int(y / casilla_alto)  # Invierte el cálculo del índice y
+
+            # Convierte las coordenadas bidimensionales a un índice unidimensional
+            indice_casilla = casilla_y * self.tablero.cols + casilla_x
+        
+        else: #Botones
+            if x <  self.size[0] * 0.3:
+                indice_casilla = self.tablero.cols * self.tablero.rows
+            elif x > self.size[0] * 0.55 and x < self.size[0] * 0.7:
+                indice_casilla = self.tablero.cols * self.tablero.rows + 1
+            elif x > self.size[0] * 0.7 and x < self.size[0] * 0.85:
+                indice_casilla = self.tablero.cols * self.tablero.rows + 2
+            else:
+                indice_casilla = self.tablero.cols * self.tablero.rows + 3
+
+
+        # Si la casilla es diferente a la casilla anterior, reinicia el contador de frames
+        if self.casilla_anterior is None or indice_casilla != self.casilla_anterior:
+            self.contador_frames = 0
+        else:
+            self.contador_frames += 1
+
+        # Si el contador de frames llega a 30 (1 segundo a 30 FPS), bloquea la casilla
+        if self.contador_frames >= self.frames_bloqueo:
+            self.casilla_bloqueada = indice_casilla
+
+        # Actualiza el estado de todas las casillas
+        for i, btn in enumerate(self.tablero.casillas + self.botones):
+            if i == self.casilla_bloqueada:
                 btn.state = 'down'
-                if click:
-                    btn.dispatch('on_press')
             else:
                 btn.state = 'normal'
+
+        # Si se hace click, se activa la casilla bloqueada
+        if click and self.casilla_bloqueada is not None:
+            if self.casilla_bloqueada < self.tablero.cols * self.tablero.rows:
+                self.tablero.casillas[self.casilla_bloqueada].dispatch('on_press')
+            else:
+                self.botones[self.casilla_bloqueada - self.tablero.cols * self.tablero.rows].dispatch('on_press')
+
+        # Actualiza la casilla anterior
+        self.casilla_anterior = indice_casilla

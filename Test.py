@@ -69,7 +69,7 @@ class Test(Screen):
         
         # Añade las tareas de actualización al reloj
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)
-        Clock.schedule_interval(self.update, 1.0 / 60.0)  # 60 FPS
+        Clock.schedule_interval(self.update, 1.0 / 30.0)  
 
     # Funcion para dejar de escanear y volver al inicio
     def on_inicio(self, *args):
@@ -95,7 +95,6 @@ class Test(Screen):
             
             # Desempaqueta los datos
             proxima_pos_t, click = datos
-
             # Actualiza el color del círculo
             if click == 0:  # Rojo
                 self.circulo_color.rgba = (1, 0, 0, 1)

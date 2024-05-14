@@ -9,9 +9,9 @@ from Mensajes import Mensajes
 from entrenamiento.Conjuntos import Conjuntos
 import cv2
 import torch
-import pyttsx3
+from gtts import gTTS
+from io import BytesIO
 import threading
-import asyncio
 
 class Modelo:
     def __init__(self):
@@ -35,7 +35,7 @@ class Modelo:
         self.umbral_ear_bajo = 0.2
         self.umbral_ear_cerrado = 0.2
         self.contador_p = 0
-        self.suma_frames = 1
+        self.suma_frames = 4 #Numero de frames que tiene que estar cerrado el ojo para que se considere un parpadeo
         self.calibrado = False
         self.sonido = pygame.mixer.Sound('./sonidos/click.wav')
 
@@ -52,16 +52,14 @@ class Modelo:
 
         # Variables para suavizar la mirada en el test
         self.historial = []
-        self.cantidad_suavizado = 3
-        self.hist_max = 10
-        self.retroceso_click = 6
+        self.cantidad_suavizado = 5
+        self.hist_max = 50
+        self.retroceso_click = 0
 
         # Variables para uso de los tableros
         self.tableros = {}
         self.cargar_tableros()
         self.frase = ""
-        self.lock = threading.Lock()
-        self.engine = pyttsx3.init()
         
     #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
     def reiniciar_datos_r(self):
@@ -69,7 +67,7 @@ class Modelo:
         self.contador_r = 5 #Contador para la cuenta atras
         self.pos_r = (0, 0) #Posicion de la pelota roja
         self.salto_bajo, self.salto_alto = 30, 80 #Salto de la pelota roja
-        self.velocidad = 25
+        self.velocidad = 30
         self.direccion = 1 
 
     
@@ -212,7 +210,8 @@ class Modelo:
             if self.contador_p == self.suma_frames:
                 self.contador_p = -1000 #Asi evitamos dos toques consecutivos sin abrir el ojo
                 self.sonido.play()
-            return 1
+                return 1
+            return 0
         else:
             self.contador_p = 0     
             return 0   
@@ -320,9 +319,11 @@ class Modelo:
         return distancias_izq, distancias_der, or_x, or_y, or_z, ear, self.umbral_ear, coord_cab
 
 
+
     #Funcion para obtener la posicion de la mirada en el test
     #Se obtiene la posición de la mirada y si se ha hecho click
     #Se suaviza la posición de la mirada y si se hace click, se retrocede self.retroceso_click frames para evitar la desviación
+    #el error esta aqui en como se le pasan los datos en el datos as array creo 
     def obtener_posicion_mirada_ear(self):
         # Se obtienen los datos
         datos = self.obtener_datos()
@@ -341,6 +342,15 @@ class Modelo:
         # Normalizar los datos
         normalizar_funcion = getattr(Conjuntos, f'conjunto_{self.conjunto}')
         datos_array = normalizar_funcion(datos_array)
+
+
+        # Normalizacion para la ResNet
+        #----------------------------------
+        # datos_array = np.reshape(datos_array, (-1, 1, 23))
+        # datos_array = np.repeat(datos_array[:, :, np.newaxis], 3, axis=1)
+        # self.modelo.eval()
+        #----------------------------------
+
 
         datos_array = torch.from_numpy(datos_array).float()
 
@@ -398,7 +408,9 @@ class Modelo:
         self.frase = ''
 
     def reproducir_texto(self):
-        engine = pyttsx3.init()
-        engine.setProperty('voice', 'spanish')
-        engine.say(self.frase)
-        engine.runAndWait()
+        tts = gTTS(text=self.frase.lower(), lang='es')
+        fp = BytesIO()
+        tts.write_to_fp(fp)
+        fp.seek(0)
+        pygame.mixer.music.load(fp)
+        pygame.mixer.music.play()

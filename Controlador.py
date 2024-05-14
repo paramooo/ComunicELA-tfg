@@ -143,7 +143,6 @@ class Controlador:
     def on_casilla_tab(self, texto_boton):
             if texto_boton.startswith('TAB.'):
                 nombre_tablero = texto_boton[5:]
-                print(nombre_tablero)   
                 nuevo_tablero = self.modelo.obtener_tablero(nombre_tablero)
                 if nuevo_tablero is not None:
                     self.vista.tableros.cambiar_tablero(nuevo_tablero)
