@@ -49,4 +49,11 @@ SUAVIZAR ORIENTACION PARA ENTENAR
 MIRAR TIME ENTRE CLICK Y CLICK
 MEDIR DESVIACION TIPICA MEDIA PARA LOS DIFERENTES CONJUNTOS DE DATOS
 
-capa sigmoide para que
+capa sigmoide para que quede el resultado entre 0 y 1
+
+
+problema entre suavidad y retraso:
+Filtro de Kalman
+Filtro de mediana
+Filtro de Savitzky-Golay
+Filtro de media móvil exponencial (EMA)

@@ -144,6 +144,7 @@ class Controlador:
             if texto_boton.startswith('TAB.'):
                 nombre_tablero = texto_boton[5:]
                 nuevo_tablero = self.modelo.obtener_tablero(nombre_tablero)
+                self.modelo.tablero_actual = nuevo_tablero
                 if nuevo_tablero is not None:
                     self.vista.tableros.cambiar_tablero(nuevo_tablero)
             else:

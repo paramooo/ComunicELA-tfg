@@ -11,8 +11,9 @@ import cv2
 import torch
 from gtts import gTTS
 from io import BytesIO
-import threading
-
+import pandas as pd
+from kivy.core.audio import SoundLoader
+from pykalman import KalmanFilter
 class Modelo:
     def __init__(self):
         # Para el sonido del click
@@ -52,14 +53,15 @@ class Modelo:
 
         # Variables para suavizar la mirada en el test
         self.historial = []
-        self.cantidad_suavizado = 5
-        self.hist_max = 50
-        self.retroceso_click = 0
+        #self.cantidad_suavizado = 50
+        self.hist_max = 15
+        #self.retroceso_click = 0
 
         # Variables para uso de los tableros
         self.tableros = {}
         self.cargar_tableros()
         self.frase = ""
+        self.tablero = None
         
     #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
     def reiniciar_datos_r(self):
@@ -363,18 +365,26 @@ class Modelo:
         # Añadir la nueva posición al historial
         self.historial.append(mirada)
 
-        # Eliminar la posición más antigua si el historial es demasiado largo
+        # Eliminar la posición más asntigua si el historial es demasiado largo
         if len(self.historial) > self.hist_max:
             self.historial.pop(0)
 
-        # Calcular la media ponderada de las posiciones en el historial para suavizar
-        if len(self.historial) > self.cantidad_suavizado:
-            pesos = range(1, len(self.historial[-self.cantidad_suavizado:]) + 1)
-            mirada = np.average(self.historial[-self.cantidad_suavizado:], weights=pesos, axis=0)
+        #Mediana -> funciona bastante bien (menos retraso quel normal pero aun tiene)
+        mirada = np.median(self.historial[-self.hist_max:], axis=0)
 
+
+        # Calcular la media ponderada de las posiciones en el historial para suavizar
+        # if len(self.historial) > self.cantidad_suavizado:
+        #     pesos = range(1, len(self.historial[-self.cantidad_suavizado:]) + 1)
+        #     mirada = np.average(self.historial[-self.cantidad_suavizado:], weights=pesos, axis=0)
+
+        # Hacer la media normal con el historial
+        mirada = np.mean(self.historial, axis=0)
+
+        # ------------------ Al hacerlo con lo del bloqueo ya no hace falta esto -------------------
         # Si se detecta un parpadeo, se coge la posición de self.retroceso_click frames atrás
-        if click == 1 and len(self.historial) >= self.retroceso_click:
-            mirada = self.historial[-self.retroceso_click]
+        # if click == 1 and len(self.historial) >= self.retroceso_click:
+        #     mirada = self.historial[-self.retroceso_click]
 
         return mirada, click
 
@@ -384,13 +394,20 @@ class Modelo:
 #--------------------------------FUNCIONES PARA LOS TABLEROS--------------------------------
 #-------------------------------------------------------------------------------------------
 
+    # def cargar_tableros(self):
+    #     for filename in os.listdir('./tableros'):
+    #         if filename.endswith('.txt'):
+    #             with open(os.path.join('./tableros', filename), 'r') as f:
+    #                 palabras = [line.strip().split(';') for line in f]
+    #                 self.tableros[filename[:-4]] = palabras  # Añade el tablero al diccionario
+
+
     def cargar_tableros(self):
         for filename in os.listdir('./tableros'):
-            if filename.endswith('.txt'):
-                with open(os.path.join('./tableros', filename), 'r') as f:
-                    palabras = [line.strip().split(';') for line in f]
-                    self.tableros[filename[:-4]] = palabras  # Añade el tablero al diccionario
-
+            if filename.endswith('.xlsx'):
+                df = pd.read_excel(os.path.join('./tableros', filename), header=None)
+                palabras = df.values.tolist()  # Convierte el DataFrame a una lista de listas
+                self.tableros[filename[:-5]] = palabras  # Añade el tablero al diccionario
 
     def obtener_tablero(self, nombre):
         return self.tableros.get(nombre.lower())
@@ -408,9 +425,14 @@ class Modelo:
         self.frase = ''
 
     def reproducir_texto(self):
-        tts = gTTS(text=self.frase.lower(), lang='es')
-        fp = BytesIO()
-        tts.write_to_fp(fp)
-        fp.seek(0)
-        pygame.mixer.music.load(fp)
-        pygame.mixer.music.play()
+        try:
+            tts = gTTS(text=self.frase.lower(), lang='es')    
+            fp = BytesIO()
+            tts.write_to_fp(fp)
+            fp.seek(0)
+            pygame.mixer.music.load(fp)
+            pygame.mixer.music.play()
+
+        except:
+            print("Error al reproducir el texto")
+            pass
