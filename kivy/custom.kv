@@ -2,12 +2,75 @@
     font_size: 32
     size_hint: self.size_hint
     height: 40
-    background_color: 0, 0, 0, 0  # Hace que el fondo del botón sea transparente
-    color_down: 0.1, 0.4, 0.5, 1  # El color del botón cuando se presiona
+    background_color: (0,0,0,0)
+    color_down: 0.6, 0.6, 0.6, 1
+    border: (10, 10, 10, 10)  # Añade un borde alrededor del botón
     canvas.before:
         Color:
-            rgba: self.color_down if self.state == 'down' else (0.2, 0.6, 0.8, 1)  # Cambia el color dependiendo del estado del botón
+            rgba: self.color_down if self.state == 'down' else  (0.1, 0.1, 0.1, 1)
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: [15,]
+    canvas.after:
+        Color:
+            rgba: (0.8, 0.8, 0.8, 1)  # Añade un borde blanco alrededor del botón
+        Line:
+            rounded_rectangle: self.x, self.y, self.width, self.height, 15
+            width: 1.5
+
+
+<CustomSpinner@Spinner>:
+    font_name: 'Texto'
+    background_color: (0, 0, 0, 0)  # Hace que el fondo del spinner sea transparente
+    color_down: (0.6, 0.6, 0.6, 1)  # El color del spinner cuando se presiona
+    border: (10, 10, 10, 10)  # Añade un borde alrededor del spinner
+    option_cls: 'CustomSpinnerOption'  # Utiliza la clase CustomSpinnerOption para las opciones del menú desplegable
+    canvas.before:
+        Color:
+            rgba: self.color_down if self.state == 'down' else (0.1, 0.1, 0.1, 1)  # Cambia el color dependiendo del estado del spinner
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [15,]
+    canvas.after:
+        Color:
+            rgba: (0.8, 0.8, 0.8, 1)  # Añade un borde blanco alrededor del spinner
+        Line:
+            rounded_rectangle: self.x, self.y, self.width, self.height, 15
+            width: 1.5
+
+<CustomSpinnerOption@SpinnerOption>:
+    font_name: 'Texto'
+    background_color: (0, 0,0, 1)  # Fondo negro
+    color: (1, 1, 1, 1)  # Texto blanco
+    canvas.after:
+        Color:
+            rgba: (0.8, 0.8, 0.8, 1)  # Añade un borde blanco alrededor de la opción
+        Line:
+            rounded_rectangle: self.x, self.y, self.width, self.height, 15
+            width: 1.5
+
+
+
+
+<CasillaTablero@Button>:
+    font_size: 32
+    size_hint: self.size_hint
+    height: 40
+    background_color:  (0,0,0,0) # Un nivel de gris para las casillas que empiezan por "TAB.", otro nivel de gris para las demás
+    color_down: 0.6, 0.6, 0.6, 1  # El color del botón cuando se presiona
+    border: 10, 10, 10, 10  # Añade un borde alrededor del botón
+    canvas.before:
+        Color:
+            rgba: self.color_down if self.state == 'down' else ((0.2, 0.2, 0.2, 1) if self.text.startswith('TAB.') else (0.4, 0.4, 0.4, 1))  # Cambia el color dependiendo del estado del botón
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [15,]
+    canvas.after:
+        Color:
+            rgba: 1, 1, 1, 1  # Añade un borde blanco alrededor del botón
+        Line:
+            rounded_rectangle: self.x, self.y, self.width, self.height, 15
+            width: 1.5

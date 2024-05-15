@@ -6,6 +6,7 @@ from Tableros import Tableros
 from Recopilar import Recopilar
 from Reentrenar import Reentrenar
 
+
 class Vista:
     def __init__(self):
         self.controlador = None
@@ -15,6 +16,7 @@ class Vista:
         self.calibrar = None
         self.test = None
         self.tableros = None
+        self.fondo = './imagenes/fondo_menus.jpg'
 
     def set_controlador(self, controlador):
         self.controlador = controlador
@@ -43,3 +45,6 @@ class Vista:
 
     def get_screen(self):
         return self.sm.current 
+    
+    def get_fondo(self):
+        return self.fondo

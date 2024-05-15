@@ -6,9 +6,9 @@ from kivy.uix.label import Label
 from kivy.graphics import Color, Ellipse
 from kivy.graphics import InstructionGroup
 from kivy.clock import Clock
-from kivy.uix.spinner import Spinner
 from kivy.uix.image import Image
 from kivy.graphics.texture import Texture
+from Custom import CustomSpinner
 
 class Recopilar(Screen):
     def __init__(self, controlador, **kwargs):
@@ -29,14 +29,18 @@ class Recopilar(Screen):
                         "Mirala fijamente hasta que termine de moverse, ¡Muchas gracias! (no tardará más de 3 minutos)",
                         "¡¡¡Gracias!!!, presiona Inicio para volver o Recopilar para volver a recopilar datos"]
 
+        # Crea una imagen de fondo
+        self.fondo = Image(source=self.controlador.get_fondo() , allow_stretch=True, keep_ratio=False)
+        self.add_widget(self.fondo)
+        
         self.layout = BoxLayout(orientation='vertical')
 
         # El boton de inicio
-        btn_inicio = ButtonRnd(text='Inicio', size_hint=(.2, .1), pos_hint={'x': 0, 'top': 1}, on_press= self.on_inicio)
+        btn_inicio = ButtonRnd(text='Inicio', size_hint=(.2, .1), pos_hint={'x': 0, 'top': 1}, on_press= self.on_inicio, font_name='Texto')
         self.layout.add_widget(btn_inicio)
 
         # El texto explicativo
-        self.texto_explicativo = Label(text=self.textos[0], font_size=self.controlador.get_font_txts(), size_hint=(1, .8))
+        self.texto_explicativo = Label(text=self.textos[0], font_size=self.controlador.get_font_txts(), size_hint=(1, .8), font_name='Texto')
         self.layout.add_widget(self.texto_explicativo)
 
 
@@ -46,11 +50,11 @@ class Recopilar(Screen):
         self.layout.add_widget(self.image_box)
 
         # El boton de continuar
-        btn_recopilar = ButtonRnd(text='Recopilar', size_hint=(.2, .1), pos_hint={'right': 1, 'top': 0}, on_press= self.on_recopilar)
+        btn_recopilar = ButtonRnd(text='Recopilar', size_hint=(.2, .1), pos_hint={'right': 1, 'top': 0}, on_press= self.on_recopilar, font_name='Texto')
         self.layout.add_widget(btn_recopilar)
 
         # Menu de seleccion de fichero
-        self.camera_spinner = Spinner(
+        self.camera_spinner = CustomSpinner(
         text='Seleccione fichero',
         values=["0","1"],
         size_hint=(0.2, 0.1),
@@ -75,6 +79,7 @@ class Recopilar(Screen):
         # Schedule the update of the image box every 1/30 seconds
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)
         self.image_box.opacity = 1  # Show the image box
+        self.btn_recopilar.disabled = False
 
     def on_inicio(self, *args):
         # Cambia a la pantalla de inicio
@@ -91,6 +96,7 @@ class Recopilar(Screen):
             self.controlador.mensaje('Seleccione un fichero')
             return
         self.image_box.opacity = 0  # Hide the image box
+        self.btn_recopilar.disabled = True
 
         self.controlador.recopilar_datos()
         self.controlador.on_recopilar()
@@ -123,6 +129,7 @@ class Recopilar(Screen):
             self.texto_explicativo.text = self.textos[1]
             #Volver a mostrar la imagen
             self.image_box.opacity = 1
+            self.btn_recopilar.disabled = False
 
         else:
             # Si no recolecto datos aun, muestra el texto explicativo normal

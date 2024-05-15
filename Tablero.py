@@ -1,5 +1,5 @@
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.button import Button
+from Custom import CasillaTablero
 
 class Tablero(GridLayout):
     def __init__(self, palabras, controlador, **kwargs):
@@ -11,7 +11,7 @@ class Tablero(GridLayout):
         self.casillas = []
         for fila in palabras:
             for palabra in fila:
-                btn = Button(text=str(palabra), on_press=self.on_button_press)
+                btn = CasillaTablero(text=str(palabra), on_press=self.on_button_press, font_name='Texto')
                 self.casillas.append(btn)
                 self.add_widget(btn)
 

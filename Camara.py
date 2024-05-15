@@ -50,4 +50,10 @@ class Camara:
 
     def get_frame(self):
         with self.lock:
-            return self.frame
+            if self.running:
+                #Reescalar a 640x480
+                if self.frame is not None:
+                    self.frame = cv2.resize(self.frame, (640, 480))
+                return self.frame
+            else:
+                return None

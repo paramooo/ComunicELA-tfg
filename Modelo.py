@@ -22,6 +22,7 @@ class Modelo:
         # Se inicializa el detector
         self.detector = Detector()
         self.camara = Camara()
+        self.camara_act = None
 
         # Variables para el modelo de test
         self.conjunto = 2
@@ -110,8 +111,10 @@ class Modelo:
         if self.camara_activa():
             self.detener_camara()
         self.iniciar_camara(camara)
+        self.camara_act = camara
 
-
+    def get_index_actual(self):
+        return self.camara_act
 
 # ---------------------------   FUNCIONES CONTROL DEL MENU DE CALIBRACION -------------------------------
 #-------------------------------------------------------------------------------------------
@@ -130,7 +133,11 @@ class Modelo:
     def get_frame_editado(self, porcentaje):
         frame = self.get_frame()
         if frame is None:
-            return None
+            frame = np.zeros((480, 640, 3), dtype=np.uint8)
+            # Poner un texto de que no esta la camara activa alineado al centro y en blanco y con la fuente de texto
+            cv2.putText(frame, 'Seleccione una camara', (220, 430), cv2.FONT_ITALIC, 0.6, (255, 255, 255), 2)
+            return frame
+            
         
         # Rojo por defecto
         color = (0, 0, 255)  
@@ -200,7 +207,7 @@ class Modelo:
 
         elif self.estado_calibracion == 1:
             self.umbral_ear_cerrado = self.detector.calcular_ear_medio(coord_ear_izq, coord_ear_der)
-            self.umbral_ear = (self.umbral_ear_bajo*0.5 + self.umbral_ear_cerrado*0.5) #Se calcula el umbral final ponderado entre el cerrado y el abierto bajo
+            self.umbral_ear = (self.umbral_ear_bajo*0.4 + self.umbral_ear_cerrado*0.6) #Se calcula el umbral final ponderado entre el cerrado y el abierto bajo
             self.calibrado = True
 
 
@@ -297,10 +304,14 @@ class Modelo:
 #-----------------------------------------------------------------------------------------------
     def obtener_datos(self):
         frame = self.get_frame()
+        if frame is None:
+            self.mensaje("Error de la camara")
+            return None
         datos = self.detector.obtener_coordenadas_indices(frame)
         
         #Si no se detecta cara, se devuelve None
         if datos is None:
+            self.mensaje("No se detecta cara")
             return None
         
         # Se desempaquetan los datos

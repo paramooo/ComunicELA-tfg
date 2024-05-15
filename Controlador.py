@@ -17,6 +17,9 @@ class Controlador:
             self.mensaje('Primero debe calibrar el parpadeo')
     def get_screen(self):
         return self.vista.get_screen()
+    
+    def get_fondo(self):
+        return self.vista.get_fondo()
 
 
 
@@ -52,11 +55,17 @@ class Controlador:
         Clock.schedule_once(lambda dt: self._actualizar_spinner(camaras))
 
     def _actualizar_spinner(self, camaras):
-        self.vista.inicio.camera_spinner.values = [str(i) for i in camaras] + ['Actualizar cámaras']
+        self.vista.inicio.camera_spinner.values = ['Cámara ' + str(i) for i in camaras] + ['Actualizar cámaras']
         self.vista.inicio.camera_spinner.text = 'Seleccionar cámara'
 
     def seleccionar_camara(self, camara):
         self.modelo.seleccionar_camara(camara)
+
+    def get_frame_editado(self, porcentaje):
+        return self.modelo.get_frame_editado(porcentaje)
+    
+    def get_camara_seleccionada(self):
+        return self.modelo.get_index_actual()
     
 
 # FUNCIONES PARA EL MENU DE CALIBRACION DEL PARPADEO
@@ -86,8 +95,6 @@ class Controlador:
     def get_punto_central(self, frame):
         return self.modelo.get_punto_central(frame)
     
-    def get_frame_editado(self, porcentaje):
-        return self.modelo.get_frame_editado(porcentaje)
 
 
 # ---------------------------- FUNCIONES PARA EL MODO DE TEST/TABLEROS -------------------------

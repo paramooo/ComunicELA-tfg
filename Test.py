@@ -8,7 +8,7 @@ from kivy.graphics import InstructionGroup
 import numpy as np
 from kivy.uix.image import Image
 from kivy.graphics.texture import Texture
-from kivy.uix.spinner import Spinner
+from kivy.uix.image import Image
 
 
 class Test(Screen):
@@ -17,38 +17,32 @@ class Test(Screen):
         self.controlador = controlador
         self.background_color = (0, 0, 0, 1) 
         self.controlador.set_escanear(False)
-        self.porcentajeDisp = 0.15
 
         texto_central = ("Mire al rededor de la pantalla y parpadee para confirmar el calibrado\n"+
                         "Es un modelo en desarrollo, cuantos mas datos recopilemos, mejor funcionara en un futuro\n"+
                         "El punto rojo deberia seguir su mirada, al parpadear debería escuchar un sonido de click y ver el punto verde")
 
+        # Crea una imagen de fondo
+        self.fondo = Image(source=self.controlador.get_fondo() , allow_stretch=True, keep_ratio=False)
+        self.add_widget(self.fondo)
+
         self.layout = BoxLayout(orientation='vertical')
 
         # El boton de inicio
-        btn_inicio = ButtonRnd(text='Inicio', size_hint=(.2, .1), pos_hint={'x': 0, 'top': 1}, on_press= self.on_inicio)
+        btn_inicio = ButtonRnd(text='Inicio', size_hint=(.2, .1), pos_hint={'x': 0, 'top': 1}, on_press= self.on_inicio, font_name='Texto')
         self.layout.add_widget(btn_inicio)
 
         # El texto explicativo
-        self.texto_explicativo = Label(text=texto_central, font_size=self.controlador.get_font_txts(),halign='center', size_hint=(1, .8))
+        self.texto_explicativo = Label(text=texto_central, font_size=self.controlador.get_font_txts(),halign='center', size_hint=(1, .8), font_name='Texto')
         self.layout.add_widget(self.texto_explicativo)
 
         # Variables reconocidas
-        self.texto_variables = Label(text="", font_size=self.controlador.get_font_txts(), size_hint=(1, .1))
+        self.texto_variables = Label(text="", font_size=self.controlador.get_font_txts(), size_hint=(1, .1), font_name='Texto')
         self.layout.add_widget(self.texto_variables)
 
         # The image box
         self.image_box = Image(size_hint=(.2, .3), pos_hint={'right': 1, 'top': 0.1})
         self.layout.add_widget(self.image_box)
-        
-        # Menu de seleccion de fichero
-        self.camera_spinner = Spinner(
-        text='Seleccione fichero',
-        values=["0","1"],
-        size_hint=(0.2, 0.1),
-        pos_hint={'right': 1, 'top': 0},
-        )
-        self.layout.add_widget(self.camera_spinner)
 
         self.add_widget(self.layout)
 
@@ -109,14 +103,9 @@ class Test(Screen):
 
 
     def update_image_box(self, dt):
-            # Poner la zona donde se puede mover la persona
-            self.porcentajeDisp = 0.15 if self.porcentajeDisp == 0 else 0.30
-
             # Only update the image box in calibration state 0
-            frame = self.controlador.get_frame_editado(self.porcentajeDisp)
-            if frame is None:
-                return
-            
+            frame = self.controlador.get_frame_editado(0.15)
+
             # Convert the frame to a texture
             texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
             texture.blit_buffer(frame.tostring(), colorfmt='bgr', bufferfmt='ubyte')

@@ -2,20 +2,20 @@ from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from Custom import ButtonRnd
 from kivy.uix.screenmanager import Screen
-from kivy.graphics import Color, Ellipse, Line
+from kivy.graphics import Color, Ellipse
 from kivy.graphics import InstructionGroup
 from kivy.clock import Clock
 from kivy.uix.image import Image
 from kivy.graphics.texture import Texture
-import cv2
 
 class Calibrar(Screen):
     def __init__(self, controlador, **kwargs):
         super(Calibrar, self).__init__(**kwargs)
         self.controlador = controlador
-        self.background_color = (0, 0, 0, 1) 
-        self.porcentajeDisp = 0.10  
-
+        #self.background_color = (0, 0, 0, 1) 
+        # Crea una imagen de fondo
+        self.fondo = Image(source=self.controlador.get_fondo() , allow_stretch=True, keep_ratio=False)
+        self.add_widget(self.fondo)
         # Textos de calibración
         self.textos_calibracion = [
             'Cuadrar la cruz con el punto medio entre las cejas y la cabeza recta, posteriormente mire fijamente el punto \n' + 
@@ -28,19 +28,20 @@ class Calibrar(Screen):
         self.layout = BoxLayout(orientation='vertical')
 
         # El boton de inicio
-        btn_inicio = ButtonRnd(text='Inicio', size_hint=(.2, .1), pos_hint={'x': 0, 'top': 1}, on_press= self.on_inicio)
+        btn_inicio = ButtonRnd(text='Inicio', size_hint=(.2, .1), pos_hint={'x': 0, 'top': 1}, on_press= self.on_inicio, font_name='Texto')
         self.layout.add_widget(btn_inicio)
 
         # El texto explicativo
-        self.texto_explicativo = Label(text=self.textos_calibracion[0], font_size=self.controlador.get_font_txts(), size_hint=(1, .1), pos_hint={'top': .7})
+        self.texto_explicativo = Label(text=self.textos_calibracion[0], font_size=self.controlador.get_font_txts(), size_hint=(1, .1), pos_hint={'top': .7}, font_name='Texto')
         self.layout.add_widget(self.texto_explicativo)
         
         # The image box
         self.image_box = Image(size_hint=(.5, .4), pos_hint={'center_x': .5, 'top': 1})
+
         self.layout.add_widget(self.image_box)
 
         # El boton de comenzar
-        btn_comenzar = ButtonRnd(text='Continuar', size_hint=(.2, .1), pos_hint={'right': 1, 'top': 0}, on_press=self.on_continuar)
+        btn_comenzar = ButtonRnd(text='Continuar', size_hint=(.2, .1), pos_hint={'right': 1, 'top': 0}, on_press=self.on_continuar, font_name='Texto')
         self.layout.add_widget(btn_comenzar)
 
         # Add the layout to the screen
@@ -90,7 +91,7 @@ class Calibrar(Screen):
     def update_image_box(self, dt):
         # Only update the image box in calibration state 0
         if self.controlador.obtener_estado_cal() == 0:
-            frame = self.controlador.get_frame_editado(self.porcentajeDisp)
+            frame = self.controlador.get_frame_editado(0.10)
             if frame is None:
                 return
             

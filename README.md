@@ -50,10 +50,14 @@ MIRAR TIME ENTRE CLICK Y CLICK
 MEDIR DESVIACION TIPICA MEDIA PARA LOS DIFERENTES CONJUNTOS DE DATOS
 
 capa sigmoide para que quede el resultado entre 0 y 1
+problema entre suavidad y retraso: mediana
 
 
-problema entre suavidad y retraso:
-Filtro de Kalman
-Filtro de mediana
-Filtro de Savitzky-Golay
-Filtro de media móvil exponencial (EMA)
+poner explicaciones de los archivos arriba en comentarios y limpiar tdoo bien
+
+fondomenus: https://unsplash.com/es/fotos/un-fondo-negro-con-un-diseno-ondulado-Cp4xHgvXt0M
+fuentes: google_fonts
+fRANCISCO -> TITULO
+Orbitron -> Textos
+
+CAMBIAR AREA DE RECONOCIMIENTO DE BOTONES DE TABLEROS, ESTA EN 0.2 Y ES 0.15
