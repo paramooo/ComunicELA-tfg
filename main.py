@@ -5,6 +5,8 @@ from Controlador import Controlador
 from kivy.core.window import Window
 from kivy.core.text import LabelBase
 Window.fullscreen = 'auto'
+from kivy.config import Config
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
 class MyApp(App):
     def build(self):

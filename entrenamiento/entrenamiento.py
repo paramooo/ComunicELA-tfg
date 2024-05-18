@@ -6,12 +6,11 @@ import numpy as np
 from scipy.ndimage import gaussian_filter1d
 from Conjuntos import Conjuntos
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import KFold
 import pandas as pd
 from torchvision import models
-from torch.utils.data import DataLoader
-
+import keyboard
+import matplotlib.pyplot as plt
+from shapely.geometry import Point, Polygon, LineString
 
 
 ##############################################  ANALIS DE DATOS ########################################################
@@ -138,6 +137,94 @@ def graficar_perdidas(train_losses, test_losses):
     plt.legend()
     plt.show()
 
+
+
+
+
+
+def ponderar_graficas():
+    def ponderar(mirada):
+        # Definir los límites
+        arriba_izq = np.array([0.05, 1])
+        arriba_der = np.array([1, 1])
+        abajo_izq = np.array([0, 0])
+        abajo_der = np.array([1, 0])
+
+        # Definir los límites de las zonas
+        LimiteBajoX = 0
+        LimiteAltoX = 0
+        LimiteBajoY = 0
+        LimiteAltoY = 0
+
+        # Calcular el cuadrante de la mirada
+        cuadrante = 0
+        if mirada[0] >= 0.5:
+            cuadrante += 1
+        if mirada[1] >= 0.5:
+            cuadrante += 2
+
+        # Ponemos los limites de la esquina
+        if cuadrante == 0:
+            LimiteBajoX = abajo_izq[0]
+            LimiteBajoY = abajo_izq[1]
+            LimiteAltoX = abajo_der[0]
+            LimiteAltoY = arriba_izq[1]
+        if cuadrante == 1:
+            LimiteAltoX = abajo_der[0]
+            LimiteBajoY = abajo_der[1]
+            LimiteAltoY = arriba_der[1]
+            LimiteBajoX = abajo_izq[0]
+        if cuadrante == 2:
+            LimiteBajoX = arriba_izq[0]
+            LimiteAltoY = arriba_izq[1]
+            LimiteBajoY = abajo_izq[1]
+            LimiteAltoX = arriba_der[0]
+        if cuadrante == 3:
+            LimiteAltoX = arriba_der[0]
+            LimiteAltoY = arriba_der[1]
+            LimiteBajoY = abajo_der[1]
+            LimiteBajoX = arriba_izq[0]
+
+        # Calculamos los limites de la zona no afectada
+        ComienzoZonaNoAfectadaX = LimiteBajoX + (0.5-LimiteBajoX)/2
+        FinZonaNoAfectadaX = LimiteAltoX - (LimiteAltoX-0.5)/2
+        ComienzoZonaNoAfectadaY = LimiteBajoY + (0.5-LimiteBajoY)/2
+        FinZonaNoAfectadaY = LimiteAltoY - (LimiteAltoY-0.5)/2
+
+        # Calculamos las x y las y de las Xs
+        Xx = np.array([LimiteBajoX, ComienzoZonaNoAfectadaX, 0.5, FinZonaNoAfectadaX, LimiteAltoX])
+        Xy = np.array([0, ComienzoZonaNoAfectadaX, 0.5, FinZonaNoAfectadaX, 1])
+        Yx = np.array([LimiteBajoY, ComienzoZonaNoAfectadaY, 0.5, FinZonaNoAfectadaY, LimiteAltoY])
+        Yy = np.array([0, ComienzoZonaNoAfectadaY, 0.5, FinZonaNoAfectadaY, 1])
+
+        # Crear la función polinómica
+        polinomioX = np.poly1d(np.polyfit(Xx, Xy, 4))
+        polinomioY = np.poly1d(np.polyfit(Yx, Yy, 4))
+
+        # Calcular el valor ponderado
+        return np.array([np.clip(polinomioX(mirada[0]),0,1), np.clip(polinomioY(mirada[1]),0,1)])      
+
+
+    # Generar valores de mirada desde 0 hasta 1
+    x = np.linspace(0, 1, 100)
+    mirada = np.array([[i, i] for i in x])
+
+    # Calcular los valores ponderados
+    miradas_ponderadas = np.array([ponderar(mirad) for mirad in mirada])
+
+    # Crear la gráfica
+    plt.figure(figsize=(10, 6))
+    plt.plot(mirada[:, 0], label='Mirada original')
+    plt.plot(miradas_ponderadas[:, 0], label='Mirada ponderada')
+    plt.xlabel('Fotograma')
+    plt.ylabel('Valor de X de la mirada')
+    plt.title('Función de ponderación')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
+
 ############################################################################################################################
 ############################################################################################################################
 ############################################################################################################################
@@ -226,30 +313,63 @@ def entrenar_validacion(model, optimizer, loss_function, input_train, output_tra
         print(f'Epoch {epoch+1}, Train Loss: {train_loss.item()}, Val Loss: {val_loss.item()}, Test Loss: {test_loss.item()}')
 
     return model, train_losses, val_losses, test_losses
+    # Lo mismo que entrenar pero sin validacion
 
-# Lo mismo que entrenar pero sin validacion
 def entrenar(model, optimizer, loss_function, input_train, output_train, input_test, output_test, epochs):
     train_losses = []
     test_losses = []
-    for epoch in range(epochs):  # número de épocas
-        optimizer.zero_grad()  # reinicia los gradientes
-        train_predictions = model(input_train)  # pasa los datos de entrenamiento a través de la red
-        train_loss = loss_function(train_predictions, output_train)  # calcula la pérdida de entrenamiento
-        train_loss.backward()  # retropropaga los errores
-        optimizer.step()  # actualiza los pesos
+    best_loss = float('inf')
+    models = []
+
+    plt.ion()  # Activa el modo interactivo de matplotlib
+    fig, ax = plt.subplots()
+
+    for epoch in range(epochs):
+        # Entrenamiento y cálculo de la pérdida
+        train_predictions = model(input_train)
+        train_loss = loss_function(train_predictions, output_train)
         train_losses.append(train_loss.item())
 
-        # Calcular la pérdida de prueba
+        # Validación y cálculo de la pérdida
         test_predictions = model(input_test)
         test_loss = loss_function(test_predictions, output_test)
         test_losses.append(test_loss.item())
 
-        print(f'Epoch {epoch+1}, Train Loss: {train_loss.item()}, Test Loss: {test_loss.item()}')
+        # Guardar el mejor modelo
+        if test_loss.item() < best_loss:
+            best_loss = test_loss.item()
+        models.append(model)
 
+        # Actualizar el modelo
+        optimizer.zero_grad()
+        train_loss.backward()
+        optimizer.step()
+
+        # Graficar las pérdidas en tiempo real
+        ax.clear()
+        ax.plot(train_losses, label='Train Loss')
+        ax.plot(test_losses, label='Test Loss')
+        ax.legend()
+        plt.draw()
+        plt.pause(0.01)
+
+        # Detener el entrenamiento si se presiona la tecla 'p'
+        if keyboard.is_pressed('p'):
+            print("Entrenamiento detenido por el usuario.")
+            break
+    print("Epoch mejor modelo: ", test_losses.index(min(test_losses)))
+    print("Perdida test mejor modelo: ", min(test_losses), "Perdida train mejor modelo: ", train_losses[test_losses.index(min(test_losses))])
+    print("Que modelo guardar?")
+    guardar = int(input())
+    #Evaluar el modelo elegido
+    model = models[guardar]
+    test_predictions = model(input_test)
+    test_loss = loss_function(test_predictions, output_test)
+    train_predictions = model(input_train)
+    train_loss = loss_function(train_predictions, output_train)
+    print("Modelo ", guardar, " -> Perdida test: ", test_loss.item(), "Perdida train: ", train_loss.item())
+    plt.ioff()  # Desactiva el modo interactivo
     return model, train_losses, test_losses
-
-
-
 
 
 
@@ -307,34 +427,47 @@ def entrenar1():
     
     # Definir la red neuronal
     entradas = 23
-    topology = [100,150, 200,300,300,100, 50]
+    topology = [100,300,500,400,100]
     model = crear_ann(entradas, topology)
     model = model.to("cuda")  
 
     # Cargar los datos, procesarlos y moverlos a la GPU
+    print("Cargando datos")
     input, output = cargar_datos()    
-    input_final = Conjuntos.conjunto_2(input)
+    input_test, output_test = cargar_datos_test()
+
+    #Limpiamos los datos con el ojo cerrado
+    index = np.where(input[:, -2] < input[:, -1])
+    input = np.delete(input, index, axis=0)
+    output = np.delete(output, index, axis=0)
+
+    #Suaavizamos los datos
+    print("Suavizando datos")
+    input = suavizar_datos(input, 5)
+
+    # Convertir los datos a conjunto
+    print("Procesando datos a conjunto")
+    input_train = Conjuntos.conjunto_2(input)    
+    input_test = Conjuntos.conjunto_2(input_test)
 
     # Dividir los datos en entrenamiento y validación
     #input_train, input_val, output_train, output_val = train_test_split(input_final, output, test_size=0.1)
 
     # Convertir los datos a tensores de PyTorch y moverlos a la GPU
-    input_train = torch.from_numpy(suavizar_datos(input_final,5)).float().to("cuda")
+    print("Moviendo datos a GPU")
+    input_train = torch.from_numpy(input_train).float().to("cuda")
     output_train = torch.from_numpy(output).float().to("cuda")
     # input_val = torch.from_numpy(input_val).float().to("cuda")
     # output_val = torch.from_numpy(output_val).float().to("cuda")
-
-    # Cargar los datos de prueba, procesarlos y moverlos a la GPU
-    input_test, output_test = cargar_datos_test()
-    input_test = Conjuntos.conjunto_2(input_test)
     input_test = torch.from_numpy(input_test).float().to("cuda")
     output_test = torch.from_numpy(output_test).float().to("cuda")
 
     # Definir el optimizador
-    optimizer = optim.Adam(model.parameters(), lr=0.01)
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     # Entrenar la red
-    model, train_losses, test_losses = entrenar(model, optimizer, mse_loss, input_train, output_train, input_test, output_test, 900)
+    print("Entrenando")
+    model, train_losses, test_losses = entrenar(model, optimizer, mse_loss, input_train, output_train, input_test, output_test, 1500)
 
 
 
@@ -420,17 +553,8 @@ def entrenar_resnet(epochs):
 
 
 if __name__ == '__main__':
-    # entrenar_resnet(1500)
-    entrenar1()
-
-
-
-
-
-
-
-
-
-
-
+#     # entrenar_resnet(1500)
+#     entrenar1()
+    ponderar_graficas()
+    #entrenar1()
 

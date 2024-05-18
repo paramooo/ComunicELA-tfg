@@ -63,7 +63,7 @@
     border: 10, 10, 10, 10  # Añade un borde alrededor del botón
     canvas.before:
         Color:
-            rgba: self.color_down if self.state == 'down' else ((0.2, 0.2, 0.2, 1) if self.text.startswith('TAB.') else (0.4, 0.4, 0.4, 1))  # Cambia el color dependiendo del estado del botón
+            rgba: self.color_down if self.state == 'down' else ((0.15, 0.15, 0.15, 1) if self.text.startswith('TAB.') else (0.25, 0.25, 0.25, 1))  # Cambia el color dependiendo del estado del botón
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -73,4 +73,9 @@
             rgba: 1, 1, 1, 1  # Añade un borde blanco alrededor del botón
         Line:
             rounded_rectangle: self.x, self.y, self.width, self.height, 15
+            width: 1.5
+        Color:
+            rgba: 0.5, 0.5, 0.5, 1  # Añade un borde de un tono más oscuro
+        Line:
+            rounded_rectangle: (self.x+self.width*0.05), (self.y+self.height*0.1),( self.width-self.width*0.1), (self.height-self.height*0.2), 15
             width: 1.5

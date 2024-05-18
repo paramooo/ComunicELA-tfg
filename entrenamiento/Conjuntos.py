@@ -53,4 +53,45 @@ class Conjuntos:
 
         return data
     
+
+
+
         
+    def conjunto_3(data):
+        """
+        Entradas: 39
+        [0-31] Distancias entre los puntos de referencia de los ojos
+                - Medias de los dos ojos
+                - Normalizadas entre ellas con min-max
+        [32-34] Coordenadas de la orientación de la cara
+        [35-36] Coordenadas del centro de la cara
+        [37-38] EAR y umbral EAR      
+        """
+        # Normalizar cada valor de los primeros 16 de cada fila entre ellos mismos
+        data[:, :32] = (data[:, :32] - np.min(data[:, :32], axis=1, keepdims=True)) / (np.max(data[:, :32], axis=1, keepdims=True) - np.min(data[:, :32], axis=1, keepdims=True))
+
+        # Todo clip entre 0 y 1
+        data[:, :] = np.clip(data[:, :], 0, 1)
+
+        return data
+
+
+
+    def conjunto_4(data):
+        """
+            Entradas: 37
+            [0-31] Distancias entre los puntos de referencia de los ojos
+                    - Medias de los dos ojos
+                    - Normalizadas entre ellas con min-max
+            [32-34] Coordenadas de la orientación de la cara
+            [35-36] Coordenadas del centro de la cara
+        """
+        # Normalizar cada valor de los primeros 16 de cada fila entre ellos mismos
+        data[:, :32] = (data[:, :32] - np.min(data[:, :32], axis=1, keepdims=True)) / (np.max(data[:, :32], axis=1, keepdims=True) - np.min(data[:, :32], axis=1, keepdims=True))
+
+        # Todo clip entre 0 y 1
+        data[:, :] = np.clip(data[:, :], 0, 1)
+        
+        # Elimina las columnas 37-38 de todas las filas
+        data = np.delete(data, np.s_[37:39], axis=1)
+        return data

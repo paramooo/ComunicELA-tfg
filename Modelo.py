@@ -13,7 +13,7 @@ from gtts import gTTS
 from io import BytesIO
 import pandas as pd
 from kivy.core.audio import SoundLoader
-from pykalman import KalmanFilter
+import threading
 class Modelo:
     def __init__(self):
         # Para el sonido del click
@@ -26,7 +26,7 @@ class Modelo:
 
         # Variables para el modelo de test
         self.conjunto = 2
-        self.modelo = torch.load('./anns/pytorch/modelo.pth')
+        self.modelo = torch.load('./anns/pytorch/modelo_ajustado.pth')
 
         # Variables de control para el tamaño de la fuente de los textos
         self.tamaño_fuente_txts = 23
@@ -53,9 +53,11 @@ class Modelo:
         self.escanear = False
 
         # Variables para suavizar la mirada en el test
-        self.historial = []
-        #self.cantidad_suavizado = 50
-        self.hist_max = 15
+        self.historial = []     # Suaviza la mirada con la mediana esto baja el ruido
+        self.historial2 = []    # Suaviza las medianas asi el puntero se mueve suave
+        self.cantidad_suavizado = 18
+        self.cantidad_suavizado2 = 5
+        self.hist_max = 60
         #self.retroceso_click = 0
 
         # Variables para uso de los tableros
@@ -63,6 +65,14 @@ class Modelo:
         self.cargar_tableros()
         self.frase = ""
         self.tablero = None
+        
+        # Ponderar la mirada
+        self.limiteAbajoIzq = [0.1,0.15]
+        self.limiteAbajoDer = [0.85,0.12]
+        self.limiteArribaIzq = [0.05,0.86]
+        self.limiteArribaDer = [0.88,0.88]
+        self.Desplazamiento = [0.5,0.5]
+
         
     #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
     def reiniciar_datos_r(self):
@@ -72,6 +82,8 @@ class Modelo:
         self.salto_bajo, self.salto_alto = 30, 80 #Salto de la pelota roja
         self.velocidad = 30
         self.direccion = 1 
+    
+
 
     
 # ---------------------------   FUNCIONES DE CONTROL GENERAL    -------------------------------
@@ -189,14 +201,15 @@ class Modelo:
     def calibrar_ear(self):
         #Si estamos en el estado 2, no se hace nada, sale al inicio
         if self.estado_calibracion == 2:
-            return
+            return 0
 
         # Se obtienen los datos
         datos = self.detector.obtener_coordenadas_indices(self.get_frame())
 
         #Si no se detecta cara, se devuelve 1 indicando error
         if datos is None:
-            return 1
+            self.mensaje('Calibración fallida, intente de nuevo')
+            return None
     
         # Se desempaquetan los datos
         _, _, coord_ear_izq, coord_ear_der, _, _ = self.detector.obtener_coordenadas_indices(self.get_frame())
@@ -209,10 +222,9 @@ class Modelo:
             self.umbral_ear_cerrado = self.detector.calcular_ear_medio(coord_ear_izq, coord_ear_der)
             self.umbral_ear = (self.umbral_ear_bajo*0.4 + self.umbral_ear_cerrado*0.6) #Se calcula el umbral final ponderado entre el cerrado y el abierto bajo
             self.calibrado = True
-
+        return 0
 
 #Para el test/tableros
-#Reproducimos sonido pasado un tiempo de parpadeo pero el color en tiempo real
     def get_parpadeo(self, ear):
         if ear < self.umbral_ear:
             self.contador_p += 1
@@ -224,7 +236,22 @@ class Modelo:
         else:
             self.contador_p = 0     
             return 0   
+    
 
+    def set_limite(self, valor, esquina, eje):
+        if esquina == 0:
+            self.limiteAbajoIzq[eje] = valor
+        elif esquina == 1:
+            self.limiteAbajoDer[eje] = valor
+        elif esquina == 2:
+            self.limiteArribaIzq[eje] = valor
+        elif esquina == 3:
+            self.limiteArribaDer[eje] = valor
+        elif esquina == 4:
+            self.Desplazamiento[eje] = valor
+
+    def get_limites(self):
+        return self.limiteAbajoIzq, self.limiteAbajoDer, self.limiteArribaIzq, self.limiteArribaDer, self.Desplazamiento
 
 # ---------------------------   FUNCIONES DE RECOPILACION DE DATOS  -------------------------------
         
@@ -373,6 +400,13 @@ class Modelo:
         # Se desempaqueta la posición de la mirada
         mirada = mirada.data.numpy()[0]
 
+        # Postprocesar la posición de la mirada
+        mirada = self.postprocesar(mirada)
+
+        return mirada, click
+
+
+    def postprocesar(self, mirada):
         # Añadir la nueva posición al historial
         self.historial.append(mirada)
 
@@ -380,38 +414,83 @@ class Modelo:
         if len(self.historial) > self.hist_max:
             self.historial.pop(0)
 
-        #Mediana -> funciona bastante bien (menos retraso quel normal pero aun tiene)
-        mirada = np.median(self.historial[-self.hist_max:], axis=0)
+        # PRIMER POSTPROCESADO CON LA MEDIANA PARA REDUCIR EL RUIDO con
+        mirada = np.median(self.historial[-self.cantidad_suavizado:], axis=0)
+       # mirada = np.mean(self.historial[-self.cantidad_suavizado:], axis=0)
+        self.historial2.append(mirada)
+        if len(self.historial2) > self.hist_max:
+            self.historial2.pop(0)
+        
+        mirada = np.mean(self.historial2[-self.cantidad_suavizado2:], axis=0)
+        # SEGUNDO POSTPROCESADO CON LA CAMPANA DE GAUSS INVERSA
+        mirada = self.ponderar(mirada)
+        
+        return mirada
 
 
-        # Calcular la media ponderada de las posiciones en el historial para suavizar
-        # if len(self.historial) > self.cantidad_suavizado:
-        #     pesos = range(1, len(self.historial[-self.cantidad_suavizado:]) + 1)
-        #     mirada = np.average(self.historial[-self.cantidad_suavizado:], weights=pesos, axis=0)
+    def ponderar(self, mirada):
+        def calcular_limites_esquina(cuadrante):
+            if cuadrante == 0:
+                return self.limiteAbajoIzq[0], self.limiteAbajoIzq[1], self.limiteAbajoDer[0], self.limiteArribaIzq[1]
+            elif cuadrante == 1:
+                return self.limiteAbajoIzq[0], self.limiteAbajoDer[1], self.limiteAbajoDer[0], self.limiteArribaDer[1]
+            elif cuadrante == 2:
+                return self.limiteArribaIzq[0], self.limiteAbajoIzq[1], self.limiteArribaDer[0], self.limiteArribaIzq[1]
+            elif cuadrante == 3:
+                return self.limiteArribaIzq[0], self.limiteAbajoDer[1], self.limiteArribaDer[0], self.limiteArribaDer[1]
+        
+        def ponderar_esquina(mirada, esquina_limites):
+            LimiteBajoX, LimiteBajoY, LimiteAltoX, LimiteAltoY = esquina_limites
 
-        # Hacer la media normal con el historial
-        mirada = np.mean(self.historial, axis=0)
+            # Calculamos los límites de la zona no afectada
+            ComienzoZonaNoAfectadaX = LimiteBajoX + (self.Desplazamiento[0] - LimiteBajoX) / 2
+            FinZonaNoAfectadaX = LimiteAltoX - (LimiteAltoX - self.Desplazamiento[0]) / 2
+            ComienzoZonaNoAfectadaY = LimiteBajoY + (self.Desplazamiento[1] - LimiteBajoY) / 2
+            FinZonaNoAfectadaY = LimiteAltoY - (LimiteAltoY - self.Desplazamiento[1]) / 2
 
-        # ------------------ Al hacerlo con lo del bloqueo ya no hace falta esto -------------------
-        # Si se detecta un parpadeo, se coge la posición de self.retroceso_click frames atrás
-        # if click == 1 and len(self.historial) >= self.retroceso_click:
-        #     mirada = self.historial[-self.retroceso_click]
+            # Calculamos las x y las y de las Xs
+            Xx = np.array([LimiteBajoX, ComienzoZonaNoAfectadaX, self.Desplazamiento[0], FinZonaNoAfectadaX, LimiteAltoX])
+            Xy = np.array([0, ComienzoZonaNoAfectadaX, 0.5, FinZonaNoAfectadaX, 1])
+            Yx = np.array([LimiteBajoY, ComienzoZonaNoAfectadaY, self.Desplazamiento[1], FinZonaNoAfectadaY, LimiteAltoY])
+            Yy = np.array([0, ComienzoZonaNoAfectadaY, 0.5, FinZonaNoAfectadaY, 1])
 
-        return mirada, click
+            # Crear la función polinómica
+            polinomioX = np.poly1d(np.polyfit(Xx, Xy, 4))
+            polinomioY = np.poly1d(np.polyfit(Yx, Yy, 4))
+
+            # Calcular el valor ponderado
+            return np.array([np.clip(polinomioX(mirada[0]), 0, 1), np.clip(polinomioY(mirada[1]), 0, 1)])
+
+        def calcular_distancia(mirada, esquina):
+            return np.sqrt((mirada[0] - esquina[0])**2 + (mirada[1] - esquina[1])**2)
+
+        # Definir las cuatro esquinas
+        esquinas = [self.limiteAbajoIzq, self.limiteAbajoDer, self.limiteArribaIzq, self.limiteArribaDer]
+        ponderaciones = []
+
+        # Calcular la ponderación para cada esquina
+        for esquina_limites in esquinas:
+            ponderacion_esquina = ponderar_esquina(mirada, calcular_limites_esquina(esquinas.index(esquina_limites)))
+            ponderaciones.append(ponderacion_esquina)
 
 
-                
-   
+        # Calcular la distancia de la mirada a cada esquina
+        distancias = [calcular_distancia(mirada, esquina) for esquina in esquinas]
+
+        # Normalizar las distancias para obtener pesos de ponderación
+        pesos = np.array([1 / (distancia + 1) for distancia in distancias])
+        suma_pesos = np.sum(pesos)
+
+        # Ponderar las ponderaciones de acuerdo a las distancias
+        ponderacion_final = np.zeros_like(ponderaciones[0])
+        for i, ponderacion_esquina in enumerate(ponderaciones):
+            ponderacion_final += ponderacion_esquina * (pesos[i] / suma_pesos)
+
+        return ponderacion_final
+
+            
 #--------------------------------FUNCIONES PARA LOS TABLEROS--------------------------------
 #-------------------------------------------------------------------------------------------
-
-    # def cargar_tableros(self):
-    #     for filename in os.listdir('./tableros'):
-    #         if filename.endswith('.txt'):
-    #             with open(os.path.join('./tableros', filename), 'r') as f:
-    #                 palabras = [line.strip().split(';') for line in f]
-    #                 self.tableros[filename[:-4]] = palabras  # Añade el tablero al diccionario
-
 
     def cargar_tableros(self):
         for filename in os.listdir('./tableros'):
@@ -436,14 +515,23 @@ class Modelo:
         self.frase = ''
 
     def reproducir_texto(self):
-        try:
-            tts = gTTS(text=self.frase.lower(), lang='es')    
-            fp = BytesIO()
-            tts.write_to_fp(fp)
-            fp.seek(0)
-            pygame.mixer.music.load(fp)
-            pygame.mixer.music.play()
+        #Empezar un hulo separado:
+        def reproducir_texto_hilo():
+            try:
+                tts = gTTS(text=self.frase.lower(), lang='es')    
+                fp = BytesIO()
+                tts.write_to_fp(fp)
+                fp.seek(0)
+                pygame.mixer.music.load(fp)
+                pygame.mixer.music.play()
 
-        except:
-            print("Error al reproducir el texto")
-            pass
+            except:
+                print("Error al reproducir el texto")
+                pass
+
+
+        #Se crea un hilo para reproducir el texto
+        threading.Thread(target=reproducir_texto_hilo).start()
+
+
+    

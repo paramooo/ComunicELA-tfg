@@ -50,8 +50,8 @@ class Recopilar(Screen):
         self.layout.add_widget(self.image_box)
 
         # El boton de continuar
-        btn_recopilar = ButtonRnd(text='Recopilar', size_hint=(.2, .1), pos_hint={'right': 1, 'top': 0}, on_press= self.on_recopilar, font_name='Texto')
-        self.layout.add_widget(btn_recopilar)
+        self.btn_recopilar = ButtonRnd(text='Recopilar', size_hint=(.2, .1), pos_hint={'right': 1, 'top': 0}, on_press= self.on_recopilar, font_name='Texto')
+        self.layout.add_widget(self.btn_recopilar)
 
         # Menu de seleccion de fichero
         self.camera_spinner = CustomSpinner(
@@ -122,8 +122,8 @@ class Recopilar(Screen):
                 proxima_pos_r = self.controlador.actualizar_pos_circle_r(tamano_pantalla, self.fichero)
 
                 # Actualiza la posición del círculo en la vista
-                self.circulo_instr.children[1].pos = proxima_pos_r
-
+                if len(self.circulo_instr.children) > 1:
+                    self.circulo_instr.children[1].pos = proxima_pos_r
         # Si no recopilar, pero ya recopilo datos, muestra el texto de agradecimiento
         elif self.escaneado:
             self.texto_explicativo.text = self.textos[1]

@@ -61,3 +61,15 @@ fRANCISCO -> TITULO
 Orbitron -> Textos
 
 CAMBIAR AREA DE RECONOCIMIENTO DE BOTONES DE TABLEROS, ESTA EN 0.2 Y ES 0.15
+
+
+CONTROLAR CON LAS 4 ESQUINAS LA FUNCION DE TRASNFERENCIA DE LLEGAR A LAS ESQUINAS CON EL TEST CON LA MIRADA
+
+Combinar red para puntos con otra red para la imagen asociada
+Hacer
+
+efinicientnet
+
+
+
+para el ponderado:

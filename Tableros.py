@@ -54,7 +54,8 @@ class Tableros(Screen):
             height=Window.height * 0.2,  # Altura inicial del TextInput
             halign='left',  
             font_name='Texto', 
-            background_color=(0, 0, 0, 0),
+            font_size=40,
+            background_color=(0, 0, 0, 0.4),
             foreground_color=(1, 1, 1, 1),
         )
         self.label.bind(on_text=self.on_text)  # Añade un evento para cuando el texto cambie

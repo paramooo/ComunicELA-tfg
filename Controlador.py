@@ -86,8 +86,7 @@ class Controlador:
         return self.modelo.obtener_estado_calibracion()
     
     def on_continuar_calibracion(self):
-        if self.modelo.calibrar_ear() == 1:
-            self.mensaje('Calibración fallida, intente de nuevo')
+        if self.modelo.calibrar_ear() is None:
             return
         self.cambiar_estado_calibracion()
         self.vista.calibrar.update_view(self.obtener_estado_cal())
@@ -95,7 +94,6 @@ class Controlador:
     def get_punto_central(self, frame):
         return self.modelo.get_punto_central(frame)
     
-
 
 # ---------------------------- FUNCIONES PARA EL MODO DE TEST/TABLEROS -------------------------
 
@@ -112,7 +110,12 @@ class Controlador:
     
     def reproducir_texto(self):
         self.modelo.reproducir_texto()
-    
+
+    def set_limite(self, valor, esquina, eje):
+        self.modelo.set_limite(valor, esquina, eje)
+
+    def get_limites(self):
+        return self.modelo.get_limites()
 
 #-------------------------------FUNCIONES PARA LA RECOPILACION DE DATOS-----------------------------
 
@@ -171,3 +174,5 @@ class Controlador:
     
     def get_frase(self):
         return self.modelo.get_frase()
+
+

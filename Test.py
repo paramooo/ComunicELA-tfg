@@ -6,9 +6,27 @@ from Custom import ButtonRnd
 from kivy.uix.label import Label
 from kivy.graphics import InstructionGroup
 import numpy as np
-from kivy.uix.image import Image
 from kivy.graphics.texture import Texture
 from kivy.uix.image import Image
+from kivy.uix.slider import Slider
+from kivy.uix.scatter import Scatter
+
+class Pelota(Scatter):
+    def __init__(self, esquina, controlador, size_sc, label, **kwargs):
+        super(Pelota, self).__init__(**kwargs)
+        self.esquina = esquina
+        self.controlador = controlador
+        self.size_sc = size_sc
+        self.bind(pos=self.update_limites)
+        self.label = label
+
+    def update_limites(self, *args):
+        valor_x = self.center_x / self.size_sc[0]
+        valor_y = self.center_y / self.size_sc[1]
+        self.controlador.set_limite(valor_x, self.esquina, 0)
+        self.controlador.set_limite(valor_y, self.esquina, 1)
+        self.label.text = f'{self.esquina}: ({valor_x:.2f}, {valor_y:.2f})'
+
 
 
 class Test(Screen):
@@ -46,6 +64,8 @@ class Test(Screen):
 
         self.add_widget(self.layout)
 
+        self.primera = True
+
 
 
     # Funcion para dibujar el circulo amarillo una vez abierta la ventana(para centrarlo bien)
@@ -60,7 +80,28 @@ class Test(Screen):
             if self.circulo_instr not in self.layout.canvas.children:
                 self.layout.canvas.add(self.circulo_instr)
         self.controlador.set_escanear(True)
-        
+
+        if self.primera:
+            self.primera = False
+            limites = self.controlador.get_limites()
+            esquinas = ['Esquina inferior izquierda', 'Esquina inferior derecha', 'Esquina superior izquierda', 'Esquina superior derecha', 'Centro']
+            # Añadir las pelotas
+            for i in range(5):
+                # Crear una pelota
+                label = Label(text=f'{esquinas[i]}: {limites[i]}', size_hint=(.2, .1), pos_hint={'x': 0, 'top': 1 - i * 0.2})
+                pelota = Pelota(esquinas[i], self.controlador, self.size, label, size=(20, 20), size_hint=(None, None))
+                with pelota.canvas:
+                    Color(0, 1, 0)  # Verde
+                    Ellipse(size=pelota.size)
+                pelota.center = (limites[i][0] * self.width, limites[i][1] * self.height)
+                self.add_widget(pelota)
+
+                # Añadir el texto con los valores de las esquinas
+                self.layout.add_widget(label)
+
+                # Vincular la pelota con su etiqueta
+                pelota.label = label
+
         # Añade las tareas de actualización al reloj
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)
         Clock.schedule_interval(self.update, 1.0 / 30.0)  
@@ -113,3 +154,4 @@ class Test(Screen):
             # Invertir la imagen verticalmente
             texture.flip_vertical()
             self.image_box.texture = texture
+
