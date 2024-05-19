@@ -173,7 +173,7 @@ class Tableros(Screen):
 
     def emular_movimiento_y_clic(self, x, y, click):        
         #Si la y es mayor que 0.2, casillas:
-        if y > 0.2:
+        if y > 0.15:
             casilla_ancho = 1 / self.tablero.cols
             casilla_alto = 0.8 / self.tablero.rows  # Quita el 0.2 inferior
 

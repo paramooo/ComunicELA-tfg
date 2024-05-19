@@ -7,51 +7,88 @@ from kivy.graphics import InstructionGroup
 from kivy.clock import Clock
 from kivy.uix.image import Image
 from kivy.graphics.texture import Texture
+from kivy.graphics import RoundedRectangle
+from kivy.graphics import Rectangle
+from kivy.uix.image import Image
+from kivy.uix.widget import Widget
+
+
 
 class Calibrar(Screen):
     def __init__(self, controlador, **kwargs):
         super(Calibrar, self).__init__(**kwargs)
         self.controlador = controlador
-        #self.background_color = (0, 0, 0, 1) 
-        # Crea una imagen de fondo
-        self.fondo = Image(source=self.controlador.get_fondo() , allow_stretch=True, keep_ratio=False)
+
+        # Crear una imagen de fondo
+        self.fondo = Image(source=self.controlador.get_fondo2(), allow_stretch=True, keep_ratio=False)
         self.add_widget(self.fondo)
+
         # Textos de calibración
         self.textos_calibracion = [
-            'Cuadrar la cruz con el punto medio entre las cejas y la cabeza recta, posteriormente mire fijamente el punto \n' + 
-            'amarillo y mientras tanto haga click en el boton Continuar (mirando al punto)',
-            'Ahora porfavor cierre los ojos y mientras tanto vuelva a presionar el boton de continuar (con los ojos cerrados)',
-            'Calibración completada, presione continuar para ir al inicio'
-        ]     
+            'Ajustar la cámara a 50/60cm de distancia y a la misma altura que los ojos\n' + 
+            'Centrar la cámara para que el punto central de la cara esté en el circulo\n' + 
+            'Mientras el usuario mira al punto amarillo, presionar continuar',
 
-        # Creamos la caja para meter todo
-        self.layout = BoxLayout(orientation='vertical')
+            'Mientras el usuario mantiene los ojos cerrados volver a presionar el boton de continuar',
+            'Calibración completada, presionar continuar para ir al inicio'
+        ]
 
-        # El boton de inicio
-        btn_inicio = ButtonRnd(text='Inicio', size_hint=(.2, .1), pos_hint={'x': 0, 'top': 1}, on_press= self.on_inicio, font_name='Texto')
-        self.layout.add_widget(btn_inicio)
-
-        # El texto explicativo
-        self.texto_explicativo = Label(text=self.textos_calibracion[0], font_size=self.controlador.get_font_txts(), size_hint=(1, .1), pos_hint={'top': .7}, font_name='Texto')
-        self.layout.add_widget(self.texto_explicativo)
-        
-        # The image box
-        self.image_box = Image(size_hint=(.5, .4), pos_hint={'center_x': .5, 'top': 1})
-
-        self.layout.add_widget(self.image_box)
-
-        # El boton de comenzar
-        btn_comenzar = ButtonRnd(text='Continuar', size_hint=(.2, .1), pos_hint={'right': 1, 'top': 0}, on_press=self.on_continuar, font_name='Texto')
-        self.layout.add_widget(btn_comenzar)
-
-        # Add the layout to the screen
+        # Crear el contenedor principal
+        self.layout = BoxLayout(orientation='vertical', size_hint=(1, 1))
         self.add_widget(self.layout)
 
 
+        # Crear el layout del menú
+        self.menu_layout = BoxLayout(orientation='horizontal', padding=20, spacing=20, size_hint=(0.9, 0.6), pos_hint={'center_x': 0.5})
+        self.layout.add_widget(self.menu_layout)
+        
+        # Botón de Continuar
+        self.btn_comenzar = ButtonRnd(text='Continuar', size_hint=(0.25, 0.05), pos_hint={'center_x':0.5}, on_press=self.on_continuar, font_name='Texto')
+        self.layout.add_widget(self.btn_comenzar)
+        self.layout.add_widget(Widget(size_hint_y=0.1))
+        
+        
+        # Sección izquierda
+        left_section = BoxLayout(orientation='vertical', size_hint=(0.45, 1))
+        right_section = BoxLayout(orientation='vertical', size_hint=(0.45, 1))
+        self.menu_layout.add_widget(left_section)
+        self.menu_layout.add_widget(right_section)
+
+        # Botón de Inicio
+        left_section.add_widget(Widget(size_hint_y=0.4))
+        btn_inicio = ButtonRnd(text='Inicio', size_hint=(0.4, 0.2), pos_hint={'x':0.05},on_press=self.on_inicio, font_name='Texto')
+        left_section.add_widget(btn_inicio)
+        left_section.add_widget(Widget(size_hint_y=0.3))
+
+
+        # Foto calibrar.png
+        self.image = Image(source='./imagenes/calibrar.png', pos_hint={'center_x': 0.5})
+        left_section.add_widget(self.image)
+
+        # Texto explicativo
+        self.texto_explicativo = Label(
+            text=self.textos_calibracion[0], 
+            font_size=self.controlador.get_font_txts(), 
+            font_name='Texto', 
+            halign='center', 
+            valign='middle'
+        )
+        self.texto_explicativo.bind(size=self.texto_explicativo.setter('text_size'))
+        left_section.add_widget(self.texto_explicativo)
+
+        # Sección derecha
+        right_section.add_widget(Widget(size_hint_y=0.15))
+        self.image_box = Image(size_hint=(1, 0.7), pos_hint={'center_x': 0.5})
+        right_section.add_widget(self.image_box)
+
+        # Programar la actualización de la image_box
+        Clock.schedule_interval(self.update_image_box, 1.0 / 30)
+
+   
     # Funcion para dibujar el circulo amarillo una vez abierta la ventana(para centrarlo bien)
     def on_enter(self, *args):                  
         # Se crea el circulo amarillo y se añade
-        self.circulo = Ellipse(pos=(self.center_x - 50, 50), size=(100, 100))
+        self.circulo = Ellipse(pos=(self.center_x - 30, 30), size=(60, 60))
         with self.layout.canvas:
             Color(1, 1, 0)  
             self.circulo_instr = InstructionGroup()
@@ -60,6 +97,13 @@ class Calibrar(Screen):
             # Comprobamos que no haya otro circulo
             if self.circulo_instr not in self.layout.canvas.children:
                 self.layout.canvas.add(self.circulo_instr)
+
+            Color(1, 1, 1)
+            self.divisoria = Rectangle(size=(2, self.height/1.7), pos=(self.center_x, self.center_y - self.height/4))
+            self.divisora_instr = InstructionGroup()
+            self.divisora_instr.add(self.divisoria)
+            if self.divisora_instr not in self.canvas.children:
+                self.canvas.add(self.divisora_instr)
         
         # Schedule the update of the image box every 1/30 seconds
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)

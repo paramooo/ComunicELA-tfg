@@ -77,7 +77,7 @@ class Modelo:
         self.Desplazamiento = [0.5,0.5]
 
         # Aplicar un umbral
-        self.fondo_frame_editado = cv2.imread('./imagenes/fondo_marco_red.jpeg', cv2.IMREAD_GRAYSCALE)
+        self.fondo_frame_editado = cv2.imread('./imagenes/fondo_marco_amp.png', cv2.IMREAD_GRAYSCALE)
         self.mask_rgb = np.zeros((*self.fondo_frame_editado.shape, 3), dtype=np.uint8)
         self.mask_rgb[self.fondo_frame_editado<50] = [40, 40, 40]
 
@@ -165,7 +165,8 @@ class Modelo:
         puntos_or = self.detector.get_puntos_or(frame)
 
         # Ahora puedes usar mask_rgb en lugar de self.mask
-        frame = cv2.addWeighted(frame, 1, self.mask_rgb, 0.7, 0)
+
+        frame = cv2.addWeighted(frame, 1, self.mask_rgb, 0.6, 0)
 
         # Crear un circulo en el medio del frame
         r = 10

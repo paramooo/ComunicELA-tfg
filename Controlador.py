@@ -20,6 +20,9 @@ class Controlador:
     
     def get_fondo(self):
         return self.vista.get_fondo()
+    
+    def get_fondo2(self):
+        return self.vista.get_fondo2()
 
 
 
