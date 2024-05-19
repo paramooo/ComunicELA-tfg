@@ -89,7 +89,7 @@ class Test(Screen):
             for i in range(5):
                 # Crear una pelota
                 label = Label(text=f'{esquinas[i]}: {limites[i]}', size_hint=(.2, .1), pos_hint={'x': 0, 'top': 1 - i * 0.2})
-                pelota = Pelota(esquinas[i], self.controlador, self.size, label, size=(20, 20), size_hint=(None, None))
+                pelota = Pelota(i, self.controlador, self.size, label, size=(20, 20), size_hint=(None, None))
                 with pelota.canvas:
                     Color(0, 1, 0)  # Verde
                     Ellipse(size=pelota.size)

@@ -59,6 +59,7 @@ fondomenus: https://unsplash.com/es/fotos/un-fondo-negro-con-un-diseno-ondulado-
 fuentes: google_fonts
 fRANCISCO -> TITULO
 Orbitron -> Textos
+fondo_frame_editado -> generado con IA (dalle-3)
 
 CAMBIAR AREA DE RECONOCIMIENTO DE BOTONES DE TABLEROS, ESTA EN 0.2 Y ES 0.15
 

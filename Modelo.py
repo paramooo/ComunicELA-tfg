@@ -14,6 +14,9 @@ from io import BytesIO
 import pandas as pd
 from kivy.core.audio import SoundLoader
 import threading
+import math
+
+
 class Modelo:
     def __init__(self):
         # Para el sonido del click
@@ -67,13 +70,17 @@ class Modelo:
         self.tablero = None
         
         # Ponderar la mirada
-        self.limiteAbajoIzq = [0.1,0.15]
-        self.limiteAbajoDer = [0.85,0.12]
-        self.limiteArribaIzq = [0.05,0.86]
-        self.limiteArribaDer = [0.88,0.88]
+        self.limiteAbajoIzq = [0.10,0.07]
+        self.limiteAbajoDer = [0.87,0.09]
+        self.limiteArribaIzq = [0.05,0.81]
+        self.limiteArribaDer = [0.93,0.89]
         self.Desplazamiento = [0.5,0.5]
 
-        
+        # Aplicar un umbral
+        self.fondo_frame_editado = cv2.imread('./imagenes/fondo_marco_red.jpeg', cv2.IMREAD_GRAYSCALE)
+        self.mask_rgb = np.zeros((*self.fondo_frame_editado.shape, 3), dtype=np.uint8)
+        self.mask_rgb[self.fondo_frame_editado<50] = [40, 40, 40]
+
     #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
     def reiniciar_datos_r(self):
         self.recopilar = False #Variable para saber si se esta recopilando datos
@@ -149,44 +156,56 @@ class Modelo:
             # Poner un texto de que no esta la camara activa alineado al centro y en blanco y con la fuente de texto
             cv2.putText(frame, 'Seleccione una camara', (220, 430), cv2.FONT_ITALIC, 0.6, (255, 255, 255), 2)
             return frame
-            
+
+        # Blanco por defecto
+        color = (255, 255, 255)  
         
-        # Rojo por defecto
-        color = (0, 0, 255)  
-        
-        # Poner el punto en el centro
+        # Coger los puntos
         coord_central = self.detector.get_punto_central(frame)
         puntos_or = self.detector.get_puntos_or(frame)
+
+        # Ahora puedes usar mask_rgb en lugar de self.mask
+        frame = cv2.addWeighted(frame, 1, self.mask_rgb, 0.7, 0)
+
+        # Crear un circulo en el medio del frame
+        r = 10
+        # Poner el punto central y la flecha en caso de necesitarla
         if coord_central is not None:
             x = round(frame.shape[1]*coord_central[0])
             y = round(frame.shape[0]*coord_central[1])
 
-            # Si el punto central esta en el centro de la pantalla del tamaño del porcentaje esta en verde el punto central y en rojo si no
-            if 0.5 - porcentaje/2 < coord_central[0] < 0.5 + porcentaje/2 and 0.5 - porcentaje/2 < coord_central[1] < 0.5 + porcentaje/2:
+            dx = x - frame.shape[1]//2
+            dy = y - frame.shape[0]//2
+
+            # Si el punto central esta dentro del circulo de radio r
+            if dx**2 + dy**2 < r**2:
                 color = (0, 255, 0)
             else:
-                color = (0, 0, 255)
-            frame[y - 4:y + 4, x - 4:x + 4, :] = color
+                color = (255, 255, 255)
 
+                # Calcular el ángulo de la línea desde el centro del círculo hasta el punto central
+                angle = math.atan2(dy, dx)
+
+                # Calcular las coordenadas del punto en el borde del círculo
+                x_end = frame.shape[1]//2 + r * math.cos(angle)
+                y_end = frame.shape[0]//2 + r * math.sin(angle)
+
+                # Poner una flecha al punto más cercano del círculo de radio r
+                cv2.arrowedLine(frame, (x, y), (int(x_end), int(y_end)), color, 2)
+
+            # Crear un circulo de radio r en el centro
+            cv2.circle(frame, (frame.shape[1]//2, frame.shape[0]//2), r, color, 2)
+
+            # Crear un circulo de radio 10 en el punto central
+            cv2.circle(frame, (round(frame.shape[1]*coord_central[0]), round(frame.shape[0]*coord_central[1])), 5, color, -1)   
+
+        # Colorear los puntos de la cara
         if puntos_or is not None:
             for punto in puntos_or:
                 x = round(frame.shape[1]*punto[0])
                 y = round(frame.shape[0]*punto[1])
                 frame[y - 1:y + 1, x - 1:x + 1, :] = color
 
-        # Poner los pixeles centrales del frame para linea horizontal de la cruz
-        frame[frame.shape[0]//2 - 1:frame.shape[0]//2 + 1, :, :] = color
-        # Poner los pixeles centrales del frame para linea vertical de la cruz
-        frame[:, frame.shape[1]//2 - 1:frame.shape[1]//2 + 1, :] = color
-        
-        # Calcular las coordenadas del cuadrado
-        x_start = int(frame.shape[1] * (0.5 - porcentaje / 2))
-        x_end = int(frame.shape[1] * (0.5 + porcentaje / 2))
-        y_start = int(frame.shape[0] * (0.5 - porcentaje / 2))
-        y_end = int(frame.shape[0] * (0.5 + porcentaje / 2))
-
-        # Dibujar el cuadrado en el frame
-        cv2.rectangle(frame, (x_start, y_start), (x_end, y_end), color, 2)
 
         return frame
 
@@ -407,6 +426,9 @@ class Modelo:
 
 
     def postprocesar(self, mirada):
+        # Ponderar la mirada
+        mirada = self.ponderar(mirada)
+
         # Añadir la nueva posición al historial
         self.historial.append(mirada)
 
@@ -414,16 +436,14 @@ class Modelo:
         if len(self.historial) > self.hist_max:
             self.historial.pop(0)
 
-        # PRIMER POSTPROCESADO CON LA MEDIANA PARA REDUCIR EL RUIDO con
+        # Primero con la mediana para eliminar ruido y no perder tanto retraso
         mirada = np.median(self.historial[-self.cantidad_suavizado:], axis=0)
-       # mirada = np.mean(self.historial[-self.cantidad_suavizado:], axis=0)
+
         self.historial2.append(mirada)
         if len(self.historial2) > self.hist_max:
             self.historial2.pop(0)
-        
+        # Despues con la media de las medianas para suavizar el trazado del puntero
         mirada = np.mean(self.historial2[-self.cantidad_suavizado2:], axis=0)
-        # SEGUNDO POSTPROCESADO CON LA CAMPANA DE GAUSS INVERSA
-        mirada = self.ponderar(mirada)
         
         return mirada
 
@@ -473,12 +493,17 @@ class Modelo:
             ponderacion_esquina = ponderar_esquina(mirada, calcular_limites_esquina(esquinas.index(esquina_limites)))
             ponderaciones.append(ponderacion_esquina)
 
-
+        
         # Calcular la distancia de la mirada a cada esquina
         distancias = [calcular_distancia(mirada, esquina) for esquina in esquinas]
 
         # Normalizar las distancias para obtener pesos de ponderación
-        pesos = np.array([1 / (distancia + 1) for distancia in distancias])
+        pesos = np.array([1 / (distancia*2 + 1) for distancia in distancias])  # Cambio aquí
+
+        # Realizar normalizacion min-max de los pesos
+        pesos = (pesos - np.min(pesos)) / (np.max(pesos) - np.min(pesos))
+
+        # Sumar los pesos
         suma_pesos = np.sum(pesos)
 
         # Ponderar las ponderaciones de acuerdo a las distancias
@@ -486,6 +511,8 @@ class Modelo:
         for i, ponderacion_esquina in enumerate(ponderaciones):
             ponderacion_final += ponderacion_esquina * (pesos[i] / suma_pesos)
 
+        # Imprimir el peso de cada esquina
+        print(f'0: {round(pesos[0],6)} \t1: {round(pesos[1], 6)} \t2: {round(pesos[2], 6)} \t3: {round(pesos[3], 6)}')
         return ponderacion_final
 
             

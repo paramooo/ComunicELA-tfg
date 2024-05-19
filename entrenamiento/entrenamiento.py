@@ -11,6 +11,8 @@ from torchvision import models
 import keyboard
 import matplotlib.pyplot as plt
 from shapely.geometry import Point, Polygon, LineString
+import matplotlib.colors as mcolors
+import numpy as np
 
 
 ##############################################  ANALIS DE DATOS ########################################################
@@ -224,6 +226,103 @@ def ponderar_graficas():
     plt.show()
 
 
+
+
+def ponderar_graficas2():
+    limiteAbajoIzq = [0.1, 0.1]
+    limiteAbajoDer = [0.9, 0.1]
+    limiteArribaIzq = [0.1, 0.9]
+    limiteArribaDer = [0.9, 0.9]
+    Desplazamiento = [0.5, 0.5]
+    def ponderar(mirada):
+        def calcular_limites_esquina(cuadrante):
+            if cuadrante == 0:
+                return limiteAbajoIzq[0], limiteAbajoIzq[1], limiteAbajoDer[0], limiteArribaIzq[1]
+            elif cuadrante == 1:
+                return limiteAbajoIzq[0], limiteAbajoDer[1], limiteAbajoDer[0], limiteArribaDer[1]
+            elif cuadrante == 2:
+                return limiteArribaIzq[0], limiteAbajoIzq[1], limiteArribaDer[0], limiteArribaIzq[1]
+            elif cuadrante == 3:
+                return limiteArribaIzq[0], limiteAbajoDer[1], limiteArribaDer[0], limiteArribaDer[1]
+        
+        def ponderar_esquina(mirada, esquina_limites):
+            LimiteBajoX, LimiteBajoY, LimiteAltoX, LimiteAltoY = esquina_limites
+
+            # Calculamos los límites de la zona no afectada
+            ComienzoZonaNoAfectadaX = LimiteBajoX + (Desplazamiento[0] - LimiteBajoX) / 2
+            FinZonaNoAfectadaX = LimiteAltoX - (LimiteAltoX - Desplazamiento[0]) / 2
+            ComienzoZonaNoAfectadaY = LimiteBajoY + (Desplazamiento[1] - LimiteBajoY) / 2
+            FinZonaNoAfectadaY = LimiteAltoY - (LimiteAltoY - Desplazamiento[1]) / 2
+
+            # Calculamos las x y las y de las Xs
+            Xx = np.array([LimiteBajoX, ComienzoZonaNoAfectadaX, Desplazamiento[0], FinZonaNoAfectadaX, LimiteAltoX])
+            Xy = np.array([0, ComienzoZonaNoAfectadaX, 0.5, FinZonaNoAfectadaX, 1])
+            Yx = np.array([LimiteBajoY, ComienzoZonaNoAfectadaY, Desplazamiento[1], FinZonaNoAfectadaY, LimiteAltoY])
+            Yy = np.array([0, ComienzoZonaNoAfectadaY, 0.5, FinZonaNoAfectadaY, 1])
+
+            # Crear la función polinómica
+            polinomioX = np.poly1d(np.polyfit(Xx, Xy, 4))
+            polinomioY = np.poly1d(np.polyfit(Yx, Yy, 4))
+
+            # Calcular el valor ponderado
+            return np.array([np.clip(polinomioX(mirada[0]), 0, 1), np.clip(polinomioY(mirada[1]), 0, 1)])
+
+        def calcular_distancia(mirada, esquina):
+            return np.sqrt((mirada[0] - esquina[0])**2 + (mirada[1] - esquina[1])**2)
+
+        # Definir las cuatro esquinas
+        esquinas = [limiteAbajoIzq, limiteAbajoDer, limiteArribaIzq, limiteArribaDer]
+        ponderaciones = []
+
+        # Calcular la ponderación para cada esquina
+        for esquina_limites in esquinas:
+            ponderacion_esquina = ponderar_esquina(mirada, calcular_limites_esquina(esquinas.index(esquina_limites)))
+            ponderaciones.append(ponderacion_esquina)
+
+        
+        # Calcular la distancia de la mirada a cada esquina
+        distancias = [calcular_distancia(mirada, esquina) for esquina in esquinas]
+
+        # Normalizar las distancias para obtener pesos de ponderación
+        pesos = np.array([1 / (distancia*2 + 1) for distancia in distancias])  # Cambio aquí
+
+        # Realizar normalizacion min-max de los pesos
+        pesos = (pesos - np.min(pesos)) / (np.max(pesos) - np.min(pesos))
+
+        # Sumar los pesos
+        suma_pesos = np.sum(pesos)
+
+        # Ponderar las ponderaciones de acuerdo a las distancias
+        ponderacion_final = np.zeros_like(ponderaciones[0])
+        for i, ponderacion_esquina in enumerate(ponderaciones):
+            ponderacion_final += ponderacion_esquina * (pesos[i] / suma_pesos)
+
+        # Imprimir el peso de cada esquina
+        return ponderacion_final
+
+    # Generar valores de mirada desde 0 hasta 1
+    x = np.linspace(0, 1, 100)
+    y = np.linspace(0, 1, 100)
+    mirada = np.array([[i, j] for i in x for j in y])
+
+    # Calcular los valores ponderados
+    miradas_ponderadas = np.array([ponderar(mirad) for mirad in mirada])
+
+    # Crear la gráfica
+    fig, ax = plt.subplots()
+    cmap = mcolors.LinearSegmentedColormap.from_list("mycmap", ["green", "yellow", "orange", "red"])
+
+    for mirada, ponderada in zip(mirada, miradas_ponderadas):
+        # Calcular la longitud de la flecha
+        longitud = np.sqrt((ponderada[0] - mirada[0])**2 + (ponderada[1] - mirada[1])**2)
+
+        # Calcular el color de la flecha
+        color = cmap(longitud/0.17)
+
+        # Dibujar la flecha
+        ax.arrow(mirada[0], mirada[1], ponderada[0] - mirada[0], ponderada[1] - mirada[1], color=color)
+
+    plt.show()
 
 ############################################################################################################################
 ############################################################################################################################
@@ -555,6 +654,6 @@ def entrenar_resnet(epochs):
 if __name__ == '__main__':
 #     # entrenar_resnet(1500)
 #     entrenar1()
-    ponderar_graficas()
+    ponderar_graficas2()
     #entrenar1()
 
