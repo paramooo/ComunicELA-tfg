@@ -7,11 +7,8 @@ from kivy.graphics import InstructionGroup
 from kivy.clock import Clock
 from kivy.uix.image import Image
 from kivy.graphics.texture import Texture
-from kivy.graphics import RoundedRectangle
 from kivy.graphics import Rectangle
-from kivy.uix.image import Image
 from kivy.uix.widget import Widget
-
 
 
 class Calibrar(Screen):
@@ -25,29 +22,25 @@ class Calibrar(Screen):
 
         # Textos de calibración
         self.textos_calibracion = [
-            'Ajustar la cámara a 50/60cm de distancia y a la misma altura que los ojos\n' + 
-            'Centrar la cámara para que el punto central de la cara esté en el circulo\n' + 
+            'Coloque la cámara a la altura de los ojos del usuario y a 50/60cm\n\n Debe situar el círculo dentro del punto central de la cara',
             'Mientras el usuario mira al punto amarillo, presionar continuar',
-
-            'Mientras el usuario mantiene los ojos cerrados volver a presionar el boton de continuar',
-            'Calibración completada, presionar continuar para ir al inicio'
+            'Mientras el usuario mantiene los ojos cerrados volver a presionar el botón de Continuar',
+            'Calibración completada, presionar Continuar para ir al Inicio'
         ]
 
         # Crear el contenedor principal
         self.layout = BoxLayout(orientation='vertical', size_hint=(1, 1))
         self.add_widget(self.layout)
 
-
         # Crear el layout del menú
         self.menu_layout = BoxLayout(orientation='horizontal', padding=20, spacing=20, size_hint=(0.9, 0.6), pos_hint={'center_x': 0.5})
         self.layout.add_widget(self.menu_layout)
-        
+
         # Botón de Continuar
-        self.btn_comenzar = ButtonRnd(text='Continuar', size_hint=(0.25, 0.05), pos_hint={'center_x':0.5}, on_press=self.on_continuar, font_name='Texto')
+        self.btn_comenzar = ButtonRnd(text='Continuar', size_hint=(0.25, 0.05), pos_hint={'center_x': 0.5}, on_press=self.on_continuar, font_name='Texto')
         self.layout.add_widget(self.btn_comenzar)
         self.layout.add_widget(Widget(size_hint_y=0.1))
-        
-        
+
         # Sección izquierda
         left_section = BoxLayout(orientation='vertical', size_hint=(0.45, 1))
         right_section = BoxLayout(orientation='vertical', size_hint=(0.45, 1))
@@ -56,21 +49,20 @@ class Calibrar(Screen):
 
         # Botón de Inicio
         left_section.add_widget(Widget(size_hint_y=0.4))
-        btn_inicio = ButtonRnd(text='Inicio', size_hint=(0.4, 0.2), pos_hint={'x':0.05},on_press=self.on_inicio, font_name='Texto')
+        btn_inicio = ButtonRnd(text='Inicio', size_hint=(0.4, 0.2), pos_hint={'x': 0.05}, on_press=self.on_inicio, font_name='Texto')
         left_section.add_widget(btn_inicio)
         left_section.add_widget(Widget(size_hint_y=0.3))
 
-
         # Foto calibrar.png
-        self.image = Image(source='./imagenes/calibrar.png', pos_hint={'center_x': 0.5})
+        self.image = Image(source='./imagenes/calibrar0.png', pos_hint={'center_x': 0.5})
         left_section.add_widget(self.image)
 
         # Texto explicativo
         self.texto_explicativo = Label(
-            text=self.textos_calibracion[0], 
-            font_size=self.controlador.get_font_txts(), 
-            font_name='Texto', 
-            halign='center', 
+            text=self.textos_calibracion[0],
+            font_size=self.controlador.get_font_txts(),
+            font_name='Texto',
+            halign='center',
             valign='middle'
         )
         self.texto_explicativo.bind(size=self.texto_explicativo.setter('text_size'))
@@ -81,72 +73,79 @@ class Calibrar(Screen):
         self.image_box = Image(size_hint=(1, 0.7), pos_hint={'center_x': 0.5})
         right_section.add_widget(self.image_box)
 
+        # Círculo calibración
+        self.circulo = Ellipse(pos=(self.center_x - 30, 30), size=(60, 60))
+        self.circulo_instr = InstructionGroup()
+
         # Programar la actualización de la image_box
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)
 
-   
-    # Funcion para dibujar el circulo amarillo una vez abierta la ventana(para centrarlo bien)
-    def on_enter(self, *args):                  
-        # Se crea el circulo amarillo y se añade
-        self.circulo = Ellipse(pos=(self.center_x - 30, 30), size=(60, 60))
-        with self.layout.canvas:
-            Color(1, 1, 0)  
-            self.circulo_instr = InstructionGroup()
-
-            self.circulo_instr.add(self.circulo)
-            # Comprobamos que no haya otro circulo
-            if self.circulo_instr not in self.layout.canvas.children:
-                self.layout.canvas.add(self.circulo_instr)
-
-            Color(1, 1, 1)
-            self.divisoria = Rectangle(size=(2, self.height/1.7), pos=(self.center_x, self.center_y - self.height/4))
-            self.divisora_instr = InstructionGroup()
-            self.divisora_instr.add(self.divisoria)
-            if self.divisora_instr not in self.canvas.children:
-                self.canvas.add(self.divisora_instr)
-        
+    # Función para dibujar la línea divisoria del layout
+    def on_enter(self, *args):
+        self.update_divisoria()
         # Schedule the update of the image box every 1/30 seconds
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)
 
+        self.update_view(self.controlador.cambiar_estado_calibracion(0))
 
-    # Funcion para el boton continuar
+    def update_divisoria(self):
+        with self.layout.canvas:
+            Color(1, 1, 1)
+            self.divisoria = Rectangle(size=(2, self.height / 1.7), pos=(self.center_x, self.center_y - self.height / 4))
+            self.divisoria_instr = InstructionGroup()
+            self.divisoria_instr.add(self.divisoria)
+            if self.divisoria_instr not in self.layout.canvas.children:
+                self.layout.canvas.add(self.divisoria_instr)
+
+    # Función para el botón continuar
     def on_continuar(self, *args):
-        self.controlador.on_continuar_calibracion()
+        menu = self.controlador.cambiar_estado_calibracion()
+        if(menu == 0):
+            self.controlador.change_screen('inicio')
+        self.update_view(menu)
 
-    # Funcion para el boton inicio
+    # Función para el botón inicio
     def on_inicio(self, *args):
         self.controlador.cambiar_estado_calibracion(0)
         self.controlador.change_screen('inicio')
 
-        # Se detiene la camara y se limpia el circulo
+        # Se detiene la cámara y se limpia el círculo
         self.circulo_instr.clear()
 
+    # Función para actualizar la vista
+    def update_view(self, estado):
+        self.texto_explicativo.text = self.textos_calibracion[estado]
+        self.image.source = f'./imagenes/calibrar{estado}.png'
 
+        if estado == 1:
+            # Calcular la posición central
+            center_x = self.width / 2 - self.circulo.size[0] / 2
+            self.circulo.pos = (center_x, 10)
 
-    # Funcion para actualizar la vista
-    def update_view(self, n):
-        self.texto_explicativo.text = self.textos_calibracion[n]
-        if n != 0:
-            self.circulo_instr.clear()
-            self.image_box.opacity = 0  # Hide the image box
+            with self.layout.canvas:
+                Color(1, 1, 0)
+                self.circulo_instr.clear()
+                self.circulo_instr.add(Color(1, 1, 0))
+                self.circulo_instr.add(self.circulo)
+                if self.circulo_instr not in self.layout.canvas.children:
+                    self.layout.canvas.add(self.circulo_instr)
         else:
-            self.image_box.opacity = 1  # Show the image box
-    
-    def update_image_box(self, dt):
-        # Only update the image box in calibration state 0
-        if self.controlador.obtener_estado_cal() == 0:
-            frame = self.controlador.get_frame_editado(0.10)
-            if frame is None:
-                return
-            
-            
-            # Convert the frame to a texture
-            texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
-            texture.blit_buffer(frame.tostring(), colorfmt='bgr', bufferfmt='ubyte')
+            self.circulo_instr.clear()
 
-            # Invertir la imagen verticalmente
-            texture.flip_vertical()
-            self.image_box.texture = texture
+        self.update_divisoria()
+
+    def update_image_box(self, dt):
+        frame = self.controlador.get_frame_editado()
+        if frame is None:
+            return
+
+        # Convert the frame to a texture
+        texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+        texture.blit_buffer(frame.tostring(), colorfmt='bgr', bufferfmt='ubyte')
+
+        # Invertir la imagen verticalmente
+        texture.flip_vertical()
+        self.image_box.texture = texture
 
     def on_leave(self, *args):
         Clock.unschedule(self.update_image_box)

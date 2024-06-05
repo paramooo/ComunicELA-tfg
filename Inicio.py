@@ -12,15 +12,8 @@ class Inicio(Screen):
         super(Inicio, self).__init__(**kwargs)
         self.controlador = controlador
         #self.background_color = (0, 0, 0, 1)
-        self.porcentajeDisp = 0.15
-
         self.primera = True
-        self.texto_inicio = ("Bienvenido a ComunicELA, una aplicación en desarrollo para ayudar a personas a comunicarse.\n" + 
-                            "Para empezar, seleccione la cámara que quiera usar, despues, comienza calibrando el\n" + 
-                            "parpadeo para que la aplicacion se ajuste a tu perfil.\n" +
-                            "Una vez calibrado, puedes realizar un test para comprobar que todo funciona correctamente.\n" +
-                            "Si todo va bien, puedes empezar a recopilar datos, muchas gracias!\n" + 
-                            "Presione ESC en cuaquier momento para cerrar la aplicación")
+        #self.texto_inicio = ("Bienvenido a ComunicELA")
 
 
         
@@ -61,9 +54,9 @@ class Inicio(Screen):
         # Parte derecha con el texto y la imagen
         Derecha = BoxLayout(orientation='vertical', size_hint=(0.5, 1), spacing=10)
        
-        self.image_box = Image(size_hint=(1, 1), allow_stretch=True, keep_ratio=True)
+        self.image_box = Image(size_hint=(0.7, 0.7), pos_hint={'center_x': 0.5}, allow_stretch=True, keep_ratio=True)
 
-        texto = Label(text=self.texto_inicio, halign='center', font_size=self.controlador.get_font_txts(), valign='center', color=(1, 1, 1, 1), font_name='Texto')
+        #texto = Label(text=self.texto_inicio, halign='center', font_size=self.controlador.get_font_txts(), valign='center', color=(1, 1, 1, 1), font_name='Texto')
 
 
 
@@ -77,7 +70,7 @@ class Inicio(Screen):
         Izquierda.add_widget(espacio_blanco2)
 
         Derecha.add_widget(self.image_box)
-        Derecha.add_widget(texto)
+        #Derecha.add_widget(texto)
 
         caja.add_widget(Izquierda)
         caja.add_widget(Derecha)
@@ -114,7 +107,7 @@ class Inicio(Screen):
             self.camera_spinner.text = f'Cámara {text}'
 
     def update_image_box(self, dt):
-        frame = self.controlador.get_frame_editado(self.porcentajeDisp)
+        frame = self.controlador.get_frame_editado()
         if frame is None:
             return
         

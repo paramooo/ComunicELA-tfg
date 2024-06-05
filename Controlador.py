@@ -64,36 +64,20 @@ class Controlador:
     def seleccionar_camara(self, camara):
         self.modelo.seleccionar_camara(camara)
 
-    def get_frame_editado(self, porcentaje):
-        return self.modelo.get_frame_editado(porcentaje)
+    def get_frame_editado(self):
+        return self.modelo.get_frame_editado()
     
     def get_camara_seleccionada(self):
         return self.modelo.get_index_actual()
     
 
-# FUNCIONES PARA EL MENU DE CALIBRACION DEL PARPADEO
-    def cambiar_estado_calibracion(self, numero=-1):
-        #Primero actualiza el modelo
-        n = self.modelo.cambiar_estado_calibracion(numero)
-
-        #Avisa del cambio a la vista para cambiar el texto
-        if n == 3:
-            self.modelo.cambiar_estado_calibracion(0)
-            self.change_screen('inicio')
-            self.vista.calibrar.update_view(0)
-
-        else:
-            self.vista.calibrar.update_view(n)
-
+# FUNCIONES PARA EL MENU DE CALIBRACION DEL PARPADEO    
     def obtener_estado_cal(self):
         return self.modelo.obtener_estado_calibracion()
     
-    def on_continuar_calibracion(self):
-        if self.modelo.calibrar_ear() is None:
-            return
-        self.cambiar_estado_calibracion()
-        self.vista.calibrar.update_view(self.obtener_estado_cal())
-
+    def cambiar_estado_calibracion(self, numero=None):#MOVER ESTO AL MODELO
+        return self.modelo.cambiar_estado_calibracion(numero)
+    
     def get_punto_central(self, frame):
         return self.modelo.get_punto_central(frame)
     
@@ -125,6 +109,7 @@ class Controlador:
     def on_recopilar(self):
         # Inicia la cuenta atrás
         Clock.schedule_interval(self.modelo.cuenta_atras, 1)
+        self.modelo.recopilar = True
 
     def get_contador_reco(self):
         # Obtiene el contador del modelo
@@ -138,11 +123,8 @@ class Controlador:
     def get_escaneado(self):
         return self.modelo.escaneado  
 
-    def actualizar_pos_circle_r(self, tamano_pantalla, fichero):
+    def actualizar_pos_circle_r(self, tamano_pantalla, fichero=None):
             return self.modelo.actualizar_pos_circle_r(tamano_pantalla, fichero)
-    
-    def recopilar_datos(self):
-        self.modelo.recopilar = True
 
     def get_recopilando(self):
         return self.modelo.recopilar
@@ -151,8 +133,20 @@ class Controlador:
         self.modelo.reiniciar_datos_r() 
 
 
+# ---------------------------- FUNCIONES PARA EL MODO DE REENTRENAMIENTO -------------------------
+
+    def reiniciar_datos_ree(self):
+        self.modelo.reiniciar_datos_reent()
+
+    def set_reentrenando(self, valor):
+        self.modelo.recopilarRe = valor
+
+    def mostrar_reentrenando(self):
+        self.vista.reentrenar.texto_explicativo.text = 'Reentrenando...'
+
 # ---------------------------- FUNCIONES PARA EL MODO DE TABLEROS -------------------------
 #------------------------------------------------------------------------------------------
+#TENGO QUE MOVER ESTO AL MODELO Y DEVOLVER EN LA FUNCION LA PALABRA QUE SE HA AÑADIDO 
     def on_casilla_tab(self, texto_boton):
             if texto_boton.startswith('TAB.'):
                 nombre_tablero = texto_boton[5:]
@@ -162,15 +156,12 @@ class Controlador:
                     self.vista.tableros.cambiar_tablero(nuevo_tablero)
             else:
                 self.modelo.añadir_palabra(texto_boton)
-                self.vista.tableros.label.text = self.modelo.get_frase()
     
     def borrar_palabra(self):
         self.modelo.borrar_palabra()  
-        self.vista.tableros.label.text = self.modelo.get_frase()
 
     def borrar_todo(self):
         self.modelo.borrar_todo()
-        self.vista.tableros.label.text = self.modelo.get_frase()
 
     def obtener_tablero(self, nombre_tablero):
         return self.modelo.obtener_tablero(nombre_tablero)

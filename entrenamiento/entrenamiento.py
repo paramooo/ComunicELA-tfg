@@ -654,6 +654,6 @@ def entrenar_resnet(epochs):
 if __name__ == '__main__':
 #     # entrenar_resnet(1500)
 #     entrenar1()
-    ponderar_graficas2()
+    ponderar_graficas()
     #entrenar1()
 

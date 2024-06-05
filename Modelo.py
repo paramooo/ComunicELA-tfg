@@ -15,7 +15,8 @@ import pandas as pd
 from kivy.core.audio import SoundLoader
 import threading
 import math
-
+from torch import nn
+import torch.optim as optim
 
 class Modelo:
     def __init__(self):
@@ -47,9 +48,9 @@ class Modelo:
 
         # Variables para la recopilacion de datos 
         self.reiniciar_datos_r()
+        self.reiniciar_datos_reent()
         self.input = []
         self.output = []
-
 
         # Variable para el modelo
         self.pos_t = (0, 0)
@@ -69,17 +70,22 @@ class Modelo:
         self.frase = ""
         self.tablero = None
         
-        # Ponderar la mirada
+        # # Ponderar la mirada
         self.limiteAbajoIzq = [0.10,0.07]
         self.limiteAbajoDer = [0.87,0.09]
         self.limiteArribaIzq = [0.05,0.81]
         self.limiteArribaDer = [0.93,0.89]
         self.Desplazamiento = [0.5,0.5]
+        # self.limiteAbajoIzq = [0,0]
+        # self.limiteAbajoDer = [1,0]
+        # self.limiteArribaIzq = [0,1]
+        # self.limiteArribaDer = [1,1]
+        # self.Desplazamiento = [0.5,0.5]
 
         # Aplicar un umbral
         self.fondo_frame_editado = cv2.imread('./imagenes/fondo_marco_amp.png', cv2.IMREAD_GRAYSCALE)
         self.mask_rgb = np.zeros((*self.fondo_frame_editado.shape, 3), dtype=np.uint8)
-        self.mask_rgb[self.fondo_frame_editado<50] = [40, 40, 40]
+        self.mask_rgb[self.fondo_frame_editado<50] = [50, 50, 50]
 
     #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
     def reiniciar_datos_r(self):
@@ -89,6 +95,11 @@ class Modelo:
         self.salto_bajo, self.salto_alto = 30, 80 #Salto de la pelota roja
         self.velocidad = 30
         self.direccion = 1 
+
+    def reiniciar_datos_reent(self):
+        self.recopilarRe = False
+        self.salto_bajo_re, self.salto_alto_re = 100, 180
+        self.velocidad_re = 40
     
 
 
@@ -104,7 +115,10 @@ class Modelo:
         App.get_running_app().root.current_screen.add_widget(mensaje)
 
 
-
+    def tarea_hilo(self, funcion):
+        # Crear un hilo para la tarea
+        hilo = threading.Thread(target=funcion)
+        hilo.start()
 
 # ---------------------------   FUNCIONES DE CONTROL DE LA CAMARA    -------------------------------
 #-------------------------------------------------------------------------------------------
@@ -135,26 +149,13 @@ class Modelo:
     def get_index_actual(self):
         return self.camara_act
 
-# ---------------------------   FUNCIONES CONTROL DEL MENU DE CALIBRACION -------------------------------
-#-------------------------------------------------------------------------------------------
 
-    def cambiar_estado_calibracion(self, numero):
-        if numero != -1:
-            self.estado_calibracion = numero
-        else:
-            # Se cambia al siguiente estado
-            self.estado_calibracion = self.estado_calibracion + 1
-        return self.estado_calibracion
-                
-    def obtener_estado_calibracion(self):
-        return self.estado_calibracion        
-    
-    def get_frame_editado(self, porcentaje):
+    def get_frame_editado(self):
         frame = self.get_frame()
         if frame is None:
             frame = np.zeros((480, 640, 3), dtype=np.uint8)
             # Poner un texto de que no esta la camara activa alineado al centro y en blanco y con la fuente de texto
-            cv2.putText(frame, 'Seleccione una camara', (220, 430), cv2.FONT_ITALIC, 0.6, (255, 255, 255), 2)
+            cv2.putText(frame, 'Selecciona una camara', (220, 430), cv2.FONT_ITALIC, 0.6, (255, 255, 255), 2)
             return frame
 
         # Blanco por defecto
@@ -166,7 +167,7 @@ class Modelo:
 
         # Ahora puedes usar mask_rgb en lugar de self.mask
 
-        frame = cv2.addWeighted(frame, 1, self.mask_rgb, 0.6, 0)
+        frame = cv2.addWeighted(frame, 0.5, self.mask_rgb, 1, 0)
 
         # Crear un circulo en el medio del frame
         r = 10
@@ -191,8 +192,19 @@ class Modelo:
                 x_end = frame.shape[1]//2 + r * math.cos(angle)
                 y_end = frame.shape[0]//2 + r * math.sin(angle)
 
-                # Poner una flecha al punto más cercano del círculo de radio r
-                cv2.arrowedLine(frame, (x, y), (int(x_end), int(y_end)), color, 2)
+                # Dibujar la línea principal de la flecha
+                cv2.line(frame, (x, y), (int(x_end), int(y_end)), color, 2)
+
+                # Calcular las coordenadas de los puntos de la punta de la flecha
+                arrow_size = np.clip(np.sqrt(dx**2 + dy**2) / 5, 1, 100)
+                dx_arrow1 = arrow_size * math.cos(angle + np.pi/4)  # Ajusta el ángulo para la primera línea de la punta de la flecha
+                dy_arrow1 = arrow_size * math.sin(angle + np.pi/4)
+                dx_arrow2 = arrow_size * math.cos(angle - np.pi/4)  # Ajusta el ángulo para la segunda línea de la punta de la flecha
+                dy_arrow2 = arrow_size * math.sin(angle - np.pi/4)
+
+                # Dibujar las líneas de la punta de la flecha
+                cv2.line(frame, (int(x_end), int(y_end)), (int(x_end + dx_arrow1), int(y_end + dy_arrow1)), color, 2)
+                cv2.line(frame, (int(x_end), int(y_end)), (int(x_end + dx_arrow2), int(y_end + dy_arrow2)), color, 2)
 
             # Crear un circulo de radio r en el centro
             cv2.circle(frame, (frame.shape[1]//2, frame.shape[0]//2), r, color, 2)
@@ -210,39 +222,48 @@ class Modelo:
 
         return frame
 
+# ---------------------------   FUNCIONES CONTROL DEL MENU DE CALIBRACION -------------------------------
+#------------------------------------------------------------------------------------------
+                
 
-
-
+    def obtener_estado_calibracion(self):
+        return self.estado_calibracion        
+    
 
 # ---------------------------   FUNCIONES DE CONTROL DEL EAR -------------------------------
 #-------------------------------------------------------------------------------------------
     
 #Para la calibracion
-    def calibrar_ear(self):
-        #Si estamos en el estado 2, no se hace nada, sale al inicio
-        if self.estado_calibracion == 2:
-            return 0
-
+    def cambiar_estado_calibracion(self, numero = None):
+        if numero is not None:
+            self.estado_calibracion = numero
+            return self.estado_calibracion
         # Se obtienen los datos
         datos = self.detector.obtener_coordenadas_indices(self.get_frame())
 
         #Si no se detecta cara, se devuelve 1 indicando error
         if datos is None:
-            self.mensaje('Calibración fallida, intente de nuevo')
-            return None
+            self.mensaje('Calibración fallida, asegúrate de que el usuario está centrado y bien iluminado')
+            return self.estado_calibracion
     
         # Se desempaquetan los datos
         _, _, coord_ear_izq, coord_ear_der, _, _ = self.detector.obtener_coordenadas_indices(self.get_frame())
 
         # Se captura el EAR actual dependiendo del estado de la calibracion
-        if self.estado_calibracion == 0:
+        if self.estado_calibracion == 1:
             self.umbral_ear_bajo = self.detector.calcular_ear_medio(coord_ear_izq, coord_ear_der)
 
-        elif self.estado_calibracion == 1:
+        elif self.estado_calibracion == 2:
             self.umbral_ear_cerrado = self.detector.calcular_ear_medio(coord_ear_izq, coord_ear_der)
             self.umbral_ear = (self.umbral_ear_bajo*0.4 + self.umbral_ear_cerrado*0.6) #Se calcula el umbral final ponderado entre el cerrado y el abierto bajo
             self.calibrado = True
-        return 0
+        
+        elif self.estado_calibracion == 3:
+            self.estado_calibracion = 0
+            return self.estado_calibracion
+
+        self.estado_calibracion += 1
+        return self.estado_calibracion
 
 #Para el test/tableros
     def get_parpadeo(self, ear):
@@ -279,72 +300,75 @@ class Modelo:
         if self.contador_r > 0:
             self.contador_r -= 1
         elif self.contador_r == 0:
-            self.recopilar = True
             return False
 
     def actualizar_pos_circle_r(self, tamano_pantalla, fichero):
+        velocidad = self.velocidad_re if self.recopilarRe else self.velocidad
+        salto_bajo = self.salto_bajo_re if self.recopilarRe else self.salto_bajo
+        salto_alto = self.salto_alto_re if self.recopilarRe else self.salto_alto
+    
         # Actualiza la posición x de la pelota
-        self.pos_r = (self.pos_r[0] + self.velocidad * self.direccion, self.pos_r[1])
+        self.pos_r = (self.pos_r[0] + velocidad * self.direccion, self.pos_r[1])
 
         # Si la pelota toca los bordes x de la pantalla, cambia la dirección y realiza un salto
         if self.pos_r[0] < 0 or self.pos_r[0] + 50 > tamano_pantalla[0]:
             self.direccion *= -1
 
             # Actualiza la posición y de la pelota con un salto aleatorio
-            salto = random.randint(self.salto_bajo, self.salto_alto)
+            salto = random.randint(min(salto_bajo, salto_alto), max(salto_bajo, salto_alto))
             self.pos_r = (self.pos_r[0], self.pos_r[1] + salto)
 
         # Si la pelota toca el borde superior de la pantalla, invierte el salto
-        if self.pos_r[1] + 50 > tamano_pantalla[1]:
-            self.salto_bajo, self.salto_alto = -self.salto_alto, -self.salto_bajo
+        if self.pos_r[1] + 50 > tamano_pantalla[1]: 
+            # Invertimos los saltos y bajamos un poco
+            self.salto_bajo, self.salto_alto , self.salto_bajo_re, self.salto_alto_re = self.salto_bajo*-1, self.salto_alto*-1, self.salto_bajo_re*-1, self.salto_alto_re*-1
             self.pos_r = (self.pos_r[0], tamano_pantalla[1] - 50)
 
         # Si la pelota toca el borde inferior de la pantalla, reiniciamos los datos y la posición
         if self.pos_r[1] < 0:
-            self.guardar_final(fichero)
+            if self.recopilarRe:
+                self.tarea_hilo(lambda: self.reentrenar())
+                self.reiniciar_datos_reent()
+                self.recopilarRe = False
+            else:
+                self.guardar_final(fichero)
             self.reiniciar_datos_r()
         else:
             datos = self.obtener_datos()
-            if datos is None:                
-                self.mensaje("No se detecta cara")	
-            else:
+            if datos is not None:                
                 distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab = datos
                 self.guardar_datos(distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, self.pos_r/np.array(tamano_pantalla))
         return self.pos_r
 
 
-
     def guardar_datos(self, distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, pos_r_norm):
-        # Preparar los datos para guardar
-        distancias_izq_str = ', '.join([str(dist) for dist in distancias_izq])
-        distancias_der_str = ', '.join([str(dist) for dist in distancias_der])
-        orientacion_cabeza_str = f'{or_x}, {or_y}, {or_z}'
-        ear_str = str(ear)
-        ear_umbral_str = str(umbral_ear) 
-        pos_cabeza_str = ', '.join([str(coord) for coord in coord_cab])
-
         # Guardar los datos en las listas
-        self.input.append(f'{distancias_izq_str}, {distancias_der_str}, {orientacion_cabeza_str}, {pos_cabeza_str}, {ear_str}, {ear_umbral_str}')
-        self.output.append(f'{pos_r_norm[0]}, {pos_r_norm[1]}')
-
+        self.input.append([*distancias_izq, *distancias_der, or_x, or_y, or_z, *coord_cab, ear, umbral_ear])
+        self.output.append(pos_r_norm)
 
 
     def guardar_final(self, fichero):
-        #Si no existe la carpeta txts, se crea
+        # Si no existe la carpeta txts, se crea
         os.makedirs('txts', exist_ok=True)
         
         # Guardar los datos en los archivos
         with open(f'./txts/input{fichero}.txt', 'a') as f:
             for linea in self.input:
-                f.write(linea + '\n')
+                # Convertir el elemento a cadena si es una lista o tupla
+                if isinstance(linea, (list, tuple)):
+                    linea = ', '.join(map(str, linea))
+                f.write(str(linea) + '\n')
 
         with open(f'./txts/output{fichero}.txt', 'a') as f:
             for linea in self.output:
-                f.write(linea + '\n')
+                # Convertir el elemento a cadena si es una lista o tupla
+                if isinstance(linea, (list, tuple)):
+                    linea = ', '.join(map(str, linea))
+                f.write(str(linea) + '\n')
 
-        # Limpiar las listas para la próxima vez
-        self.input = []
-        self.output = []
+            # Limpiar las listas para la próxima vez
+            self.input = []
+            self.output = []
 
 
 # ---------------------------   FUNCIONES DE OBTENCION DE DATOS  -------------------------------
@@ -358,7 +382,7 @@ class Modelo:
         
         #Si no se detecta cara, se devuelve None
         if datos is None:
-            self.mensaje("No se detecta cara")
+            self.mensaje("No se detecta ninguna cara")
             return None
         
         # Se desempaquetan los datos
@@ -398,8 +422,6 @@ class Modelo:
 
         # Se transforman los datos a un conjunto
         datos_array = Conjuntos.datos_as_array(datos)
-
-        # Normalizar los datos
         normalizar_funcion = getattr(Conjuntos, f'conjunto_{self.conjunto}')
         datos_array = normalizar_funcion(datos_array)
 
@@ -512,8 +534,6 @@ class Modelo:
         for i, ponderacion_esquina in enumerate(ponderaciones):
             ponderacion_final += ponderacion_esquina * (pesos[i] / suma_pesos)
 
-        # Imprimir el peso de cada esquina
-        print(f'0: {round(pesos[0],6)} \t1: {round(pesos[1], 6)} \t2: {round(pesos[2], 6)} \t3: {round(pesos[3], 6)}')
         return ponderacion_final
 
             
@@ -557,9 +577,63 @@ class Modelo:
                 print("Error al reproducir el texto")
                 pass
 
-
         #Se crea un hilo para reproducir el texto
-        threading.Thread(target=reproducir_texto_hilo).start()
+        self.tarea_hilo(reproducir_texto_hilo())
 
 
     
+    #----------------------------------- FUNCIONES PARA EL REEENTRENAMIENTO --------------------------------
+    #-----------------------------------------------------------------------------------------------------
+
+    def reentrenar(self):
+        # Se obtienen los datos
+        self.input = np.array(self.input)
+        self.output = np.array(self.output)
+
+        # Se eliminan los datos con el ojo cerrado
+        index = np.where(self.input[:, -2] < self.input[:, -1])
+        input = np.delete(self.input, index, axis=0)
+        output = np.delete(self.output, index, axis=0)
+
+        # Se obtiene el conjunto 
+        normalizar_funcion = getattr(Conjuntos, f'conjunto_{self.conjunto}')
+        input = normalizar_funcion(input)
+
+        # Se convierten a tensores
+        input_train = torch.from_numpy(input).float()
+        output_train = torch.from_numpy(output).float()
+
+        # Se reentrena al modelo
+        # Definir el optimizador
+        optimizer = optim.Adam(self.modelo.parameters(), lr=0.001)
+
+        train_losses = []
+        best_loss = float('inf')
+        models = []
+        loss = nn.MSELoss()
+        first_loss = loss(self.modelo(input_train), output_train).item()
+        for epoch in range(500):
+            # Entrenamiento y cálculo de la pérdida
+            train_predictions = self.modelo(input_train)
+            train_loss = loss(train_predictions, output_train)
+            train_losses.append(train_loss.item())
+            print("Epoch: ", epoch, " Loss: ", train_loss.item())
+
+            # Guardar el mejor modelo
+            if train_loss.item() < best_loss:
+                best_loss = train_loss.item()
+            models.append(self.modelo)
+
+            # Actualizar el modelo
+            optimizer.zero_grad()
+            train_loss.backward()
+            optimizer.step()
+
+         
+        self.modelo = models[train_losses.index(min(train_losses))]
+        print("Se ha elegido el epoch ", train_losses.index(min(train_losses)))
+        print("Perdida antes del reentreno a los valores del usuario: ", first_loss, "Perdida final: ", min(train_losses))
+        
+        # Se limpian los datos
+        self.input = []
+        self.output = []

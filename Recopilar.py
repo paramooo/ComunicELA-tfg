@@ -16,7 +16,6 @@ class Recopilar(Screen):
         self.fichero = "0"
         self.controlador = controlador
         self.background_color = (0, 0, 0, 1) 
-        self.porcentajeDisp = 0.15
 
         self.escaneado = False
         self.textos = ["Primero elige el tipo de recopilado:\n" + 
@@ -65,6 +64,7 @@ class Recopilar(Screen):
         self.add_widget(self.layout)
 
     def on_enter(self, *args):
+        self.escaneado = False
         self.controlador.reiniciar_datos_r()
         # Añade la tarea de actualización al reloj
         Clock.schedule_interval(self.update, 1.0 / 30.0)  # 30 FPS  
@@ -87,7 +87,6 @@ class Recopilar(Screen):
         # Limpia las instrucciones de gráficos del círculo
         self.circulo_instr.clear()
 
-
     # Funcion para el boton recopilar, pone recopilar a true e inicia la cuanta atras
     def on_recopilar(self, *args):
         # Obtiene el fichero seleccionado
@@ -98,7 +97,6 @@ class Recopilar(Screen):
         self.image_box.opacity = 0  # Hide the image box
         self.btn_recopilar.disabled = True
 
-        self.controlador.recopilar_datos()
         self.controlador.on_recopilar()
 
     def update(self, dt):
@@ -137,11 +135,8 @@ class Recopilar(Screen):
 
 
     def update_image_box(self, dt):
-            # Poner la zona donde se puede mover la persona
-            self.porcentajeDisp = 0.15 if self.camera_spinner.text == "0" else 0.30
-
             # Only update the image box in calibration state 0
-            frame = self.controlador.get_frame_editado(self.porcentajeDisp)
+            frame = self.controlador.get_frame_editado()
             if frame is None:
                 return
             

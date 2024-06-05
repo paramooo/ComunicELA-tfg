@@ -145,7 +145,7 @@ class Test(Screen):
 
     def update_image_box(self, dt):
             # Only update the image box in calibration state 0
-            frame = self.controlador.get_frame_editado(0.15)
+            frame = self.controlador.get_frame_editado()
 
             # Convert the frame to a texture
             texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')

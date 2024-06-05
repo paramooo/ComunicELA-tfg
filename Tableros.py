@@ -125,12 +125,16 @@ class Tableros(Screen):
 
     # Actualiza la posición de la mirada
     def update(self, dt):
+        # Obtener la frase actual
+        self.label.text = self.controlador.get_frase()
+        
         for dibujo in self.dibujos_mirada:
             self.canvas.remove(dibujo)
 
         self.dibujos_mirada = []
 
         if self.controlador.get_escanear() and self.controlador.get_screen() == 'tableros':
+
             # Obtiene la posición de la mirada y el ear
             datos = self.controlador.obtener_posicion_mirada_ear()
 
