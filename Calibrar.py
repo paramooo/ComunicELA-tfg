@@ -41,7 +41,7 @@ class Calibrar(Screen):
         self.layout.add_widget(self.btn_comenzar)
         self.layout.add_widget(Widget(size_hint_y=0.1))
 
-        # Sección izquierda
+        # Secciones
         left_section = BoxLayout(orientation='vertical', size_hint=(0.45, 1))
         right_section = BoxLayout(orientation='vertical', size_hint=(0.45, 1))
         self.menu_layout.add_widget(left_section)
@@ -49,7 +49,7 @@ class Calibrar(Screen):
 
         # Botón de Inicio
         left_section.add_widget(Widget(size_hint_y=0.4))
-        btn_inicio = ButtonRnd(text='Inicio', size_hint=(0.4, 0.2), pos_hint={'x': 0.05}, on_press=self.on_inicio, font_name='Texto')
+        btn_inicio = ButtonRnd(text='Inicio', size_hint=(0.4, 0.21), pos_hint={'x': 0.05}, on_press=self.on_inicio, font_name='Texto')
         left_section.add_widget(btn_inicio)
         left_section.add_widget(Widget(size_hint_y=0.3))
 

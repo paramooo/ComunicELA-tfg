@@ -103,6 +103,15 @@ class Controlador:
 
     def get_limites(self):
         return self.modelo.get_limites()
+    
+    def get_bloqueado(self):
+        return self.modelo.bloqueado
+    
+    def set_bloqueado(self, valor):
+        self.modelo.bloqueado = valor
+
+    def reproducir_alarma(self):
+        self.modelo.alarma()
 
 #-------------------------------FUNCIONES PARA LA RECOPILACION DE DATOS-----------------------------
 

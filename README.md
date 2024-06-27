@@ -60,7 +60,9 @@ fuentes: google_fonts
 fRANCISCO -> TITULO
 Orbitron -> Textos
 fondo_frame_editado -> generado con IA (dalle-3)
-
+fuente audio click -> (recortado)   https://assets.mixkit.co/active_storage/sfx/1133/1133.wav
+fuente audio lock -> https://freesound.org/people/nebulasnails/sounds/405534/
+fuente audio alarma -> https://freesound.org/people/Trancox/sounds/391905/
 
 
 Combinar red para puntos con otra red para la imagen asociada

@@ -11,6 +11,23 @@ from Tablero import Tablero
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.image import Image
+from kivy.uix.widget import Widget
+from kivy.graphics import Rectangle
+
+class PantallaBloqueada(BoxLayout):
+    def __init__(self, **kwargs):
+        super(PantallaBloqueada, self).__init__(**kwargs)
+        self.orientation = 'vertical'
+        self.size_hint = (1, 1)
+        with self.canvas.before:
+            Color(0, 0, 0, 0.85)  # color negro con alpha a 0.7
+            self.rect = Rectangle(size=self.size, pos=self.pos)
+        self.bind(size=self._update_rect, pos=self._update_rect)
+        self.add_widget(Label(text='Mantenga los ojos cerrados 2 segundos para desbloquear', color=(1, 1, 1, 1)))
+
+    def _update_rect(self, instance, value):
+        self.rect.pos = instance.pos
+        self.rect.size = instance.size
 
 class Tableros(Screen):
     def __init__(self, controlador, **kwargs):
@@ -42,7 +59,7 @@ class Tableros(Screen):
         self.layout_principal.add_widget(self.layout_vertical)
 
         # El boton de inicio
-        self.btn_inicio = ButtonRnd(text='Inicio', size_hint=(.15, 1), on_press= self.on_inicio, font_name='Texto')
+        self.btn_inicio = ButtonRnd(text='Inicio', size_hint=(.12, 1), on_press= self.on_inicio, font_name='Texto')
         layout_botones.add_widget(self.btn_inicio)
 
         # Espacio para texto
@@ -64,16 +81,20 @@ class Tableros(Screen):
 
 
         # El boton para borrar una palabra
-        self.btn_borrar_palabra = ButtonRnd(text='<', size_hint=(.15, 1), on_press=self.on_borrar_palabra, font_name='Texto')
+        self.btn_borrar_palabra = ButtonRnd(text='Borrar', size_hint=(.12, 1), on_press=self.on_borrar_palabra, font_name='Texto')
         layout_botones.add_widget(self.btn_borrar_palabra)
 
         # El boton para borrar todo el texto
-        self.btn_borrar_todo = ButtonRnd(text='<|', size_hint=(.15, 1), on_press=self.on_borrar_todo, font_name='Texto')
+        self.btn_borrar_todo = ButtonRnd(text='Borrar todo', size_hint=(.12, 1), on_press=self.on_borrar_todo, font_name='Texto')
         layout_botones.add_widget(self.btn_borrar_todo)
 
         # El boton para reproducir el texto
-        self.btn_reproducir = ButtonRnd(text='Reproducir', size_hint=(.15, 1), on_press=self.on_reproducir, font_name='Texto')
+        self.btn_reproducir = ButtonRnd(text='Reproducir', size_hint=(.12, 1), on_press=self.on_reproducir, font_name='Texto')
         layout_botones.add_widget(self.btn_reproducir)
+
+        # El boton de alarma
+        self.btn_alarma = ButtonRnd(text='Alarma', size_hint=(.12, 1), on_press=self.on_alarma, font_name='Texto')
+        layout_botones.add_widget(self.btn_alarma)
 
         # Añade la tarea de actualización al reloj
         Clock.schedule_interval(self.update, 1.0 / 30.0)  
@@ -83,7 +104,7 @@ class Tableros(Screen):
         self.contador_frames = 0
         self.casilla_anterior = None
         self.frames_bloqueo = 30
-        self.botones = [self.btn_inicio, self.btn_borrar_palabra, self.btn_borrar_todo, self.btn_reproducir]
+        self.botones = [self.btn_inicio, self.btn_borrar_palabra, self.btn_borrar_todo, self.btn_reproducir, self.btn_alarma]
         self.dibujos_mirada = []
 
     def on_text(self, instance, value):
@@ -93,6 +114,7 @@ class Tableros(Screen):
     # Funcion para escanear al entrar
     def on_enter(self, *args):
         self.controlador.set_escanear(True)
+        self.controlador.set_bloqueado(False)
 
     # Parar de escanear al salir
     def on_inicio(self, instance):
@@ -113,6 +135,9 @@ class Tableros(Screen):
     def on_reproducir(self, instance):
         #Aqui leer el texto en alto
         self.controlador.reproducir_texto()
+    
+    def on_alarma(self, instance):
+        self.controlador.reproducir_alarma()
 
 
     # Cambia el tablero
@@ -150,26 +175,37 @@ class Tableros(Screen):
             # Actualiza la posición de la mirada
             x, y = pos
 
-            # Emula el movimiento con las casillas bloqueantes
-            self.emular_movimiento_y_clic(x,y, click)
+            # Emula el movimiento y clic
+            if self.controlador.get_bloqueado():
+                if not hasattr(self, 'pantalla_bloqueada'):
+                    self.pantalla_bloqueada = PantallaBloqueada()
+                    self.add_widget(self.pantalla_bloqueada)
+            else:
+                if hasattr(self, 'pantalla_bloqueada'):
+                    self.remove_widget(self.pantalla_bloqueada)
+                    del self.pantalla_bloqueada
 
-            # Normaliza las coordenadas
-            x, y = pos*self.size
+                # Emula el movimiento con las casillas 
+                self.emular_movimiento_y_clic(x,y, click)
 
-            tamaño_cruz = 20
-            with self.canvas:
-                Color(1, 1, 1)
-                cruz1 = Line(points=[x - tamaño_cruz, y, x + tamaño_cruz, y], width=1)
-                cruz2 = Line(points=[x, y - tamaño_cruz, x, y + tamaño_cruz], width=1)
-                
-                # Normaliza contador_frames entre 0 y tamaño_cruz
-                radio_circulo = (self.contador_frames / self.frames_bloqueo) * tamaño_cruz
+                # Normaliza las coordenadas
+                x, y = pos*self.size
 
-                # Pinta un círculo con radio variable
-                circulo = Line(circle=(x, y, radio_circulo), width=2)
+                # Dibuja el cursor
+                tamaño_cruz = 20
+                with self.canvas:
+                    Color(1, 1, 1)
+                    cruz1 = Line(points=[x - tamaño_cruz, y, x + tamaño_cruz, y], width=1)
+                    cruz2 = Line(points=[x, y - tamaño_cruz, x, y + tamaño_cruz], width=1)
+                    
+                    # Normaliza contador_frames entre 0 y tamaño_cruz
+                    radio_circulo = (self.contador_frames / self.frames_bloqueo) * tamaño_cruz
 
-            # Añade los dibujos a la lista para eliminarlos en la próxima actualización
-            self.dibujos_mirada.extend([cruz1, cruz2, circulo])
+                    # Pinta un círculo con radio variable
+                    circulo = Line(circle=(x, y, radio_circulo), width=2)
+
+                # Añade los dibujos a la lista para eliminarlos en la próxima actualización
+                self.dibujos_mirada.extend([cruz1, cruz2, circulo])
 
 
 
@@ -190,12 +226,14 @@ class Tableros(Screen):
             indice_casilla = casilla_y * self.tablero.cols + casilla_x
         
         else: #Botones
-            if x < 0.15:
+            if x < 0.12:
                 indice_casilla = self.tablero.cols * self.tablero.rows
-            elif x > 0.55 and x < 0.7:
+            elif x > 0.52 and x < 0.64:
                 indice_casilla = self.tablero.cols * self.tablero.rows + 1
-            elif x >= 0.7 and x < 0.85:
+            elif x >= 0.64 and x < 0.76:
                 indice_casilla = self.tablero.cols * self.tablero.rows + 2
+            elif x >= 0.88:
+                indice_casilla = self.tablero.cols * self.tablero.rows + 4
             else: # Asi al clickar sobre el texto tambien reproduce el audio
                 indice_casilla = self.tablero.cols * self.tablero.rows + 3
 
@@ -225,7 +263,7 @@ class Tableros(Screen):
                 self.tablero.casillas[self.casilla_bloqueada].dispatch('on_press')
             else:
                 # Asegurar que el indice es correcto
-                self.botones[min(self.casilla_bloqueada - self.tablero.cols * self.tablero.rows,3)].dispatch('on_press')
+                self.botones[min(self.casilla_bloqueada - self.tablero.cols * self.tablero.rows,4)].dispatch('on_press')
                 print(self.casilla_bloqueada - self.tablero.cols * self.tablero.rows)
         # Actualiza la casilla anterior
         self.casilla_anterior = indice_casilla

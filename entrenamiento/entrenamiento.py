@@ -13,6 +13,9 @@ import matplotlib.pyplot as plt
 from shapely.geometry import Point, Polygon, LineString
 import matplotlib.colors as mcolors
 import numpy as np
+from tqdm import tqdm
+import optuna
+
 
 
 ##############################################  ANALIS DE DATOS ########################################################
@@ -227,14 +230,7 @@ def ponderar_graficas():
 
 
 
-
-def ponderar_graficas2():
-    limiteAbajoIzq = [0.1, 0.1]
-    limiteAbajoDer = [0.9, 0.1]
-    limiteArribaIzq = [0.1, 0.9]
-    limiteArribaDer = [0.9, 0.9]
-    Desplazamiento = [0.5, 0.5]
-    def ponderar(mirada):
+def ponderar(mirada, limiteAbajoIzq, limiteAbajoDer, limiteArribaIzq, limiteArribaDer, Desplazamiento):
         def calcular_limites_esquina(cuadrante):
             if cuadrante == 0:
                 return limiteAbajoIzq[0], limiteAbajoIzq[1], limiteAbajoDer[0], limiteArribaIzq[1]
@@ -300,13 +296,21 @@ def ponderar_graficas2():
         # Imprimir el peso de cada esquina
         return ponderacion_final
 
+
+def ponderar_graficas2():
+    limiteAbajoIzq = [0.1, 0.1]
+    limiteAbajoDer = [0.9, 0.1]
+    limiteArribaIzq = [0.1, 0.9]
+    limiteArribaDer = [0.9, 0.9]
+    Desplazamiento = [0.5, 0.5]
+
     # Generar valores de mirada desde 0 hasta 1
     x = np.linspace(0, 1, 100)
     y = np.linspace(0, 1, 100)
     mirada = np.array([[i, j] for i in x for j in y])
 
     # Calcular los valores ponderados
-    miradas_ponderadas = np.array([ponderar(mirad) for mirad in mirada])
+    miradas_ponderadas = np.array([ponderar(mirad, limiteAbajoIzq, limiteAbajoDer, limiteArribaIzq, limiteArribaDer, Desplazamiento) for mirad in mirada])
 
     # Crear la gráfica
     fig, ax = plt.subplots()
@@ -324,6 +328,66 @@ def ponderar_graficas2():
 
     plt.show()
 
+
+
+def optimizar_ponderacion():
+    # Cargar el modelo y los datos
+    model = torch.load('./anns/pytorch/modeloRELU.pth')
+    input, output = cargar_datos1()
+    input = Conjuntos.conjunto_2(input)
+
+    # Limpiar los datos con el ojo cerrado
+    index = np.where(input[:, -2] < input[:, -1])
+    input = np.delete(input, index, axis=0)
+    output = np.delete(output, index, axis=0)
+
+    # Pasar los datos y el modelo a la GPU
+    input = torch.tensor(input).float().to('cuda')
+    output = torch.tensor(output).float().to('cuda')
+    model = model.to('cuda')
+
+    def objective(trial):
+        # Definir los límites de las esquinas y el desplazamiento
+        limiteAbajoIzqX = trial.suggest_float('limiteAbajoIzqX', 0.00, 0.25)
+        limiteAbajoIzqY = trial.suggest_float('limiteAbajoIzqY', 0.00, 0.25)
+        limiteAbajoDerX = trial.suggest_float('limiteAbajoDerX', 0.75, 1.00)
+        limiteAbajoDerY = trial.suggest_float('limiteAbajoDerY', 0.00, 0.25)
+        limiteArribaIzqX = trial.suggest_float('limiteArribaIzqX', 0.00, 0.25)
+        limiteArribaIzqY = trial.suggest_float('limiteArribaIzqY', 0.75, 1.00)
+        limiteArribaDerX = trial.suggest_float('limiteArribaDerX', 0.75, 1.00)
+        limiteArribaDerY = trial.suggest_float('limiteArribaDerY', 0.75, 1.00)
+        DesplazamientoX = trial.suggest_float('DesplazamientoX', 0.45, 0.55)
+        DesplazamientoY = trial.suggest_float('DesplazamientoY', 0.45, 0.55)
+
+        limiteAbajoIzq = [limiteAbajoIzqX, limiteAbajoIzqY]
+        limiteAbajoDer = [limiteAbajoDerX, limiteAbajoDerY]
+        limiteArribaIzq = [limiteArribaIzqX, limiteArribaIzqY]
+        limiteArribaDer = [limiteArribaDerX, limiteArribaDerY]
+        Desplazamiento = [DesplazamientoX, DesplazamientoY]
+
+        # Calcular las predicciones del modelo
+        predicciones = model(input).cpu().detach().numpy()  # Mover las predicciones a la CPU
+
+        for i, prediccion in enumerate(predicciones):
+            predicciones[i] = ponderar(prediccion, limiteAbajoIzq, limiteAbajoDer, limiteArribaIzq, limiteArribaDer, Desplazamiento)
+
+        # Convertir de nuevo a tensor de PyTorch
+        predicciones = torch.tensor(predicciones).float().to('cuda')
+
+        # Calcular el error
+        error = mse_loss(output, predicciones).item()
+
+        return error
+
+    study = optuna.create_study(direction='minimize')
+    study.optimize(objective, n_trials=100)  # Puedes ajustar el número de pruebas según tus necesidades
+
+    print('Los mejores parámetros son:', study.best_params)
+
+
+
+
+
 ############################################################################################################################
 ############################################################################################################################
 ############################################################################################################################
@@ -337,6 +401,12 @@ def cargar_datos():
     # Cargar los datos
     input = np.loadtxt('./txts/input0.txt', delimiter=',')
     output = np.loadtxt('./txts/output0.txt', delimiter=',')
+    return input, output
+
+def cargar_datos1():
+    # Cargar los datos
+    input = np.loadtxt('./txts/input1.txt', delimiter=',')
+    output = np.loadtxt('./txts/output1.txt', delimiter=',')
 
     return input, output
 
@@ -654,6 +724,7 @@ def entrenar_resnet(epochs):
 if __name__ == '__main__':
 #     # entrenar_resnet(1500)
 #     entrenar1()
-    ponderar_graficas()
+    #ponderar_graficas()
     #entrenar1()
+    optimizar_ponderacion()
 

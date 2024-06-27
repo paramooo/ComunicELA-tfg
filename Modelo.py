@@ -43,7 +43,7 @@ class Modelo:
         self.contador_p = 0
         self.suma_frames = 4 #Numero de frames que tiene que estar cerrado el ojo para que se considere un parpadeo
         self.calibrado = False
-        self.sonido = pygame.mixer.Sound('./sonidos/click.wav')
+        self.sonido_click = pygame.mixer.Sound('./sonidos/click.wav')
 
 
         # Variables para la recopilacion de datos 
@@ -69,13 +69,24 @@ class Modelo:
         self.cargar_tableros()
         self.frase = ""
         self.tablero = None
-        
+        self.bloqueado = False
+        self.contador_pb = 0
+        self.sonido_alarma = pygame.mixer.Sound('./sonidos/alarm.wav')
+        self.sonido_lock = pygame.mixer.Sound('./sonidos/lock.wav')
+
         # # Ponderar la mirada
         self.limiteAbajoIzq = [0.10,0.07]
         self.limiteAbajoDer = [0.87,0.09]
         self.limiteArribaIzq = [0.05,0.81]
         self.limiteArribaDer = [0.93,0.89]
         self.Desplazamiento = [0.5,0.5]
+        # self.limiteAbajoIzq = [0.045,0.048]
+        # self.limiteAbajoDer = [0.98,0.006]
+        # self.limiteArribaIzq = [0.008,0.94]
+        # self.limiteArribaDer = [0.983,0.956]
+        # self.Desplazamiento = [0.484,0.45]
+
+        # LOS DEL OPTIMIZADOR
         # self.limiteAbajoIzq = [0,0]
         # self.limiteAbajoDer = [1,0]
         # self.limiteArribaIzq = [0,1]
@@ -92,8 +103,8 @@ class Modelo:
         self.recopilar = False #Variable para saber si se esta recopilando datos
         self.contador_r = 5 #Contador para la cuenta atras
         self.pos_r = (0, 0) #Posicion de la pelota roja
-        self.salto_bajo, self.salto_alto = 30, 80 #Salto de la pelota roja
-        self.velocidad = 30
+        self.salto_bajo, self.salto_alto = 80, 120 #Salto de la pelota roja
+        self.velocidad = 35
         self.direccion = 1 
 
     def reiniciar_datos_reent(self):
@@ -268,16 +279,31 @@ class Modelo:
 #Para el test/tableros
     def get_parpadeo(self, ear):
         if ear < self.umbral_ear:
+            # Contador para parpadeo
             self.contador_p += 1
+            # Contador para el bloqueo de los tableros
+            self.contador_pb += 1
+
+            #Si se mantiene cerrado el ojo durante 60 frames, se bloquea el tablero
+            if self.contador_pb == 60:  
+                self.contador_pb = -1000
+                self.bloqueado = not self.bloqueado
+                self.sonido_lock.play()
+            
+            #Si se mantiene cerrado el ojo durante suma_frames, se considera un parpadeo
             if self.contador_p == self.suma_frames:
-                self.contador_p = -1000 #Asi evitamos dos toques consecutivos sin abrir el ojo
-                self.sonido.play()
+                self.contador_p = -1000 
+                if not self.bloqueado:
+                    self.sonido_click.play()
                 return 1
             return 0
         else:
-            self.contador_p = 0     
+            self.contador_p = 0
+            self.contador_pb = 0     
             return 0   
     
+    def alarma(self):
+        self.sonido_alarma.play()
 
     def set_limite(self, valor, esquina, eje):
         if esquina == 0:
@@ -355,14 +381,14 @@ class Modelo:
         with open(f'./txts/input{fichero}.txt', 'a') as f:
             for linea in self.input:
                 # Convertir el elemento a cadena si es una lista o tupla
-                if isinstance(linea, (list, tuple)):
+                if isinstance(linea, (list, tuple, np.ndarray)):
                     linea = ', '.join(map(str, linea))
                 f.write(str(linea) + '\n')
 
         with open(f'./txts/output{fichero}.txt', 'a') as f:
             for linea in self.output:
                 # Convertir el elemento a cadena si es una lista o tupla
-                if isinstance(linea, (list, tuple)):
+                if isinstance(linea, (list, tuple, np.ndarray)):
                     linea = ', '.join(map(str, linea))
                 f.write(str(linea) + '\n')
 
@@ -580,6 +606,11 @@ class Modelo:
         #Se crea un hilo para reproducir el texto
         self.tarea_hilo(reproducir_texto_hilo())
 
+    def get_bloqueado(self):
+        return self.bloqueado
+    
+    def set_bloqueado(self, valor):
+        self.bloqueado = valor
 
     
     #----------------------------------- FUNCIONES PARA EL REEENTRENAMIENTO --------------------------------
@@ -612,7 +643,7 @@ class Modelo:
         models = []
         loss = nn.MSELoss()
         first_loss = loss(self.modelo(input_train), output_train).item()
-        for epoch in range(500):
+        for epoch in range(100):
             # Entrenamiento y cálculo de la pérdida
             train_predictions = self.modelo(input_train)
             train_loss = loss(train_predictions, output_train)
