@@ -13,6 +13,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.image import Image
 from kivy.uix.widget import Widget
 from kivy.graphics import Rectangle
+import keyboard
 
 class PantallaBloqueada(BoxLayout):
     def __init__(self, **kwargs):
@@ -96,6 +97,11 @@ class Tableros(Screen):
         self.btn_alarma = ButtonRnd(text='Alarma', size_hint=(.12, 1), on_press=self.on_alarma, font_name='Texto')
         layout_botones.add_widget(self.btn_alarma)
 
+        #  Cronometro para las pruebas
+        self.cronometro = Label(size_hint=(.1, .05), pos_hint={'right':1, 'top':1})
+        self.add_widget(self.cronometro)
+
+
         # Añade la tarea de actualización al reloj
         Clock.schedule_interval(self.update, 1.0 / 30.0)  
 
@@ -115,6 +121,11 @@ class Tableros(Screen):
     def on_enter(self, *args):
         self.controlador.set_escanear(True)
         self.controlador.set_bloqueado(False)
+        #Si estan las opciones de desarrollador activas mostrar el cronometro sino no
+        if self.controlador.get_desarrollador():
+            self.cronometro.opacity = 1
+        else:
+            self.cronometro.opacity = 0
 
     # Parar de escanear al salir
     def on_inicio(self, instance):
@@ -134,6 +145,7 @@ class Tableros(Screen):
 
     def on_reproducir(self, instance):
         #Aqui leer el texto en alto
+        self.controlador.stop_cronometro()
         self.controlador.reproducir_texto()
     
     def on_alarma(self, instance):
@@ -184,6 +196,15 @@ class Tableros(Screen):
                 if hasattr(self, 'pantalla_bloqueada'):
                     self.remove_widget(self.pantalla_bloqueada)
                     del self.pantalla_bloqueada
+
+                # Si se pulsa el espacio, iniciar el cronómetro
+                if keyboard.is_pressed('space'):
+                    self.controlador.iniciar_cronometro()
+
+                # Actualiza el cronómetro
+                tiempo = self.controlador.get_cronometro()
+                self.cronometro.text = f'{int(tiempo):02}:{int((tiempo % 1) * 100):02}'
+
 
                 # Emula el movimiento con las casillas 
                 self.emular_movimiento_y_clic(x,y, click)

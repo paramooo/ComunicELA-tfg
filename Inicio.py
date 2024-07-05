@@ -189,6 +189,8 @@ class Inicio(Screen):
         if value:
             self.Izquierda.add_widget(self.btn_tst) 
             self.Izquierda.add_widget(self.btn_rec) 
+            self.controlador.set_desarrollador(True)
         else:
             self.Izquierda.remove_widget(self.btn_tst)  
             self.Izquierda.remove_widget(self.btn_rec) 
+            self.controlador.set_desarrollador(False)

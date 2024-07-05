@@ -13,8 +13,6 @@ Datos recopilacion:
 
 
 
-normalizar los datos en base a esa distancia, (buscar alguna formula o algo nose)
-
 
 Informarme sobre las redes secuenciales, capas LSTM o GRU
 Ahora esta puesto suavizando la posicion reconocida con las posiciones reconocidas anteriormente pero vaya creo que asi ira mejor

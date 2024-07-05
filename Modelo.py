@@ -17,6 +17,7 @@ import threading
 import math
 from torch import nn
 import torch.optim as optim
+from kivy.clock import Clock
 
 class Modelo:
     def __init__(self):
@@ -27,6 +28,7 @@ class Modelo:
         self.detector = Detector()
         self.camara = Camara()
         self.camara_act = None
+        self.desarrollador = False
 
         # Variables para el modelo de test
         self.conjunto = 2
@@ -74,6 +76,7 @@ class Modelo:
         self.contador_pb = 0
         self.sonido_alarma = pygame.mixer.Sound('./sonidos/alarm.wav')
         self.sonido_lock = pygame.mixer.Sound('./sonidos/lock.wav')
+        self.cronometro_pruebas = 0 #Variable para el cronometro de las pruebas
 
         # # Ponderar la mirada
         # self.limiteAbajoIzq = [0.10,0.07]
@@ -329,6 +332,7 @@ class Modelo:
         if self.contador_r > 0:
             self.contador_r -= 1
         elif self.contador_r == 0:
+            Clock.unschedule(self.cuenta_atras)
             return False
 
     def actualizar_pos_circle_r(self, tamano_pantalla, fichero):
@@ -661,6 +665,22 @@ class Modelo:
     
     def set_bloqueado(self, valor):
         self.bloqueado = valor
+
+    def cronometro(self, dt):
+        self.cronometro_pruebas += dt
+
+    def get_cronometro(self):
+        return self.cronometro_pruebas
+    
+    #Detiene el cronometro y guarda en el txt de resultados de los test el tiempo seguido de la frase
+    def stop_cronometro(self):
+        Clock.unschedule(self.cronometro)
+        if self.cronometro_pruebas != 0 and self.frase != "":
+            with open('./resultados/PRUEBAS_CRONO.txt', 'a') as f:
+                f.write(f'{self.cronometro_pruebas} -> {self.frase}\n')
+            self.cronometro_pruebas = 0
+
+
 
     
     #----------------------------------- FUNCIONES PARA EL REEENTRENAMIENTO --------------------------------

@@ -32,6 +32,12 @@ class Controlador:
 
     def get_font_txts(self):
         return self.modelo.tamaño_fuente_txts
+    
+    def set_desarrollador(self, valor):
+        self.modelo.desarrollador = valor
+
+    def get_desarrollador(self):
+        return self.modelo.desarrollador
 
 
 
@@ -112,6 +118,15 @@ class Controlador:
 
     def reproducir_alarma(self):
         self.modelo.alarma()
+
+    def iniciar_cronometro(self):
+        Clock.schedule_interval(self.modelo.cronometro, 0.01)
+
+    def get_cronometro (self):
+        return self.modelo.get_cronometro()
+    
+    def stop_cronometro(self):
+        self.modelo.stop_cronometro()
 
 #-------------------------------FUNCIONES PARA LA RECOPILACION DE DATOS-----------------------------
 

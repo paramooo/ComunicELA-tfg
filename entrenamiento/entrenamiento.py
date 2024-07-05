@@ -414,7 +414,6 @@ def cargar_datos1():
     # Cargar los datos
     input = np.loadtxt('./txts/input1.txt', delimiter=',')
     output = np.loadtxt('./txts/output1.txt', delimiter=',')
-    print(input.shape)
     return input, output
 
 def suavizar_datos(data, sigma):
@@ -450,7 +449,7 @@ def preparar_test(input, output, porcentaje):
     #42 es la semilla
     input_train, input_test, output_train, output_test = train_test_split(input, output, test_size=test_size, random_state=42)
     
-    return input_train, output_train, input_test, output_test
+    return input_train, input_test, output_train, output_test
 
 
 
@@ -644,11 +643,11 @@ def entrenar(model, optimizer, loss_function, input_train, output_train, input_t
         ax.plot(test_losses, label='Test Loss')
         ax.legend()
         plt.draw()
-        plt.pause(0.01)
+        plt.pause(0.001)
         print(f'Epoch {epoch}, Train Loss: {train_loss_avg}, Test Loss: {test_loss_avg}', end='\r')
 
         # Liberamos memoria
-        torch.cuda.empty_cache()
+        #torch.cuda.empty_cache()
         
         # Detener el entrenamiento si se presiona la tecla 'p'
         if keyboard.is_pressed('p'):
@@ -723,11 +722,11 @@ def entrenar_fusion(model, optimizer, loss_function, input_train_ann, input_trai
         ax.plot(test_losses, label='Test Loss')
         ax.legend()
         plt.draw()
-        plt.pause(0.01)
+        plt.pause(0.001)
         print(f'Epoch {epoch}, Train Loss: {train_loss_avg}, Test Loss: {test_loss_avg}', end='\r')
 
         # Liberamos memoria
-        torch.cuda.empty_cache()
+        #torch.cuda.empty_cache()
         
         # Detener el entrenamiento si se presiona la tecla 'p'
         if keyboard.is_pressed('p'):
@@ -796,8 +795,8 @@ def entrenar_fusion(model, optimizer, loss_function, input_train_ann, input_trai
 
 def entrenar_ann():
     # Definir la red neuronal
-    entradas = 23
-    topology = [100,300,500,400,100]
+    entradas = 39
+    topology = [50, 80, 20]
     model = crear_ann(entradas, topology)
     model = model.to("cuda")  
 
@@ -811,7 +810,7 @@ def entrenar_ann():
     output = np.delete(output, index, axis=0)
 
     # Crear el conjunto de test
-    input, output, input_test, output_test = preparar_test(input, output, 10)
+    input, input_test, output, output_test = preparar_test(input, output, 10)
 
     #Suaavizamos los datos
     print("Suavizando datos")
@@ -819,8 +818,8 @@ def entrenar_ann():
 
     # Convertir los datos a conjunto
     print("Procesando datos a conjunto")
-    input_train = Conjuntos.conjunto_2(input)    
-    input_test = Conjuntos.conjunto_2(input_test)
+    input_train = Conjuntos.conjunto_1(input)    
+    input_test = Conjuntos.conjunto_1(input_test)
 
     # Dividir los datos en entrenamiento y validación
     #input_train, input_val, output_train, output_val = train_test_split(input_final, output, test_size=0.1)
@@ -840,8 +839,6 @@ def entrenar_ann():
     # Entrenar la red
     print("Entrenando")
     model, train_losses, test_losses = entrenar(model, optimizer, mse_loss, input_train, output_train, input_test, output_test, 1500, 10000)
-
-
 
     # Mover el modelo a la CPU
     model = model.to("cpu")  
@@ -863,7 +860,7 @@ def entrenar_cnn():
     # Cargar los datos, procesarlos y moverlos a la GPU
     print("Cargando datos")
     input, output = cargar_datos_cnn()  # Asegúrate de que tus datos estén en el formato correcto para la CNN
-    input, output, input_test, output_test = preparar_test(input, output, 10)
+    input, input_test, output, output_test = preparar_test(input, output, 10)
 
     #FALTA LIMPIAR LOS DATOS CON EL OJO CERRADO
 
@@ -896,7 +893,7 @@ def entrenar_cnn():
 def entrenar_resnet(epochs):
     # Cargar los datos
     input_train, output_train = cargar_datos()
-    input, ouput, input_test, output_test = preparar_test(input_train, output_train, 10)
+    input_train, input_test, output_train, output_test = preparar_test(input_train, output_train, 10)
 
     # Convertir a conjunto2
     input_train = Conjuntos.conjunto_2(input_train)
@@ -982,8 +979,8 @@ def entrenar_combinado():
     input_cnn = np.delete(input_cnn, index, axis=0)
 
     # Crear el conjunto de test 
-    input_ann_train, output, input_ann_test, output_test = preparar_test(input_ann, output_ORG, 10)
-    input_cnn_train, _, input_cnn_test, _ = preparar_test(input_cnn, output_ORG, 10)
+    input_ann_train, input_ann_test, output, output_test = preparar_test(input_ann, output_ORG, 10)
+    input_cnn_train, input_cnn_test, _ , _ = preparar_test(input_cnn, output_ORG, 10)
 
     #Suaavizamos los datos de la ann
     print("Suavizando datos")
@@ -1028,4 +1025,4 @@ if __name__ == '__main__':
     #entrenar1()
     #optimizar_ponderacion()
     #entrenar_combinado()
-    entrenar_cnn()
+    entrenar_ann()

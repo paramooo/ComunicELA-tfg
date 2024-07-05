@@ -14,15 +14,18 @@ class Conjuntos:
 # Funcion para transformar el input.txt
     def conjunto_1(data):
         """
-        Entradas: 14
-        [0-5] Distancias entre los puntos de referencia del ojo izquierdo 
-        [6-11] Distancias entre los puntos de referencia del ojo derecho
-        [19] EAR
-        [20] Umbral EAR
-        MAAAAAAAAAAAAAAAAL
+        Entradas: 39 -> TODOS LOS DATOS (NORMALIZAR MIN MAX DISTANCIAS)
+        [0-15] Distancias entre los puntos de referencia 
+        [16-31] Distancias entre los puntos de referencia
+        [32-34] Coordenadas de la orientación de la cara
+        [35-36] Coordenadas del centro de la cara
+        [37-38] EAR y umbral EAR 
         """
-        # Coje los puntos 0,2,4,6,8,10 (ojo izquierdo) y 1,3,5,7,9,11 (ojo derecho) y el EAR y el umbral EAR
-        data = np.concatenate((data[:, 0:12:2], data[:, 1:12:2], data[:, 19:21]), axis=1)
+        # Normalizar cada valor de los primeros 16 de cada fila entre ellos mismos PARA NORMALIZAR EL OJO DERECHO
+        data[:, :16] = (data[:, :16] - np.min(data[:, :16], axis=1, keepdims=True)) / (np.max(data[:, :16], axis=1, keepdims=True) - np.min(data[:, :16], axis=1, keepdims=True))
+
+        # Normalizar cada valor de los segundos 16 de cada fila entre ellos mismos PARA NORMALIZAR EL OJO IZQUIERDO
+        data[:, 16:32] = (data[:, 16:32] - np.min(data[:, 16:32], axis=1, keepdims=True)) / (np.max(data[:, 16:32], axis=1, keepdims=True) - np.min(data[:, 16:32], axis=1, keepdims=True))
 
         return data
 
