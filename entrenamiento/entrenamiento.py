@@ -15,6 +15,13 @@ import matplotlib.colors as mcolors
 import numpy as np
 from tqdm import tqdm
 import optuna
+import os
+import cv2
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+import copy
+
+
 
 
 
@@ -407,23 +414,43 @@ def cargar_datos1():
     # Cargar los datos
     input = np.loadtxt('./txts/input1.txt', delimiter=',')
     output = np.loadtxt('./txts/output1.txt', delimiter=',')
-
+    print(input.shape)
     return input, output
-
-# Funcion para cargar los datos de test
-def cargar_datos_test():
-    # Cargar los datos
-    input = np.loadtxt('./txts/input_test0.txt', delimiter=',')
-    output = np.loadtxt('./txts/output_test0.txt', delimiter=',')
-
-    return input, output
-
 
 def suavizar_datos(data, sigma):
     # Aplicar filtro gaussiano a cada columna
     for i in range(data.shape[1]):
         data[:, i] = gaussian_filter1d(data[:, i], sigma)
     return data
+
+
+
+# Carga las imagenes de frames/1 y los outputs de txts/output1.txt
+def cargar_datos_cnn():
+    # Cargar los inputs
+    inputs = []
+    for nombre_archivo in os.listdir('./frames/1'):
+        img = cv2.imread(os.path.join('./frames/1', nombre_archivo), cv2.IMREAD_GRAYSCALE)/ 255.0        
+        inputs.append(img)
+    inputs = np.array(inputs)    
+    inputs = np.expand_dims(inputs, axis=1)  # Añade una dimensión para los canales
+
+    # Cargar los outputs
+    output = np.loadtxt('./txts/output1.txt', delimiter=',')
+    return inputs, output
+
+
+
+# Divide los datos en conjuntos de entrenamiento y prueba
+def preparar_test(input, output, porcentaje):
+    # Calcula el tamaño del conjunto de prueba
+    test_size = porcentaje / 100.0
+    
+    # Divide los datos en conjuntos de entrenamiento y prueba
+    #42 es la semilla
+    input_train, input_test, output_train, output_test = train_test_split(input, output, test_size=test_size, random_state=42)
+    
+    return input_train, output_train, input_test, output_test
 
 
 
@@ -439,7 +466,7 @@ mse_loss = nn.MSELoss()
 
 
 
-#------------------ FUNCIONES PARA LA ANN ------------------
+#------------------ FUNCIONES PARA CREAR LAS REDES ------------------
 #----------------------------------------------------------
 
 # Función para crear la ANN
@@ -455,6 +482,87 @@ def crear_ann(entradas, topology):
     # Limita salida a rango 0-1
     model.add_module("sigmoid_out", nn.Sigmoid())
     return model
+
+# Funcion para crear la cnn1 
+# Capa convolucional 1: 32 filtros de 3x3
+# Capa de pooling 1: Max pooling de 2x2
+# Capa convolucional 32:64 filtros de 3x3
+# Capa de pooling 2: Max pooling de 2x2
+# Capa completamente conectada: 500 neuronas
+def crear_cnn_1():
+    model = nn.Sequential()
+    
+    # Primera capa convolucional
+    model.add_module('conv1', nn.Conv2d(1, 16, kernel_size=3, stride=1, padding=1))
+    model.add_module('relu1', nn.ReLU())
+    model.add_module('pool1', nn.MaxPool2d(kernel_size=2, stride=2))
+    
+    # Segunda capa convolucional
+    model.add_module('conv2', nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1))
+    model.add_module('relu2', nn.ReLU())
+    model.add_module('pool2', nn.MaxPool2d(kernel_size=2, stride=2))
+    
+    # Capa completamente conectada
+    model.add_module('flatten', nn.Flatten())
+    model.add_module('fc1', nn.Linear(32*50*12, 250))  
+    model.add_module('relu3', nn.ReLU())
+    
+    # Capa de salida
+    model.add_module('fc2', nn.Linear(250, 2))
+    model.add_module('output', nn.Sigmoid())
+    
+    return model
+
+
+def crear_cnn_2():
+    model = nn.Sequential()
+    
+    # Primera capa convolucional
+    model.add_module('conv1', nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=1))
+    model.add_module('relu1', nn.ReLU())
+    model.add_module('pool1', nn.MaxPool2d(kernel_size=2, stride=2))
+    
+    # Segunda capa convolucional
+    model.add_module('conv2', nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1))
+    model.add_module('relu2', nn.ReLU())
+    model.add_module('pool2', nn.MaxPool2d(kernel_size=2, stride=2))
+    
+    # Capa completamente conectada
+    model.add_module('flatten', nn.Flatten())
+    model.add_module('fc1', nn.Linear(64*12*50, 500))  
+    model.add_module('relu3', nn.ReLU())
+    
+    # Capa de salida
+    model.add_module('fc2', nn.Linear(500, 2))
+    model.add_module('output', nn.Sigmoid())
+    
+    return model
+
+# Clase para crear la red fusionada para poder editar el forward
+class FusionNet(nn.Module):
+    def __init__(self, ann, cnn):
+        super(FusionNet, self).__init__()
+        self.ann = ann
+        self.cnn = cnn
+        self.fusion_layer = nn.Sequential(
+            nn.Linear(4, 100),
+            nn.ReLU(),
+            nn.Linear(100, 2),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x_ann, x_cnn):
+        out_ann = self.ann(x_ann)
+        out_cnn = self.cnn(x_cnn)
+        # Concatena las salidas de las dos redes
+        fusion = torch.cat((out_ann, out_cnn), dim=1)
+        # Pasa la concatenación a través de la capa de fusión
+        out = self.fusion_layer(fusion)
+        return out
+
+
+
+
 
 #Entrena la red y devuelve los errores de entrenamiento, validación y test
 def entrenar_validacion(model, optimizer, loss_function, input_train, output_train, input_val, output_val, input_test, output_test, epochs):
@@ -484,35 +592,51 @@ def entrenar_validacion(model, optimizer, loss_function, input_train, output_tra
     return model, train_losses, val_losses, test_losses
     # Lo mismo que entrenar pero sin validacion
 
-def entrenar(model, optimizer, loss_function, input_train, output_train, input_test, output_test, epochs):
+def entrenar(model, optimizer, loss_function, input_train, output_train, input_test, output_test, epochs, batch_size):
     train_losses = []
     test_losses = []
-    best_loss = float('inf')
     models = []
 
     plt.ion()  # Activa el modo interactivo de matplotlib
     fig, ax = plt.subplots()
 
+    # Calcular el numero de lotes
+    num_batches = len(input_train) // batch_size
+
     for epoch in range(epochs):
-        # Entrenamiento y cálculo de la pérdida
-        train_predictions = model(input_train)
-        train_loss = loss_function(train_predictions, output_train)
-        train_losses.append(train_loss.item())
+        train_loss_total = 0
+        test_loss_total = 0
 
-        # Validación y cálculo de la pérdida
-        test_predictions = model(input_test)
-        test_loss = loss_function(test_predictions, output_test)
-        test_losses.append(test_loss.item())
+        for i in range(num_batches):
+            # Obtiene el lote actual
+            input_batch = input_train[i*batch_size:(i+1)*batch_size]
+            output_batch = output_train[i*batch_size:(i+1)*batch_size]
+            
+            # Entrenamiento y cálculo de la pérdida EN CADA LOTE YA QUE NO TENGO VRAM SUFICIENTE PARA TODAS LAS IMG A LA VEZ
+            train_predictions = model(input_batch)
+            train_loss = loss_function(train_predictions, output_batch)
+            train_loss_total += train_loss.item()
 
-        # Guardar el mejor modelo
-        if test_loss.item() < best_loss:
-            best_loss = test_loss.item()
-        models.append(model)
+            # Cálculo de la pérdida
+            test_predictions = model(input_test)
+            test_loss = loss_function(test_predictions, output_test)
+            test_loss_total += test_loss.item()
 
-        # Actualizar el modelo
-        optimizer.zero_grad()
-        train_loss.backward()
-        optimizer.step()
+            # Actualizar el modelo
+            optimizer.zero_grad()
+            train_loss.backward()
+            optimizer.step()
+
+        # Guardar el modelo actual
+        models.append(copy.deepcopy(model))
+        
+        # Calcula las pérdidas promedio para la época
+        train_loss_avg = train_loss_total / num_batches
+        test_loss_avg = test_loss_total / num_batches
+
+        # Guarda las pérdidas promedio
+        train_losses.append(train_loss_avg)
+        test_losses.append(test_loss_avg)
 
         # Graficar las pérdidas en tiempo real
         ax.clear()
@@ -521,26 +645,104 @@ def entrenar(model, optimizer, loss_function, input_train, output_train, input_t
         ax.legend()
         plt.draw()
         plt.pause(0.01)
+        print(f'Epoch {epoch}, Train Loss: {train_loss_avg}, Test Loss: {test_loss_avg}', end='\r')
 
+        # Liberamos memoria
+        torch.cuda.empty_cache()
+        
         # Detener el entrenamiento si se presiona la tecla 'p'
         if keyboard.is_pressed('p'):
             print("Entrenamiento detenido por el usuario.")
             break
+
+
     print("Epoch mejor modelo: ", test_losses.index(min(test_losses)))
     print("Perdida test mejor modelo: ", min(test_losses), "Perdida train mejor modelo: ", train_losses[test_losses.index(min(test_losses))])
     print("Que modelo guardar?")
     guardar = int(input())
-    #Evaluar el modelo elegido
     model = models[guardar]
-    test_predictions = model(input_test)
-    test_loss = loss_function(test_predictions, output_test)
-    train_predictions = model(input_train)
-    train_loss = loss_function(train_predictions, output_train)
-    print("Modelo ", guardar, " -> Perdida test: ", test_loss.item(), "Perdida train: ", train_loss.item())
+
     plt.ioff()  # Desactiva el modo interactivo
     return model, train_losses, test_losses
 
 
+
+def entrenar_fusion(model, optimizer, loss_function, input_train_ann, input_train_cnn, output_train, input_test_ann, input_test_cnn, output_test, epochs, batch_size):
+    train_losses = []
+    test_losses = []
+    models = []
+
+    plt.ion()  # Activa el modo interactivo de matplotlib
+    fig, ax = plt.subplots()
+
+    # Calcular el numero de lotes
+    num_samples = len(input_train_ann)
+    if batch_size > num_samples:
+        batch_size = num_samples
+    num_batches = num_samples // batch_size
+
+    for epoch in range(epochs):
+        train_loss_total = 0
+        test_loss_total = 0
+
+        for i in range(num_batches):
+            # Obtiene el lote actual
+            input_batch_ann = input_train_ann[i*batch_size:(i+1)*batch_size]
+            output_batch = output_train[i*batch_size:(i+1)*batch_size]
+            input_batch_cnn = input_train_cnn[i*batch_size:(i+1)*batch_size]
+            
+            # Entrenamiento y cálculo de la pérdida EN CADA LOTE YA QUE NO TENGO VRAM SUFICIENTE PARA TODAS LAS IMG A LA VEZ
+            train_predictions = model(input_batch_ann, input_batch_cnn)
+            train_loss = loss_function(train_predictions, output_batch)
+            train_loss_total += train_loss.item()
+
+            # Cálculo de la pérdida
+            test_predictions = model(input_test_ann, input_test_cnn)
+            test_loss = loss_function(test_predictions, output_test)
+            test_loss_total += test_loss.item()
+
+            # Actualizar el modelo
+            optimizer.zero_grad()
+            train_loss.backward()
+            optimizer.step()
+
+        # Guardar el modelo actual
+        models.append(copy.deepcopy(model))
+        
+        # Calcula las pérdidas promedio para la época
+        train_loss_avg = train_loss_total / num_batches
+        test_loss_avg = test_loss_total / num_batches
+
+        # Guarda las pérdidas promedio
+        train_losses.append(train_loss_avg)
+        test_losses.append(test_loss_avg)
+
+        # Graficar las pérdidas en tiempo real
+        ax.clear()
+        ax.plot(train_losses, label='Train Loss')
+        ax.plot(test_losses, label='Test Loss')
+        ax.legend()
+        plt.draw()
+        plt.pause(0.01)
+        print(f'Epoch {epoch}, Train Loss: {train_loss_avg}, Test Loss: {test_loss_avg}', end='\r')
+
+        # Liberamos memoria
+        torch.cuda.empty_cache()
+        
+        # Detener el entrenamiento si se presiona la tecla 'p'
+        if keyboard.is_pressed('p'):
+            print("Entrenamiento detenido por el usuario.")
+            break
+
+
+    print("Epoch mejor modelo: ", test_losses.index(min(test_losses)))
+    print("Perdida test mejor modelo: ", min(test_losses), "Perdida train mejor modelo: ", train_losses[test_losses.index(min(test_losses))])
+    print("Que modelo guardar?")
+    guardar = int(input())
+    model = models[guardar]
+
+    plt.ioff()  # Desactiva el modo interactivo
+    return model, train_losses, test_losses
 
 
 # # Para el conjunto 1
@@ -592,8 +794,7 @@ def entrenar(model, optimizer, loss_function, input_train, output_train, input_t
 # print(f'Error medio de entrenamiento: {mean_train_loss}')
 # print(f'Error medio de validación: {mean_val_loss}')
 
-def entrenar1():
-    
+def entrenar_ann():
     # Definir la red neuronal
     entradas = 23
     topology = [100,300,500,400,100]
@@ -603,12 +804,14 @@ def entrenar1():
     # Cargar los datos, procesarlos y moverlos a la GPU
     print("Cargando datos")
     input, output = cargar_datos()    
-    input_test, output_test = cargar_datos_test()
 
     #Limpiamos los datos con el ojo cerrado
     index = np.where(input[:, -2] < input[:, -1])
     input = np.delete(input, index, axis=0)
     output = np.delete(output, index, axis=0)
+
+    # Crear el conjunto de test
+    input, output, input_test, output_test = preparar_test(input, output, 10)
 
     #Suaavizamos los datos
     print("Suavizando datos")
@@ -636,7 +839,7 @@ def entrenar1():
 
     # Entrenar la red
     print("Entrenando")
-    model, train_losses, test_losses = entrenar(model, optimizer, mse_loss, input_train, output_train, input_test, output_test, 1500)
+    model, train_losses, test_losses = entrenar(model, optimizer, mse_loss, input_train, output_train, input_test, output_test, 1500, 10000)
 
 
 
@@ -652,12 +855,48 @@ def entrenar1():
 
 
 
-import matplotlib.pyplot as plt
+def entrenar_cnn():
+    # Definir la red neuronal
+    model = crear_cnn_1()
+    model = model.to("cuda")  
+
+    # Cargar los datos, procesarlos y moverlos a la GPU
+    print("Cargando datos")
+    input, output = cargar_datos_cnn()  # Asegúrate de que tus datos estén en el formato correcto para la CNN
+    input, output, input_test, output_test = preparar_test(input, output, 10)
+
+    #FALTA LIMPIAR LOS DATOS CON EL OJO CERRADO
+
+    # Convertir los datos a tensores de PyTorch y moverlos a la GPU
+    print("Moviendo datos a GPU")
+    input_train = torch.from_numpy(input).float().to("cuda")
+    output_train = torch.from_numpy(output).float().to("cuda")
+    input_test = torch.from_numpy(input_test).float().to("cuda")
+    output_test = torch.from_numpy(output_test).float().to("cuda")
+
+    # Definir el optimizador
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+    # Entrenar la red
+    print("Entrenando")
+    model, train_losses, test_losses = entrenar(model, optimizer, mse_loss, input_train, output_train, input_test, output_test, 1500, 1000)
+
+    # Mover el modelo a la CPU
+    model = model.to("cpu")  
+
+    # Guardar el modelo
+    torch.save(model, './cnns/pytorch/modeloCNN.pth')
+
+    # Graficar las pérdidas
+    graficar_perdidas(train_losses, test_losses)
+
+
+
 
 def entrenar_resnet(epochs):
     # Cargar los datos
     input_train, output_train = cargar_datos()
-    input_test, output_test = cargar_datos_test()
+    input, ouput, input_test, output_test = preparar_test(input_train, output_train, 10)
 
     # Convertir a conjunto2
     input_train = Conjuntos.conjunto_2(input_train)
@@ -716,15 +955,77 @@ def entrenar_resnet(epochs):
     graficar_perdidas(train_losses, test_losses)
 
 
+def entrenar_combinado():
+    print("Creando redes")
+    # Crear las redes ANN y CNN
+    entradas = 23
+    topology = [100,300,500,400,100]
+    ann = crear_ann(entradas, topology)
+    cnn = crear_cnn_1()
 
+    # Crear la red de fusión
+    model = FusionNet(ann, cnn)
+    model = model.to("cuda")
 
+    # AL USAR LA SEMILLA PARA LOS DATOS REPETIBLES, EN LAS DOS REDES USA LOS MISMOS
+    # Cargar los datos
+    print("Cargando datos")
+    input_ann, output_ORG = cargar_datos1()
+    input_cnn, _ = cargar_datos_cnn()
 
+    #Limpiamos los datos con el ojo cerrado
+    index = np.where(input_ann [:, -2] < input_ann[:, -1])
 
+    #Limpiamos 
+    input_ann = np.delete(input_ann, index, axis=0)
+    output_ORG = np.delete(output_ORG, index, axis=0)
+    input_cnn = np.delete(input_cnn, index, axis=0)
+
+    # Crear el conjunto de test 
+    input_ann_train, output, input_ann_test, output_test = preparar_test(input_ann, output_ORG, 10)
+    input_cnn_train, _, input_cnn_test, _ = preparar_test(input_cnn, output_ORG, 10)
+
+    #Suaavizamos los datos de la ann
+    print("Suavizando datos")
+    input_ann_train = suavizar_datos(input_ann_train, 5)
+
+    #Convertir a conjunto los datos para la ann
+    print("Procesando datos a conjunto")
+    input_ann_train = Conjuntos.conjunto_2(input_ann_train)
+    input_ann_test = Conjuntos.conjunto_2(input_ann_test)
+
+    # Convertir a tensores de PyTorch y moverlos a la GPU
+    print("Moviendo datos a GPU")
+    input_ann_train = torch.from_numpy(input_ann_train).float().to("cuda")
+    input_ann_test = torch.from_numpy(input_ann_test).float().to("cuda")
+
+    input_cnn_train = torch.from_numpy(input_cnn_train).float().to("cuda")
+    input_cnn_test = torch.from_numpy(input_cnn_test).float().to("cuda")
+
+    output_train = torch.from_numpy(output).float().to("cuda")
+    output_test = torch.from_numpy(output_test).float().to("cuda")
+
+    # Definir el optimizador
+    optimizer = optim.Adam(model.parameters(), lr=0.05)
+
+    # Entrenar la red
+    print("Entrenando")
+    model, train_losses, test_losses = entrenar_fusion(model, optimizer, mse_loss, input_ann_train, input_cnn_train, output_train, input_ann_test, input_cnn_test, output_test, 1500, 1000)
+
+    # Mover el modelo a la CPU
+    model = model.to("cpu")
+
+    # Guardar el modelo
+    torch.save(model, './fusiones/pytorch/modeloFusion.pth')
+
+    # Graficar las pérdidas
+    graficar_perdidas(train_losses, test_losses)
 
 if __name__ == '__main__':
 #     # entrenar_resnet(1500)
 #     entrenar1()
     #ponderar_graficas()
     #entrenar1()
-    optimizar_ponderacion()
-
+    #optimizar_ponderacion()
+    #entrenar_combinado()
+    entrenar_cnn()

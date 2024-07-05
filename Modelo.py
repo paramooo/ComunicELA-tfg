@@ -51,6 +51,7 @@ class Modelo:
         self.reiniciar_datos_reent()
         self.input = []
         self.output = []
+        self.input_frames = []
 
         # Variable para el modelo
         self.pos_t = (0, 0)
@@ -75,23 +76,25 @@ class Modelo:
         self.sonido_lock = pygame.mixer.Sound('./sonidos/lock.wav')
 
         # # Ponderar la mirada
-        self.limiteAbajoIzq = [0.10,0.07]
-        self.limiteAbajoDer = [0.87,0.09]
-        self.limiteArribaIzq = [0.05,0.81]
-        self.limiteArribaDer = [0.93,0.89]
-        self.Desplazamiento = [0.5,0.5]
+        # self.limiteAbajoIzq = [0.10,0.07]
+        # self.limiteAbajoDer = [0.87,0.09]
+        # self.limiteArribaIzq = [0.05,0.81]
+        # self.limiteArribaDer = [0.93,0.89]
+        # self.Desplazamiento = [0.5,0.5]
+
+        # los del optimizador
         # self.limiteAbajoIzq = [0.045,0.048]
         # self.limiteAbajoDer = [0.98,0.006]
         # self.limiteArribaIzq = [0.008,0.94]
         # self.limiteArribaDer = [0.983,0.956]
         # self.Desplazamiento = [0.484,0.45]
 
-        # LOS DEL OPTIMIZADOR
-        # self.limiteAbajoIzq = [0,0]
-        # self.limiteAbajoDer = [1,0]
-        # self.limiteArribaIzq = [0,1]
-        # self.limiteArribaDer = [1,1]
-        # self.Desplazamiento = [0.5,0.5]
+        #SIN PONDERAR 
+        self.limiteAbajoIzq = [0,0]
+        self.limiteAbajoDer = [1,0]
+        self.limiteArribaIzq = [0,1]
+        self.limiteArribaDer = [1,1]
+        self.Desplazamiento = [0.5,0.5]
 
         # Aplicar un umbral
         self.fondo_frame_editado = cv2.imread('./imagenes/fondo_marco_amp.png', cv2.IMREAD_GRAYSCALE)
@@ -103,8 +106,8 @@ class Modelo:
         self.recopilar = False #Variable para saber si se esta recopilando datos
         self.contador_r = 5 #Contador para la cuenta atras
         self.pos_r = (0, 0) #Posicion de la pelota roja
-        self.salto_bajo, self.salto_alto = 80, 120 #Salto de la pelota roja
-        self.velocidad = 35
+        self.salto_bajo, self.salto_alto = 70, 100 #Salto de la pelota roja
+        self.velocidad = 50
         self.direccion = 1 
 
     def reiniciar_datos_reent(self):
@@ -362,28 +365,39 @@ class Modelo:
         else:
             datos = self.obtener_datos()
             if datos is not None:                
-                distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab = datos
-                self.guardar_datos(distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, self.pos_r/np.array(tamano_pantalla))
+                distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, frame = datos
+                #aQUI ES DONDE TENGO QUE METER PARA GUARDAR EL FRAME TAMBIEN
+                self.guardar_datos(distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, self.pos_r/np.array(tamano_pantalla), frame)
         return self.pos_r
 
 
-    def guardar_datos(self, distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, pos_r_norm):
+    def guardar_datos(self, distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, pos_r_norm, frame):
         # Guardar los datos en las listas
         self.input.append([*distancias_izq, *distancias_der, or_x, or_y, or_z, *coord_cab, ear, umbral_ear])
         self.output.append(pos_r_norm)
+        self.input_frames.append(frame)
 
 
     def guardar_final(self, fichero):
         # Si no existe la carpeta txts, se crea
         os.makedirs('txts', exist_ok=True)
-        
+        os.makedirs(f'frames/{fichero}', exist_ok=True)
+
+        # Determinar el número de líneas existentes en el archivo
+        with open(f'./txts/input{fichero}.txt', 'r') as f:
+            num_lineas = sum(1 for _ in f)+1
+
         # Guardar los datos en los archivos
         with open(f'./txts/input{fichero}.txt', 'a') as f:
-            for linea in self.input:
+            for i, linea in enumerate(self.input):
                 # Convertir el elemento a cadena si es una lista o tupla
                 if isinstance(linea, (list, tuple, np.ndarray)):
                     linea = ', '.join(map(str, linea))
                 f.write(str(linea) + '\n')
+                cv2.imwrite(f'./frames/{fichero}/frame_{num_lineas}.jpg', self.input_frames[i])
+                num_lineas += 1
+
+
 
         with open(f'./txts/output{fichero}.txt', 'a') as f:
             for linea in self.output:
@@ -395,6 +409,8 @@ class Modelo:
             # Limpiar las listas para la próxima vez
             self.input = []
             self.output = []
+
+       
 
 
 # ---------------------------   FUNCIONES DE OBTENCION DE DATOS  -------------------------------
@@ -418,16 +434,50 @@ class Modelo:
         distancias_izq, distancias_der = self.detector.calcular_distancias_ojos(coord_o_izq, coord_o_der)
 
         # - Orientación de la cabeza entre 0 y 1
-        or_x, or_y, or_z = self.detector.get_orientacion_cabeza(coord_o, frame)
+        or_x, or_y, or_z = self.detector.get_orientacion_cabeza(coord_o, frame.shape)
 
         # - EAR 
         ear = self.detector.calcular_ear_medio(coord_ear_izq, coord_ear_der)
 
+        # - Recortar el rectangulo de los ojos normalizado a 200x50
+        rect_frame = self.normalizar_frame(frame, coord_o_izq, coord_o_der)
+
         #print("ORX: ", round(or_x,3), "ORY: ", round(or_y,3), "ORZ: ", round(or_z,3), "coord_cab: ", coord_cab)
 
         # Pasamos la posicion de la pantalla normalizada
-        return distancias_izq, distancias_der, or_x, or_y, or_z, ear, self.umbral_ear, coord_cab
+        return distancias_izq, distancias_der, or_x, or_y, or_z, ear, self.umbral_ear, coord_cab, rect_frame
 
+    # Recortar el rectangulo de los ojos normalizado a 200x50
+    def normalizar_frame(self, frame, coord_o_izq, coord_o_der):
+        # Coordenadas de los ojos
+        x_o_izq, y_o_izq = coord_o_izq[0]
+        x_o_der, y_o_der = coord_o_der[0]
+
+        # Coordenadas del rectangulo
+        x1 = min(x_o_izq, x_o_der)-10
+        x2 = max(x_o_izq, x_o_der)+10
+        y1 = min(y_o_izq, y_o_der)-10
+        y2 = max(y_o_izq, y_o_der)+10
+
+        # Recortar el rectangulo de los ojos
+        rect_frame = frame[y1:y2, x1:x2]
+
+        # Calcular la relación de aspecto deseada
+        ratio = 200.0 / 50.0
+        ratio_act = rect_frame.shape[1] / rect_frame.shape[0]
+
+        # Calcular cuántos píxeles se deben agregar a cada lado
+        if ratio_act < ratio:
+            diff = int((rect_frame.shape[0] * ratio - rect_frame.shape[1]) / 2)
+            rect_frame = cv2.copyMakeBorder(rect_frame, 0, 0, diff, diff, cv2.BORDER_REPLICATE)
+        elif ratio_act > ratio:
+            diff = int((rect_frame.shape[1] / ratio - rect_frame.shape[0]) / 2)
+            rect_frame = cv2.copyMakeBorder(rect_frame, diff, diff, 0, 0, cv2.BORDER_REPLICATE)
+
+        # Redimensionar a 200x50 manteniendo la relación de aspecto
+        rect_frame = cv2.resize(rect_frame, (200, 50), interpolation = cv2.INTER_AREA)
+
+        return rect_frame
 
 
     #Funcion para obtener la posicion de la mirada en el test
@@ -443,7 +493,7 @@ class Modelo:
             return None
 
         # Se desempaquetan los datos del ear para el click
-        _, _, _, _, _, ear, _, _ = datos
+        _, _, _, _, _, ear, _, _, _ = datos
         click = self.get_parpadeo(ear)
 
         # Se transforman los datos a un conjunto

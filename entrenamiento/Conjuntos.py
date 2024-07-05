@@ -4,7 +4,7 @@ class Conjuntos:
 # --------------- FUNCIONES AUXILIARES ----------------
 # Funcion para transformar los datos a array
     def datos_as_array(datos):
-        distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab = datos
+        distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, _ = datos
         datos_transformados = np.expand_dims(np.concatenate([distancias_izq, distancias_der, [or_x], [or_y], [or_z], coord_cab, [ear], [umbral_ear]]), axis=0)
         return datos_transformados
 

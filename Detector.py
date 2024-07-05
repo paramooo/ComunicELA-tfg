@@ -115,7 +115,7 @@ class Detector:
 
 
     # Funcion para detectar la posicion de la cabeza en la pantalla
-    def get_orientacion_cabeza(self, coord_o, frame):
+    def get_orientacion_cabeza(self, coord_o, size):
         #Los puntos de referencia de la cabeza
         image_points = np.array([
             coord_o[0],     # Nose tip
@@ -138,7 +138,6 @@ class Detector:
         ])
         
         # Camara
-        size = frame.shape
         focal_length = size[1]
         center = (size[1]/2, size[0]/2)
         camera_matrix = np.array(
