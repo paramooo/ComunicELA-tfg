@@ -1,8 +1,6 @@
 import mediapipe as mp
 import numpy as np
 import cv2
-from scipy.spatial.transform import Rotation as R
-
 
 class Detector:
     def __init__(self):

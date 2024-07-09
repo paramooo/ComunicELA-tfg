@@ -373,14 +373,17 @@ class Modelo:
             self.salto_bajo, self.salto_alto , self.salto_bajo_re, self.salto_alto_re = self.salto_bajo*-1, self.salto_alto*-1, self.salto_bajo_re*-1, self.salto_alto_re*-1
             self.pos_r = (self.pos_r[0], tamano_pantalla[1] - 50)
 
-        # Si la pelota toca el borde inferior de la pantalla, reiniciamos los datos y la posición
+        # Si la pelota toca el borde inferior de la pantalla
         if self.pos_r[1] < 0:
+            # Si viene de el reentrenamiento, se reentrena 
             if self.recopilarRe:
                 self.tarea_hilo(lambda: self.reentrenar())
                 self.reiniciar_datos_reent()
                 self.recopilarRe = False
             else:
-                self.guardar_final(fichero)
+                #Si viene de la recopilacion de datos
+                self.tarea_hilo(lambda: self.guardar_final(fichero))    
+                # self.guardar_final(fichero)
             self.reiniciar_datos_r()
         else:
             datos = self.obtener_datos()
@@ -459,13 +462,13 @@ class Modelo:
         # - EAR 
         ear = self.detector.calcular_ear_medio(coord_ear_izq, coord_ear_der)
 
-        # - Recortar el rectangulo de los ojos normalizado a 200x50
-        rect_frame = self.normalizar_frame(frame, coord_o_izq, coord_o_der)
+        # - Recortar el rectangulo de los ojos normalizado a 200x50 ESTO SE HACE EN EL POSTPROCESAR NO AL OBTENER LOS DATOS
+        #rect_frame = self.normalizar_frame(frame, coord_o_izq, coord_o_der)
 
         #print("ORX: ", round(or_x,3), "ORY: ", round(or_y,3), "ORZ: ", round(or_z,3), "coord_cab: ", coord_cab)
 
         # Pasamos la posicion de la pantalla normalizada
-        return distancias_izq, distancias_der, or_x, or_y, or_z, ear, self.umbral_ear, coord_cab, rect_frame
+        return distancias_izq, distancias_der, or_x, or_y, or_z, ear, self.umbral_ear, coord_cab, frame
 
     # Recortar el rectangulo de los ojos normalizado a 200x50
     def normalizar_frame(self, frame, coord_o_izq, coord_o_der):

@@ -20,10 +20,14 @@ import cv2
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import copy
+from tqdm import tqdm
+import sys
 
-
-
-
+#Importamos el detector
+sys_copy = sys.path.copy()
+sys.path.append('./')
+from Detector import Detector
+sys.path = sys_copy
 
 ##############################################  ANALIS DE DATOS ########################################################
 
@@ -1018,11 +1022,62 @@ def entrenar_combinado():
     # Graficar las pérdidas
     graficar_perdidas(train_losses, test_losses)
 
+
+
+
+# FUNCION PARA RECORTAR LOS FRAMES AL RECTANGULO DE INTERES DE LA IMAGEN
+# Recortar el rectangulo de los ojos normalizado a 200x50
+def normalizar_frame(frame, coord_o_izq, coord_o_der, ratio, ancho, altoArriba, altoAbajo):
+    # Coordenadas de los ojos
+    x_o_izq, y_o_izq = coord_o_izq[0]
+    x_o_der, y_o_der = coord_o_der[0]
+
+    # Coordenadas del rectangulo
+    x1 = min(x_o_izq, x_o_der)-ancho
+    x2 = max(x_o_izq, x_o_der)+ancho
+    y1 = min(y_o_izq, y_o_der)-altoArriba
+    y2 = max(y_o_izq, y_o_der)+altoAbajo
+
+    # Calcular la relación de aspecto actual
+    ratio_act = (x2 - x1) / (y2 - y1)
+
+    # Calcular cuántos píxeles se deben agregar a cada lado
+    if ratio_act < ratio:
+        diff = int(((y2 - y1) * ratio - (x2 - x1)) / 2)
+        x1 -= diff
+        x2 += diff
+    elif ratio_act > ratio:
+        diff = int(((x2 - x1) / ratio - (y2 - y1)) / 2)
+        y1 -= diff
+        y2 += diff
+
+    # Recortar el rectangulo de los ojos
+    rect_frame = frame[y1:y2, x1:x2]
+
+    # Redimensionar a 200x50 manteniendo la relación de aspecto
+    rect_frame = cv2.resize(rect_frame, (200, 50), interpolation = cv2.INTER_AREA)
+
+    return rect_frame
+
+def editar_frames(ratio, ancho, altoArriba, altoAbajo):
+    #Crear la carpeta si no existe
+    if not os.path.exists(f'./frames/recortados/{ancho}-{altoArriba}-{altoAbajo}'):
+        os.makedirs(f'./frames/recortados/{ancho}-{altoArriba}-{altoAbajo}')
+    # Imprime la ruta de busqueda
+    archivos = os.listdir('./frames/1')
+    for nombre_archivo in tqdm(archivos, desc="Procesando frames"):
+        frame = cv2.imread(os.path.join('./frames/1', nombre_archivo))
+        detector = Detector()
+        datos = detector.obtener_coordenadas_indices(frame)
+        frame_editado = normalizar_frame(frame, datos[0], datos[1], ratio, ancho, altoArriba, altoAbajo)
+        cv2.imwrite(os.path.join(f'./frames/recortados/{ancho}-{altoArriba}-{altoAbajo}', nombre_archivo), frame_editado)
+
 if __name__ == '__main__':
 #     # entrenar_resnet(1500)
 #     entrenar1()
     #ponderar_graficas()
     #entrenar1()
     #optimizar_ponderacion()
-    entrenar_combinado()
+    #entrenar_combinado()
     #entrenar_ann()
+    editar_frames(ratio=200/50, ancho=15, altoArriba=15, altoAbajo=15)
