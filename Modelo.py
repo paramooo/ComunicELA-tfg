@@ -18,6 +18,7 @@ import math
 from torch import nn
 import torch.optim as optim
 from kivy.clock import Clock
+import json
 
 class Modelo:
     def __init__(self):
@@ -104,6 +105,20 @@ class Modelo:
         self.fondo_frame_editado = cv2.imread('./imagenes/fondo_marco_amp.png', cv2.IMREAD_GRAYSCALE)
         self.mask_rgb = np.zeros((*self.fondo_frame_editado.shape, 3), dtype=np.uint8)
         self.mask_rgb[self.fondo_frame_editado<50] = [50, 50, 50]
+
+    # Cargamos la configuracion del tutorial
+    def get_show_tutorial(self):    
+        try:
+            with open('./config.json', 'r') as f:
+                config = json.load(f)
+                return config["mostrar_tutorial"]
+        except FileNotFoundError:
+            return True  # Por defecto, mostrar el tutorial
+        
+    def set_show_tutorial(self, valor):
+        config = {"mostrar_tutorial": valor}
+        with open('config.json', 'w') as f:
+            json.dump(config, f)
 
     #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
     def reiniciar_datos_r(self):

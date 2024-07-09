@@ -13,11 +13,14 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Color, Rectangle
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
+from kivy.uix.checkbox import CheckBox
+import keyboard
 
 
 class TutorialPopup(ModalView):
-    def __init__(self, message, on_dismiss, pos, **kwargs):
+    def __init__(self, message, on_dismiss, pos, controlador, show_switch=False, **kwargs):
         super(TutorialPopup, self).__init__(**kwargs)
+        self.controlador = controlador
         self.size_hint = (0.3, 0.2)  # Tamaño del popup
         self.auto_dismiss = False  # No permitir que se cierre al pulsar fuera
         self.pos_hint = {'center_x': pos[0], 'center_y': pos[1]}  # Posición del popup
@@ -34,6 +37,17 @@ class TutorialPopup(ModalView):
         label.bind(size=label.setter('text_size'))  # Para que el texto se ajuste al tamaño del Label
         layout.add_widget(label)
 
+        if show_switch:
+            checkbox_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.2))
+            checkbox_label = Label(text='No volver a mostrar el tutorial', color=(1, 1, 1, 1))
+            self.tutorial_checkbox = CheckBox(active=False)
+            checkbox_layout.add_widget(Widget(size_hint_x = 1))
+            checkbox_layout.add_widget(checkbox_label)
+            checkbox_layout.add_widget(self.tutorial_checkbox)
+            checkbox_layout.add_widget(Widget(size_hint_x=1))
+            layout.add_widget(checkbox_layout)
+            layout.add_widget(Widget(size_hint_y = 0.05))
+
         # Añade un botón para cerrar el popup
         button = ButtonRnd(text='Continuar', size_hint=(1, 0.3), on_release=self.dismiss)
         layout.add_widget(button)
@@ -41,9 +55,17 @@ class TutorialPopup(ModalView):
         self.add_widget(layout)
         self.bind(on_dismiss=on_dismiss)  # Función a llamar cuando se cierre el popup
 
+
+
     def _update_rect(self, instance, value):
         self.rect.pos = instance.pos
         self.rect.size = instance.size
+
+    def on_dismiss(self):
+        # Guarda la configuración cuando se cierre el popup
+        if hasattr(self, 'tutorial_checkbox'):
+            self.controlador.set_show_tutorial(not self.tutorial_checkbox.active)
+        super().on_dismiss()
 
 
 class Inicio(Screen):
@@ -65,15 +87,6 @@ class Inicio(Screen):
 
         # Parte izquierda con los botones y el titulo
         self.Izquierda = BoxLayout(orientation='vertical', size_hint=(0.5, 1), spacing=20)
-
-        # ------------------------------------------ Añadir el switch para opciones de desarrollador ---------------------------------------
-        switch_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.1))
-        switch_layout.add_widget(Widget(size_hint_x=1))
-        switch_label = Label(text='Opciones de desarrollador', color=(1, 1, 1, 1))
-        self.dev_switch = Switch(active=False)
-        self.dev_switch.bind(active=self.opciones_des)
-        switch_layout.add_widget(switch_label)
-        switch_layout.add_widget(self.dev_switch)
 
         # Menu de seleccion de camara
         self.camera_spinner = CustomSpinner(
@@ -110,7 +123,6 @@ class Inicio(Screen):
         Derecha.add_widget(self.image_box)
         Derecha.add_widget(self.camera_spinner)  
         Derecha.add_widget(Widget(size_hint_y=0.1))    
-        Derecha.add_widget(switch_layout) 
 
         caja.add_widget(self.Izquierda)
         caja.add_widget(Derecha)
@@ -128,7 +140,12 @@ class Inicio(Screen):
         ]
 
         # Llamar al método show_tutorial después de que la vista inicial se haya completado
-        Clock.schedule_once(self.show_tutorial, 2)
+        if self.controlador.get_show_tutorial():
+            Clock.schedule_once(self.show_tutorial, 2)
+
+        # Activar las opciones de desarrollador solamente si se presiona la tecla 'd'        
+        Clock.schedule_interval(self.opciones_des, 0.1)
+
 
     def show_tutorial(self, *args):
         if self.tutorial_buttons:
@@ -137,13 +154,14 @@ class Inicio(Screen):
             # Calcula la posición normalizada
             if button == self.camera_spinner:
                 pos = 0.5, 0.22
-            elif button == self.dev_switch:
-                pos = 0.8, 0.1
             else:
                 pos = (button.center_x / Window.width) + 0.4, button.center_y / Window.height
             
-            popup = TutorialPopup(message, self.show_tutorial, pos)
-            popup.open()
+            # Muestra el popup con el mensaje
+            show_switch = len(self.tutorial_buttons) == 0
+            TutorialPopup(message, self.show_tutorial, pos, self.controlador, show_switch=show_switch).open()
+
+
 
 
     def on_enter(self, *args):
@@ -184,12 +202,13 @@ class Inicio(Screen):
     def on_leave(self, *args):
         Clock.unschedule(self.update_image_box)
 
-    def opciones_des(self, instance, value):
-        if value:
-            self.Izquierda.add_widget(self.btn_tst) 
-            self.Izquierda.add_widget(self.btn_rec) 
-            self.controlador.set_desarrollador(True)
-        else:
-            self.Izquierda.remove_widget(self.btn_tst)  
-            self.Izquierda.remove_widget(self.btn_rec) 
-            self.controlador.set_desarrollador(False)
+    def opciones_des(self, dt):
+        if keyboard.is_pressed('d'):
+            if self.controlador.get_desarrollador() == False:
+                self.Izquierda.add_widget(self.btn_tst) 
+                self.Izquierda.add_widget(self.btn_rec) 
+                self.controlador.set_desarrollador(True)
+            else:
+                self.Izquierda.remove_widget(self.btn_tst)  
+                self.Izquierda.remove_widget(self.btn_rec) 
+                self.controlador.set_desarrollador(False)

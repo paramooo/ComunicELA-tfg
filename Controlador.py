@@ -38,6 +38,12 @@ class Controlador:
 
     def get_desarrollador(self):
         return self.modelo.desarrollador
+    
+    def get_show_tutorial(self):
+        return self.modelo.get_show_tutorial()
+    
+    def set_show_tutorial(self, valor):
+        self.modelo.set_show_tutorial(valor)
 
 
 

@@ -179,10 +179,7 @@ class Tableros(Screen):
             
             # Desempaqueta los datos
             pos, click = datos
-
             pos = pos.flatten()
-
-            # Actualiza la posición de la mirada
             x, y = pos
 
             # Emula el movimiento y clic
