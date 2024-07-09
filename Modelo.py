@@ -637,11 +637,13 @@ class Modelo:
 #-------------------------------------------------------------------------------------------
 
     def cargar_tableros(self):
-        for filename in os.listdir('./tableros'):
-            if filename.endswith('.xlsx'):
-                df = pd.read_excel(os.path.join('./tableros', filename), header=None)
+        filename = './tableros/tableros.xlsx'  # Nombre del archivo de Excel
+        if os.path.isfile(filename):
+            xls = pd.ExcelFile(filename)
+            for sheet_name in xls.sheet_names:
+                df = pd.read_excel(xls, sheet_name=sheet_name, header=None)
                 palabras = df.values.tolist()  # Convierte el DataFrame a una lista de listas
-                self.tableros[filename[:-5]] = palabras  # Añade el tablero al diccionario
+                self.tableros[sheet_name] = palabras  # Añade el tablero al diccionario
 
     def obtener_tablero(self, nombre):
         return self.tableros.get(nombre.lower())

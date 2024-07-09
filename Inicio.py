@@ -44,7 +44,7 @@ class TutorialPopup(ModalView):
             checkbox_layout.add_widget(Widget(size_hint_x = 1))
             checkbox_layout.add_widget(checkbox_label)
             checkbox_layout.add_widget(self.tutorial_checkbox)
-            checkbox_layout.add_widget(Widget(size_hint_x=1))
+            checkbox_layout.add_widget(Widget(size_hint_x=0.5))
             layout.add_widget(checkbox_layout)
             layout.add_widget(Widget(size_hint_y = 0.05))
 
