@@ -104,6 +104,8 @@ class Inicio(Screen):
         self.btn_ree = ButtonRnd(text='Reentrenar', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('reentrenar'), font_name='Texto')
 
         self.btn_tab = ButtonRnd(text='Tableros', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('tabinstruc'), font_name='Texto')
+
+        self.txt_des = Label(text='Has activado las opciones de desarrollador, pulsa "D" para desactivarlas', halign='center', size_hint=(1, 0.1))
         
         self.camera_spinner.bind(text=self.seleccionar_camara)
         espacio_blanco2 = BoxLayout(size_hint=(1, 0.05))
@@ -207,8 +209,10 @@ class Inicio(Screen):
             if self.controlador.get_desarrollador() == False:
                 self.Izquierda.add_widget(self.btn_tst) 
                 self.Izquierda.add_widget(self.btn_rec) 
+                self.Izquierda.add_widget(self.txt_des)
                 self.controlador.set_desarrollador(True)
             else:
+                self.Izquierda.remove_widget(self.txt_des)
                 self.Izquierda.remove_widget(self.btn_tst)  
                 self.Izquierda.remove_widget(self.btn_rec) 
                 self.controlador.set_desarrollador(False)

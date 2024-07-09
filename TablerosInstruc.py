@@ -74,7 +74,7 @@ class TablerosInstruc(Screen):
         )
         right_instructions.add_widget(instruccion3)
         instruccion4 = Label(
-            text='Mantener los ojos cerrados 2 segundos para modo descanso',
+            text='Mantener los ojos cerrados 3 segundos para modo descanso',
             font_size='20sp',
             halign='center',
             valign='middle'

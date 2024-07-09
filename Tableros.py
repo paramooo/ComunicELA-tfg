@@ -24,7 +24,7 @@ class PantallaBloqueada(BoxLayout):
             Color(0, 0, 0, 0.85)  # color negro con alpha a 0.7
             self.rect = Rectangle(size=self.size, pos=self.pos)
         self.bind(size=self._update_rect, pos=self._update_rect)
-        self.add_widget(Label(text='Mantenga los ojos cerrados 2 segundos para desbloquear', color=(1, 1, 1, 1)))
+        self.add_widget(Label(text='Mantenga los ojos cerrados 3 segundos para desbloquear', color=(1, 1, 1, 1)))
 
     def _update_rect(self, instance, value):
         self.rect.pos = instance.pos
