@@ -120,13 +120,16 @@ class Controlador:
         self.modelo.alarma()
 
     def iniciar_cronometro(self):
-        Clock.schedule_interval(self.modelo.cronometro, 0.01)
+        self.modelo.iniciar_cronometro()
+
+    def reiniciar_cronometro(self):
+        self.modelo.reiniciar_cronometro()
 
     def get_cronometro (self):
         return self.modelo.get_cronometro()
     
-    def stop_cronometro(self):
-        self.modelo.stop_cronometro()
+    def stop_cronometro(self, guardar):
+        self.modelo.stop_cronometro(guardar)
 
 #-------------------------------FUNCIONES PARA LA RECOPILACION DE DATOS-----------------------------
 

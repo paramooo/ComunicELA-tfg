@@ -66,7 +66,7 @@ class Inicio(Screen):
         # Parte izquierda con los botones y el titulo
         self.Izquierda = BoxLayout(orientation='vertical', size_hint=(0.5, 1), spacing=20)
 
-        # Añadir el switch para opciones de desarrollador
+        # ------------------------------------------ Añadir el switch para opciones de desarrollador ---------------------------------------
         switch_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.1))
         switch_layout.add_widget(Widget(size_hint_x=1))
         switch_label = Label(text='Opciones de desarrollador', color=(1, 1, 1, 1))
@@ -125,7 +125,6 @@ class Inicio(Screen):
             (self.btn_cal, 'Despues debe calibrar el parpadeo para comenzar a usar la aplicación'),
             (self.btn_tab, 'Posteriormente ya podrá utilizar los tableros de comunicación'),
             (self.btn_ree, 'Si no está satisfecho con el rendimiento de la aplicación,\n puede reentrenar el modelo para que se ajuste mejor a sus necesidades'),
-            (self.dev_switch, 'Este apartado habilita opciones para pruebas y desarrollo de la aplicación'),
         ]
 
         # Llamar al método show_tutorial después de que la vista inicial se haya completado

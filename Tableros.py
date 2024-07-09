@@ -34,7 +34,9 @@ class Tableros(Screen):
     def __init__(self, controlador, **kwargs):
         super(Tableros, self).__init__(**kwargs)
         self.controlador = controlador
-        self.background_color = (0, 0, 0, 1) 
+        self.background_color = (0, 0, 0, 1)
+        self.espacio_presionado = False
+
 
         # Crea una imagen de fondo
         self.fondo = Image(source=self.controlador.get_fondo() , allow_stretch=True, keep_ratio=False)
@@ -97,7 +99,7 @@ class Tableros(Screen):
         self.btn_alarma = ButtonRnd(text='Alarma', size_hint=(.12, 1), on_press=self.on_alarma, font_name='Texto')
         layout_botones.add_widget(self.btn_alarma)
 
-        #  Cronometro para las pruebas
+        #  ---------------------------------- Cronometro para las pruebas ----------------------------------------------
         self.cronometro = Label(size_hint=(.1, .05), pos_hint={'right':1, 'top':1})
         self.add_widget(self.cronometro)
 
@@ -121,16 +123,12 @@ class Tableros(Screen):
     def on_enter(self, *args):
         self.controlador.set_escanear(True)
         self.controlador.set_bloqueado(False)
-        #Si estan las opciones de desarrollador activas mostrar el cronometro sino no
-        if self.controlador.get_desarrollador():
-            self.cronometro.opacity = 1
-        else:
-            self.cronometro.opacity = 0
 
     # Parar de escanear al salir
     def on_inicio(self, instance):
         self.controlador.set_escanear(False)
         self.controlador.borrar_todo()
+        self.controlador.reiniciar_cronometro()
         self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
         self.controlador.change_screen('inicio')
 
@@ -145,7 +143,7 @@ class Tableros(Screen):
 
     def on_reproducir(self, instance):
         #Aqui leer el texto en alto
-        self.controlador.stop_cronometro()
+        self.controlador.stop_cronometro(True)
         self.controlador.reproducir_texto()
     
     def on_alarma(self, instance):
@@ -197,13 +195,22 @@ class Tableros(Screen):
                     self.remove_widget(self.pantalla_bloqueada)
                     del self.pantalla_bloqueada
 
-                # Si se pulsa el espacio, iniciar el cronómetro
-                if keyboard.is_pressed('space'):
-                    self.controlador.iniciar_cronometro()
+
+                #---------------------------------------------------PARTE A COMENTAR PARA EL SOFTWARE FINAL-----------------------------------------
+                # Si se pulsa el espacio, iniciar el cronómetro, si está activado, reiniciarlo
+                espacio_actualmente_presionado = keyboard.is_pressed('space')
+                if espacio_actualmente_presionado and not self.espacio_presionado:
+                    if self.controlador.get_cronometro() == 0:
+                        self.controlador.iniciar_cronometro()
+                    else:
+                        self.controlador.reiniciar_cronometro()
+                self.espacio_presionado = espacio_actualmente_presionado
 
                 # Actualiza el cronómetro
                 tiempo = self.controlador.get_cronometro()
                 self.cronometro.text = f'{int(tiempo):02}:{int((tiempo % 1) * 100):02}'
+                #-------------------------------------------------------------------------------------------------------------------------------------
+
 
 
                 # Emula el movimiento con las casillas 

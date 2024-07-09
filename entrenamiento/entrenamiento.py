@@ -544,9 +544,9 @@ class FusionNet(nn.Module):
         self.ann = ann
         self.cnn = cnn
         self.fusion_layer = nn.Sequential(
-            nn.Linear(4, 100),
+            nn.Linear(4, 20),
             nn.ReLU(),
-            nn.Linear(100, 2),
+            nn.Linear(20, 2),
             nn.Sigmoid()
         )
 
@@ -890,7 +890,7 @@ def entrenar_cnn():
 
 
 
-def entrenar_resnet(epochs):
+def entrenar_resnet_ann(epochs):
     # Cargar los datos
     input_train, output_train = cargar_datos()
     input_train, input_test, output_train, output_test = preparar_test(input_train, output_train, 10)
@@ -1024,5 +1024,5 @@ if __name__ == '__main__':
     #ponderar_graficas()
     #entrenar1()
     #optimizar_ponderacion()
-    #entrenar_combinado()
-    entrenar_ann()
+    entrenar_combinado()
+    #entrenar_ann()

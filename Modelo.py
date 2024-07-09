@@ -77,6 +77,7 @@ class Modelo:
         self.sonido_alarma = pygame.mixer.Sound('./sonidos/alarm.wav')
         self.sonido_lock = pygame.mixer.Sound('./sonidos/lock.wav')
         self.cronometro_pruebas = 0 #Variable para el cronometro de las pruebas
+        self.contador_borrar = 0
 
         # # Ponderar la mirada
         # self.limiteAbajoIzq = [0.10,0.07]
@@ -638,9 +639,13 @@ class Modelo:
 
     def borrar_palabra(self):
         self.frase = ' '.join(self.frase.rstrip().split(' ')[:-1]) + ' '
+        self.contador_borrar += 1
 
     def borrar_todo(self):
+        numero_palabras = len(self.frase.split(' '))
+        self.contador_borrar += numero_palabras
         self.frase = ''
+
 
     def reproducir_texto(self):
         #Empezar un hulo separado:
@@ -669,17 +674,26 @@ class Modelo:
     def cronometro(self, dt):
         self.cronometro_pruebas += dt
 
+    def iniciar_cronometro(self):
+        Clock.schedule_interval(self.cronometro, 0.01)
+        self.contador_borrar = 0
+
     def get_cronometro(self):
         return self.cronometro_pruebas
     
     #Detiene el cronometro y guarda en el txt de resultados de los test el tiempo seguido de la frase
-    def stop_cronometro(self):
+    def stop_cronometro(self, guardar):
         Clock.unschedule(self.cronometro)
-        if self.cronometro_pruebas != 0 and self.frase != "":
+        if self.cronometro_pruebas != 0 and self.frase != "" and guardar:
             with open('./resultados/PRUEBAS_CRONO.txt', 'a') as f:
-                f.write(f'{self.cronometro_pruebas} -> {self.frase}\n')
+                f.write(f'{self.frase} -> Segundos: {self.cronometro_pruebas} | Errores: {self.contador_borrar}\n')
             self.cronometro_pruebas = 0
+            self.contador_borrar = 0
 
+    def reiniciar_cronometro(self):
+        Clock.unschedule(self.cronometro)
+        self.cronometro_pruebas = 0
+        self.contador_borrar = 0
 
 
     
