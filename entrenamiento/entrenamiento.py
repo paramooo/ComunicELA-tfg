@@ -595,6 +595,7 @@ def entrenar_validacion(model, optimizer, loss_function, input_train, output_tra
     return model, train_losses, val_losses, test_losses
     # Lo mismo que entrenar pero sin validacion
 
+
 def entrenar(model, optimizer, loss_function, input_train, output_train, input_test, output_test, epochs, batch_size):
     train_losses = []
     test_losses = []
@@ -649,9 +650,6 @@ def entrenar(model, optimizer, loss_function, input_train, output_train, input_t
         plt.draw()
         plt.pause(0.001)
         print(f'Epoch {epoch}, Train Loss: {train_loss_avg}, Test Loss: {test_loss_avg}', end='\r')
-
-        # Liberamos memoria
-        #torch.cuda.empty_cache()
         
         # Detener el entrenamiento si se presiona la tecla 'p'
         if keyboard.is_pressed('p'):

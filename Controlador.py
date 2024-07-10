@@ -137,6 +137,12 @@ class Controlador:
     def stop_cronometro(self, guardar):
         self.modelo.stop_cronometro(guardar)
 
+    def get_pictogramas(self):
+        return self.modelo.pictogramas
+
+    def set_pictogramas(self, valor):
+        self.modelo.pictogramas = valor
+
 #-------------------------------FUNCIONES PARA LA RECOPILACION DE DATOS-----------------------------
 
     def on_recopilar(self):

@@ -19,6 +19,7 @@ from torch import nn
 import torch.optim as optim
 from kivy.clock import Clock
 import json
+from Tablero import Tablero
 
 class Modelo:
     def __init__(self):
@@ -77,6 +78,9 @@ class Modelo:
         self.contador_pb = 0
         self.sonido_alarma = pygame.mixer.Sound('./sonidos/alarm.wav')
         self.sonido_lock = pygame.mixer.Sound('./sonidos/lock.wav')
+        self.pictogramas = True
+        
+        #variables para las pruebas de la aplicacion
         self.cronometro_pruebas = 0 #Variable para el cronometro de las pruebas
         self.contador_borrar = 0
 

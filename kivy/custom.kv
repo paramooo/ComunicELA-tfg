@@ -79,3 +79,35 @@
         Line:
             rounded_rectangle: (self.x+self.width*0.05), (self.y+self.height*0.1),( self.width-self.width*0.1), (self.height-self.height*0.2), 15
             width: 1.5
+
+
+<CasillaTableroPicto>:
+    size_hint: self.size_hint
+    height: 40
+    background_color:  (0,0,0,0)
+    color_down: 0.6, 0.6, 0.6, 1
+    border: 10, 10, 10, 10
+    canvas.before:
+        Color:
+            rgba: self.color_down if self.state == 'down' else ((0.15, 0.15, 0.15, 1) if self.text.startswith('TAB.') else (0.25, 0.25, 0.25, 1))
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [15,]
+    canvas.after:
+        Color:
+            rgba: 1, 1, 1, 1
+        Line:
+            rounded_rectangle: self.x, self.y, self.width, self.height, 15
+            width: 1.5
+        Color:
+            rgba: 0.5, 0.5, 0.5, 1
+        Line:
+            rounded_rectangle: (self.x+self.width*0.06), (self.y+self.height*0.22),( self.width-self.width*0.1), (self.height-self.height*0.3), 15
+            width: 1.5
+    Label:
+        size_hint_y: None
+        height: 50
+        halign: 'center'
+        valign: 'middle'
+    
