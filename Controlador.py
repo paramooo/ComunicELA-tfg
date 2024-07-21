@@ -210,6 +210,9 @@ class Controlador:
     
     def get_frase(self):
         return self.modelo.get_frase()
+    
+    def get_errores(self):
+        return self.modelo.contador_borrar
 
 
     def salir(self):

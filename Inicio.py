@@ -14,57 +14,7 @@ from kivy.graphics import Color, Rectangle
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
 from kivy.uix.checkbox import CheckBox
-
-
-class TutorialPopup(ModalView):
-    def __init__(self, message, on_dismiss, pos, controlador, show_switch=False, **kwargs):
-        super(TutorialPopup, self).__init__(**kwargs)
-        self.controlador = controlador
-        self.size_hint = (0.3, 0.2)  # Tamaño del popup
-        self.auto_dismiss = False  # No permitir que se cierre al pulsar fuera
-        self.pos_hint = {'center_x': pos[0], 'center_y': pos[1]}  # Posición del popup
-
-        # Crea un layout con un fondo semi-transparente
-        layout = BoxLayout(orientation='vertical', padding=[10, 10, 10, 10])
-        with layout.canvas.before:
-            Color(0, 0, 0, 0.7)  # color negro con alpha a 0.7
-            self.rect = Rectangle(size=layout.size, pos=layout.pos)
-        layout.bind(size=self._update_rect, pos=self._update_rect)
-
-        # Añade un Label con el mensaje del tutorial
-        label = Label(text=message, font_size=20, halign='center', valign='middle')
-        label.bind(size=label.setter('text_size'))  # Para que el texto se ajuste al tamaño del Label
-        layout.add_widget(label)
-
-        if show_switch:
-            checkbox_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.2))
-            checkbox_label = Label(text='No volver a mostrar el tutorial', color=(1, 1, 1, 1))
-            self.tutorial_checkbox = CheckBox(active=False)
-            checkbox_layout.add_widget(Widget(size_hint_x = 1))
-            checkbox_layout.add_widget(checkbox_label)
-            checkbox_layout.add_widget(self.tutorial_checkbox)
-            checkbox_layout.add_widget(Widget(size_hint_x=0.5))
-            layout.add_widget(checkbox_layout)
-            layout.add_widget(Widget(size_hint_y = 0.05))
-
-        # Añade un botón para cerrar el popup
-        button = ButtonRnd(text='Continuar', size_hint=(1, 0.3), on_release=self.dismiss)
-        layout.add_widget(button)
-
-        self.add_widget(layout)
-        self.bind(on_dismiss=on_dismiss)  # Función a llamar cuando se cierre el popup
-
-
-
-    def _update_rect(self, instance, value):
-        self.rect.pos = instance.pos
-        self.rect.size = instance.size
-
-    def on_dismiss(self):
-        # Guarda la configuración cuando se cierre el popup
-        if hasattr(self, 'tutorial_checkbox'):
-            self.controlador.set_show_tutorial(not self.tutorial_checkbox.active)
-        super().on_dismiss()
+from PopUp import CustPopup
 
 
 class Inicio(Screen):
@@ -156,7 +106,7 @@ class Inicio(Screen):
             
             # Muestra el popup con el mensaje
             show_switch = len(self.tutorial_buttons) == 0
-            TutorialPopup(message, self.show_tutorial, pos, self.controlador, show_switch=show_switch).open()
+            CustPopup(message, self.show_tutorial, pos, self.controlador, show_switch=show_switch).open()
 
     def _keyboard_closed(self):
         if self._keyboard is not None:
