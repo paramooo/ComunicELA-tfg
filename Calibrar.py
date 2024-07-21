@@ -24,7 +24,7 @@ class Calibrar(Screen):
         self.textos_calibracion = [
             'Coloque la cámara a la altura de los ojos del usuario y a 50/60cm\n\n Debe situar el círculo dentro del punto central de la cara',
             'Mientras el usuario mira al punto amarillo, presionar continuar',
-            'Mientras el usuario mantiene los ojos cerrados volver a presionar el botón de Continuar',
+            'Mientras el usuario mantiene los ojos cerrados\n\n volver a presionar el botón de Continuar',
             'Calibración completada, presionar Continuar para ir al Inicio'
         ]
 
@@ -48,13 +48,13 @@ class Calibrar(Screen):
         self.menu_layout.add_widget(right_section)
 
         # Botón de Inicio
-        left_section.add_widget(Widget(size_hint_y=0.4))
+        left_section.add_widget(Widget(size_hint_y=0.6))
         btn_inicio = ButtonRnd(text='Inicio', size_hint=(0.4, 0.21), pos_hint={'x': 0.05}, on_press=self.on_inicio, font_name='Texto')
         left_section.add_widget(btn_inicio)
         left_section.add_widget(Widget(size_hint_y=0.3))
 
         # Foto calibrar.png
-        self.image = Image(source='./imagenes/calibrar0.png', pos_hint={'center_x': 0.5})
+        self.image = Image(source='./imagenes/calibrar0.png', pos_hint={'center_x': 0.5}, size_hint=(1.8,1.8))
         left_section.add_widget(self.image)
 
         # Texto explicativo
@@ -63,7 +63,8 @@ class Calibrar(Screen):
             font_size=self.controlador.get_font_txts(),
             font_name='Texto',
             halign='center',
-            valign='middle'
+            valign='middle',
+            color=(0,0,0,1)
         )
         self.texto_explicativo.bind(size=self.texto_explicativo.setter('text_size'))
         left_section.add_widget(self.texto_explicativo)

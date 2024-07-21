@@ -1,6 +1,7 @@
 from kivy.uix.gridlayout import GridLayout
 from Custom import CasillaTablero
 from Custom import CasillaTableroPicto
+from unidecode import unidecode
 
 class Tablero(GridLayout):
     def __init__(self, palabras, controlador, **kwargs):
@@ -30,10 +31,18 @@ class TableroPicto(GridLayout):
         self.casillas = []
         for fila in palabras:
             for palabra in fila:
-                nombre_img = palabra.replace('. ', '-').lower()
+                # Cambiar el interrogante a la imagen de interrogante
+                if palabra == '?':
+                    nombre_img = 'int'
+                else:
+                    nombre_img = unidecode(palabra).replace('. ', '-').lower()
+
                 btn = CasillaTableroPicto(text=str(palabra), source=f'./tableros/pictogramas/{nombre_img}.png', on_press=self.on_button_press)
                 self.casillas.append(btn)
                 self.add_widget(btn)
 
     def on_button_press(self, instance):
         self.controlador.on_casilla_tab(instance.label.text)
+
+
+#volver

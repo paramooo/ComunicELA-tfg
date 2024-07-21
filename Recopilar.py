@@ -18,14 +18,7 @@ class Recopilar(Screen):
         self.background_color = (0, 0, 0, 1) 
 
         self.escaneado = False
-        self.textos = ["Primero elige el tipo de recopilado:\n" + 
-                        "-  0 -> muy bien iluminado, mantener la cabeza casi quieta y distancia 50/60cm - (15%)\n" +
-                        "-  1 -> sin importar demasiado la luz, mantener la cabeza por el centro y distancia maxima 70cm - (30%)\n" +
-                        "ASEGURATE DE QUE LA CAMARA ESTA A LA ALTURA DE LOS OJOS\n" + 
-                        "Coloca tu cabeza a la distancia requerida de la camara y cuadra tu cabeza en el cuadro si te moviste despues del calibrado\n" +  
-                        "A continuación debes mirar fijamente a la pelota roja.\n" + 
-                        "Cuando presiones Recopilar, en 5 segundos esta empezara a moverse por toda la pantalla.\n" + 
-                        "Mirala fijamente hasta que termine de moverse, ¡Muchas gracias! (no tardará más de 3 minutos)",
+        self.textos = ["Seleccione un fichero para guardar los datos y presione Recopilar para empezar",
                         "¡¡¡Gracias!!!, presiona Inicio para volver o Recopilar para volver a recopilar datos"]
 
         # Crea una imagen de fondo

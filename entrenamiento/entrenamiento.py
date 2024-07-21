@@ -1061,11 +1061,12 @@ def editar_frames(ratio, ancho, altoArriba, altoAbajo):
     #Crear la carpeta si no existe
     if not os.path.exists(f'./frames/recortados/{ancho}-{altoArriba}-{altoAbajo}'):
         os.makedirs(f'./frames/recortados/{ancho}-{altoArriba}-{altoAbajo}')
-    # Imprime la ruta de busqueda
+    
+    detector = Detector()
+
     archivos = os.listdir('./frames/1')
     for nombre_archivo in tqdm(archivos, desc="Procesando frames"):
         frame = cv2.imread(os.path.join('./frames/1', nombre_archivo))
-        detector = Detector()
         datos = detector.obtener_coordenadas_indices(frame)
         frame_editado = normalizar_frame(frame, datos[0], datos[1], ratio, ancho, altoArriba, altoAbajo)
         cv2.imwrite(os.path.join(f'./frames/recortados/{ancho}-{altoArriba}-{altoAbajo}', nombre_archivo), frame_editado)

@@ -1,0 +1,2 @@
+usuario 1
+SER IR PODER  -> Segundos: 10.48851629998535 | Errores: 0

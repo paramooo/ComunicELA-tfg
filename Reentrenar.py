@@ -16,9 +16,7 @@ class Reentrenar(Screen):
         self.escaneado = False
         
 
-        self.textos = ["Cuando se pulse comenzar, la pelota roja se moverá por la pantalla.\n" +
-                       "Mira fijamente a la pelota roja hasta que termine de moverse.\n" +
-                       "Cuando termine de moverse, se procesarán los datos.", 
+        self.textos = ["Al pulsar Reentrenar, el usuario debe mirar a la pelota roja hasta que termine de moverse.", 
                        "Reentrenamiento completado, presiona Inicio para volver, o Reentrenar para volver a realizar el proceso"]
 
         # Crea una imagen de fondo
@@ -36,7 +34,7 @@ class Reentrenar(Screen):
         self.layout.add_widget(self.texto_explicativo)
         
         # El boton de continuar
-        self.btn_recopilar = ButtonRnd(text='Recopilar', size_hint=(.2, .1), pos_hint={'right': 1, 'top': 0}, on_press= self.on_recopilar, font_name='Texto')
+        self.btn_recopilar = ButtonRnd(text='Reentrenar', size_hint=(.2, .1), pos_hint={'right': 1, 'top': 0}, on_press= self.on_recopilar, font_name='Texto')
         self.layout.add_widget(self.btn_recopilar)
 
         self.add_widget(self.layout)

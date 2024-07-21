@@ -123,10 +123,15 @@ class Tableros(Screen):
         # TextInput siempre muestre la última línea de texto
         instance.scroll_y = 0
 
+    # Cambia el tablero antes de entrar para evitar el salto de la vista
+    def on_pre_enter(self, *args):
+        self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
+
     # Funcion para escanear al entrar
     def on_enter(self, *args):
         self.controlador.set_escanear(True)
         self.controlador.set_bloqueado(False)
+
 
     # Parar de escanear al salir
     def on_inicio(self, instance):

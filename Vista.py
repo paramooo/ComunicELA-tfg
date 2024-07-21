@@ -18,7 +18,7 @@ class Vista:
         self.test = None
         self.tableros = None
         self.fondo = './imagenes/fondo_menus.jpg'
-        self.fondo2 = './imagenes/fondo_menus2.jpg'
+        self.fondo2 = './imagenes/fondo_menus3.jpg'
 
     def set_controlador(self, controlador):
         self.controlador = controlador

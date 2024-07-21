@@ -78,7 +78,7 @@ class Modelo:
         self.contador_pb = 0
         self.sonido_alarma = pygame.mixer.Sound('./sonidos/alarm.wav')
         self.sonido_lock = pygame.mixer.Sound('./sonidos/lock.wav')
-        self.pictogramas = True
+        self.pictogramas = False
         
         #variables para las pruebas de la aplicacion
         self.cronometro_pruebas = 0 #Variable para el cronometro de las pruebas
@@ -129,8 +129,8 @@ class Modelo:
         self.recopilar = False #Variable para saber si se esta recopilando datos
         self.contador_r = 5 #Contador para la cuenta atras
         self.pos_r = (0, 0) #Posicion de la pelota roja
-        self.salto_bajo, self.salto_alto = 70, 100 #Salto de la pelota roja
-        self.velocidad = 50
+        self.salto_bajo, self.salto_alto = 60, 80 #Salto de la pelota roja
+        self.velocidad = 34
         self.direccion = 1 
 
     def reiniciar_datos_reent(self):

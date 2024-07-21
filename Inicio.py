@@ -73,6 +73,7 @@ class Inicio(Screen):
         super(Inicio, self).__init__(**kwargs)
         self.controlador = controlador
         self.primera = True
+        self.d_pressed = False
 
         # Crea una imagen de fondo
         self.fondo = Image(source=self.controlador.get_fondo() , allow_stretch=True, keep_ratio=False)
@@ -205,7 +206,8 @@ class Inicio(Screen):
         Clock.unschedule(self.update_image_box)
 
     def opciones_des(self, dt):
-        if keyboard.is_pressed('d'):
+        d_pres = keyboard.is_pressed('d')
+        if d_pres and not self.d_pressed:
             if self.controlador.get_desarrollador() == False:
                 self.Izquierda.add_widget(self.btn_tst) 
                 self.Izquierda.add_widget(self.btn_rec) 
@@ -216,3 +218,5 @@ class Inicio(Screen):
                 self.Izquierda.remove_widget(self.btn_tst)  
                 self.Izquierda.remove_widget(self.btn_rec) 
                 self.controlador.set_desarrollador(False)
+        self.d_pressed = d_pres
+

@@ -1,20 +1,21 @@
 <ButtonRnd@Button>:
     font_size: 32
     size_hint: self.size_hint
+    color: (0,0,0,1)
     height: 40
     background_color: (0,0,0,0)
-    color_down: 0.6, 0.6, 0.6, 1
+    color_down: 0.3, 0.3, 0.3, 1
     border: (10, 10, 10, 10)  # Añade un borde alrededor del botón
     canvas.before:
         Color:
-            rgba: self.color_down if self.state == 'down' else  (0.1, 0.1, 0.1, 1)
+            rgba: self.color_down if self.state == 'down' else  (0.7, 0.7, 0.7, 1)
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: [15,]
     canvas.after:
         Color:
-            rgba: (0.8, 0.8, 0.8, 1)  # Añade un borde blanco alrededor del botón
+            rgba: (0.2, 0.2, 0.2, 1) 
         Line:
             rounded_rectangle: self.x, self.y, self.width, self.height, 15
             width: 1.5
@@ -22,31 +23,40 @@
 
 <CustomSpinner@Spinner>:
     font_name: 'Texto'
-    background_color: (0, 0, 0, 0)  # Hace que el fondo del spinner sea transparente
-    color_down: (0.6, 0.6, 0.6, 1)  # El color del spinner cuando se presiona
-    border: (10, 10, 10, 10)  # Añade un borde alrededor del spinner
-    option_cls: 'CustomSpinnerOption'  # Utiliza la clase CustomSpinnerOption para las opciones del menú desplegable
+    background_color: (0, 0, 0, 0)  
+    color_down: 0.3, 0.3, 0.3, 1
+    color: 0,0,0,1
+    border: (10, 10, 10, 10)  
+    option_cls: 'CustomSpinnerOption'  
     canvas.before:
         Color:
-            rgba: self.color_down if self.state == 'down' else (0.1, 0.1, 0.1, 1)  # Cambia el color dependiendo del estado del spinner
+            rgba: self.color_down if self.state == 'down' else (0.7, 0.7, 0.7, 1)  
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: [15,]
     canvas.after:
         Color:
-            rgba: (0.8, 0.8, 0.8, 1)  # Añade un borde blanco alrededor del spinner
+            rgba: (0.3, 0.3, 0.3, 1)  
         Line:
             rounded_rectangle: self.x, self.y, self.width, self.height, 15
             width: 1.5
 
 <CustomSpinnerOption@SpinnerOption>:
     font_name: 'Texto'
-    background_color: (0, 0,0, 1)  # Fondo negro
-    color: (1, 1, 1, 1)  # Texto blanco
+    background_color: (0, 0, 0, 0) 
+    color_down: 0.3, 0.3, 0.3, 1
+    color: (0, 0, 0, 1)  # Texto negro
+    canvas.before:
+        Color:
+            rgba: self.color_down if self.state == 'down' else (0.7, 0.7, 0.7, 1)  
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [15,]
     canvas.after:
         Color:
-            rgba: (0.8, 0.8, 0.8, 1)  # Añade un borde blanco alrededor de la opción
+            rgba: (0.3, 0.3, 0.3, 1)  
         Line:
             rounded_rectangle: self.x, self.y, self.width, self.height, 15
             width: 1.5
