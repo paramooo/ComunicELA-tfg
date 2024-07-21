@@ -29,9 +29,9 @@ class PantallaBloqueada(BoxLayout):
         self.rect.pos = instance.pos
         self.rect.size = instance.size
 
-class Tableros(Screen):
+class TablerosPruebas(Screen):
     def __init__(self, controlador, **kwargs):
-        super(Tableros, self).__init__(**kwargs)
+        super(TablerosPruebas, self).__init__(**kwargs)
         self.controlador = controlador
         self.background_color = (0, 0, 0, 1)
 
@@ -115,8 +115,8 @@ class Tableros(Screen):
 
     # Cambia el tablero antes de entrar para evitar el salto de la vista
     def on_pre_enter(self, *args):
-        self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
-
+        self.controlador.set_pictogramas(False)
+        self.cambiar_tablero(self.controlador.obtener_tablero('rapido'))
 
     # Funcion para escanear al entrar
     def on_enter(self, *args):
@@ -124,6 +124,7 @@ class Tableros(Screen):
         Clock.schedule_interval(self.update, 1.0 / 30.0)  
         self.controlador.set_escanear(True)
         self.controlador.set_bloqueado(False)
+
 
     # Parar de escanear al salir
     def on_inicio(self, instance):
@@ -133,8 +134,6 @@ class Tableros(Screen):
         self.controlador.change_screen('inicio')
         Clock.unschedule(self.update)
 
-
-        
     # Funciones de los botones
     def on_borrar_palabra(self, instance):
         self.controlador.borrar_palabra()
@@ -172,7 +171,7 @@ class Tableros(Screen):
 
         self.dibujos_mirada = []
 
-        if self.controlador.get_escanear() and self.controlador.get_screen() == 'tableros':
+        if self.controlador.get_escanear() and self.controlador.get_screen() == 'tablerosprueb':
 
             # Obtiene la posición de la mirada y el ear
             datos = self.controlador.obtener_posicion_mirada_ear()

@@ -43,6 +43,3 @@ class TableroPicto(GridLayout):
 
     def on_button_press(self, instance):
         self.controlador.on_casilla_tab(instance.label.text)
-
-
-#volver

@@ -14,7 +14,6 @@ from kivy.graphics import Color, Rectangle
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
 from kivy.uix.checkbox import CheckBox
-import keyboard
 
 
 class TutorialPopup(ModalView):
@@ -73,7 +72,6 @@ class Inicio(Screen):
         super(Inicio, self).__init__(**kwargs)
         self.controlador = controlador
         self.primera = True
-        self.d_pressed = False
 
         # Crea una imagen de fondo
         self.fondo = Image(source=self.controlador.get_fondo() , allow_stretch=True, keep_ratio=False)
@@ -105,6 +103,8 @@ class Inicio(Screen):
         self.btn_ree = ButtonRnd(text='Reentrenar', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('reentrenar'), font_name='Texto')
 
         self.btn_tab = ButtonRnd(text='Tableros', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('tabinstruc'), font_name='Texto')
+
+        self.btn_pruebas = ButtonRnd(text='Pruebas', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('tablerosprueb'), font_name='Texto')
 
         self.txt_des = Label(text='Has activado las opciones de desarrollador, pulsa "D" para desactivarlas', halign='center', size_hint=(1, 0.1))
         
@@ -142,12 +142,6 @@ class Inicio(Screen):
             (self.btn_ree, 'Si no está satisfecho con el rendimiento de la aplicación,\n puede reentrenar el modelo para que se ajuste mejor a sus necesidades'),
         ]
 
-        # Llamar al método show_tutorial después de que la vista inicial se haya completado
-        if self.controlador.get_show_tutorial():
-            Clock.schedule_once(self.show_tutorial, 2)
-
-        # Activar las opciones de desarrollador solamente si se presiona la tecla 'd'        
-        Clock.schedule_interval(self.opciones_des, 0.1)
 
 
     def show_tutorial(self, *args):
@@ -164,9 +158,30 @@ class Inicio(Screen):
             show_switch = len(self.tutorial_buttons) == 0
             TutorialPopup(message, self.show_tutorial, pos, self.controlador, show_switch=show_switch).open()
 
+    def _keyboard_closed(self):
+        if self._keyboard is not None:
+            self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+            self._keyboard = None
 
-
-
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        if keycode[1] == 'd':
+            if self.controlador.get_desarrollador() == False:
+                self.Izquierda.add_widget(self.btn_tst) 
+                self.Izquierda.add_widget(self.btn_rec) 
+                self.Izquierda.add_widget(self.btn_pruebas)
+                self.Izquierda.add_widget(self.txt_des)
+                self.controlador.set_desarrollador(True)
+            else:
+                self.Izquierda.remove_widget(self.txt_des)
+                self.Izquierda.remove_widget(self.btn_tst)  
+                self.Izquierda.remove_widget(self.btn_rec) 
+                self.Izquierda.remove_widget(self.btn_pruebas)
+                self.controlador.set_desarrollador(False)
+        #Escape para salir
+        if keycode[1] == 'escape':
+            self.controlador.salir()
+        return True
+    
     def on_enter(self, *args):
         # Menu de seleccion de camara una vez dentro para asi poder actualizar las camaras
         if self.primera:
@@ -175,6 +190,14 @@ class Inicio(Screen):
     
         # Schedule the update of the image box every 1/30 seconds
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)
+
+        # Llamar al método show_tutorial después de que la vista inicial se haya completado
+        if self.controlador.get_show_tutorial():
+            Clock.schedule_once(self.show_tutorial, 1)
+        
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
+
 
     def seleccionar_camara(self, _, text):
         if text.startswith('Cámara '):
@@ -204,19 +227,5 @@ class Inicio(Screen):
 
     def on_leave(self, *args):
         Clock.unschedule(self.update_image_box)
-
-    def opciones_des(self, dt):
-        d_pres = keyboard.is_pressed('d')
-        if d_pres and not self.d_pressed:
-            if self.controlador.get_desarrollador() == False:
-                self.Izquierda.add_widget(self.btn_tst) 
-                self.Izquierda.add_widget(self.btn_rec) 
-                self.Izquierda.add_widget(self.txt_des)
-                self.controlador.set_desarrollador(True)
-            else:
-                self.Izquierda.remove_widget(self.txt_des)
-                self.Izquierda.remove_widget(self.btn_tst)  
-                self.Izquierda.remove_widget(self.btn_rec) 
-                self.controlador.set_desarrollador(False)
-        self.d_pressed = d_pres
+        self._keyboard_closed()
 

@@ -192,7 +192,10 @@ class Controlador:
                 nuevo_tablero = self.modelo.obtener_tablero(nombre_tablero)
                 self.modelo.tablero_actual = nuevo_tablero
                 if nuevo_tablero is not None:
-                    self.vista.tableros.cambiar_tablero(nuevo_tablero)
+                    if self.vista.get_screen() == 'tablerosprueb':
+                        self.vista.tablerosprueb.cambiar_tablero(nuevo_tablero)
+                    else:
+                        self.vista.tableros.cambiar_tablero(nuevo_tablero)
             else:
                 self.modelo.añadir_palabra(texto_boton)
     
@@ -209,3 +212,5 @@ class Controlador:
         return self.modelo.get_frase()
 
 
+    def salir(self):
+        self.modelo.salir()

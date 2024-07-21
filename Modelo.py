@@ -157,6 +157,9 @@ class Modelo:
         hilo = threading.Thread(target=funcion)
         hilo.start()
 
+    def salir(self):
+        App.get_running_app().stop()
+
 # ---------------------------   FUNCIONES DE CONTROL DE LA CAMARA    -------------------------------
 #-------------------------------------------------------------------------------------------
 

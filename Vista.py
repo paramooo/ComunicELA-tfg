@@ -6,6 +6,7 @@ from Tableros import Tableros
 from Recopilar import Recopilar
 from Reentrenar import Reentrenar
 from TablerosInstruc import TablerosInstruc
+from TablerosPruebas import TablerosPruebas
 
 
 class Vista:
@@ -44,6 +45,9 @@ class Vista:
 
         self.tabinstruc = TablerosInstruc(self.controlador, name='tabinstruc')
         self.sm.add_widget(self.tabinstruc)
+
+        self.tablerosprueb = TablerosPruebas(self.controlador, name='tablerosprueb')
+        self.sm.add_widget(self.tablerosprueb)
 
     def change_screen(self, nombre):
         self.sm.current = nombre
