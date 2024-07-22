@@ -12,14 +12,13 @@ import torch
 from gtts import gTTS
 from io import BytesIO
 import pandas as pd
-from kivy.core.audio import SoundLoader
 import threading
 import math
 from torch import nn
 import torch.optim as optim
 from kivy.clock import Clock
 import json
-from Tablero import Tablero
+import copy
 
 class Modelo:
     def __init__(self):
@@ -34,10 +33,11 @@ class Modelo:
 
         # Variables para el modelo de test
         self.conjunto = 2
-        self.modelo = torch.load('./anns/pytorch/modelo_ajustado.pth')
+        self.modelo_org = torch.load('./anns/pytorch/modelo_ajustado.pth')
+        self.modelo = copy.deepcopy(self.modelo_org)
 
         # Variables de control para el tamaño de la fuente de los textos
-        self.tamaño_fuente_txts = 23
+        self.tamaño_fuente_txts = 25
 
         # Variables de control para la calibracion del parpadeo
         self.estado_calibracion = 0
@@ -110,6 +110,31 @@ class Modelo:
         self.mask_rgb = np.zeros((*self.fondo_frame_editado.shape, 3), dtype=np.uint8)
         self.mask_rgb[self.fondo_frame_editado<50] = [50, 50, 50]
 
+        #Variables para el reentrenamiento
+        self.numero_entrenamientos = 0
+
+
+    #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
+    def reiniciar_datos_r(self):
+        self.recopilar = False #Variable para saber si se esta recopilando datos
+        self.contador_r = 5 #Contador para la cuenta atras
+        self.pos_r = (0, 0) #Posicion de la pelota roja
+        self.salto_bajo, self.salto_alto = 60, 80 #Salto de la pelota roja
+        self.velocidad = 34
+        self.direccion = 1 
+
+    #Funcion para reiniciar los datos despues de cada reentrenamiento (se aprovecha para inicializarlos tambien)
+    def reiniciar_datos_reent(self):
+        self.recopilarRe = False
+        self.salto_bajo_re, self.salto_alto_re = 100, 180
+        self.velocidad_re = 90
+        self.numero_epochs = 100
+        self.porcentaje_reent = 0
+        
+
+
+
+
     # Cargamos la configuracion del tutorial
     def get_show_tutorial(self):    
         try:
@@ -124,19 +149,7 @@ class Modelo:
         with open('config.json', 'w') as f:
             json.dump(config, f)
 
-    #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
-    def reiniciar_datos_r(self):
-        self.recopilar = False #Variable para saber si se esta recopilando datos
-        self.contador_r = 5 #Contador para la cuenta atras
-        self.pos_r = (0, 0) #Posicion de la pelota roja
-        self.salto_bajo, self.salto_alto = 60, 80 #Salto de la pelota roja
-        self.velocidad = 34
-        self.direccion = 1 
-
-    def reiniciar_datos_reent(self):
-        self.recopilarRe = False
-        self.salto_bajo_re, self.salto_alto_re = 100, 180
-        self.velocidad_re = 40
+    
     
 
 
@@ -396,7 +409,6 @@ class Modelo:
             datos = self.obtener_datos()
             if datos is not None:                
                 distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, frame = datos
-                #aQUI ES DONDE TENGO QUE METER PARA GUARDAR EL FRAME TAMBIEN
                 self.guardar_datos(distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, self.pos_r/np.array(tamano_pantalla), frame)
         return self.pos_r
 
@@ -732,6 +744,14 @@ class Modelo:
         self.input = np.array(self.input)
         self.output = np.array(self.output)
 
+        # Si los datos estan vacios se pone el porcentaje a 100
+        if len(self.input) == 0:
+            print("No hay datos para reentrenar")
+            self.porcentaje_reent = -1
+            self.input = []
+            self.output = []
+            return
+
         # Se eliminan los datos con el ojo cerrado
         index = np.where(self.input[:, -2] < self.input[:, -1])
         input = np.delete(self.input, index, axis=0)
@@ -754,7 +774,8 @@ class Modelo:
         models = []
         loss = nn.MSELoss()
         first_loss = loss(self.modelo(input_train), output_train).item()
-        for epoch in range(100):
+        #COMPROBAR EL NUMERO DE EPOCHS CREO QUE SON DEMASIADOS FAVORECE AL OVERFITTING
+        for epoch in range(self.numero_epochs+1):
             # Entrenamiento y cálculo de la pérdida
             train_predictions = self.modelo(input_train)
             train_loss = loss(train_predictions, output_train)
@@ -771,7 +792,9 @@ class Modelo:
             train_loss.backward()
             optimizer.step()
 
-         
+            #Guardar el porcentaje de epoch que llevamos
+            self.porcentaje_reent = int((epoch/self.numero_epochs)*100)
+
         self.modelo = models[train_losses.index(min(train_losses))]
         print("Se ha elegido el epoch ", train_losses.index(min(train_losses)))
         print("Perdida antes del reentreno a los valores del usuario: ", first_loss, "Perdida final: ", min(train_losses))
@@ -779,3 +802,12 @@ class Modelo:
         # Se limpian los datos
         self.input = []
         self.output = []
+
+
+    def descartar_reentrenamientos(self):
+        if self.numero_entrenamientos == 0:
+            self.mensaje('No hay reentrenamientos que descartar')
+            return
+        self.modelo = self.modelo_org
+        self.mensaje(f'Se han descartado {self.numero_entrenamientos} reentrenamientos')
+        self.numero_entrenamientos = 0

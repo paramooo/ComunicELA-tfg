@@ -49,7 +49,7 @@ class Calibrar(Screen):
 
         # Botón de Inicio
         left_section.add_widget(Widget(size_hint_y=0.6))
-        btn_inicio = ButtonRnd(text='Inicio', size_hint=(0.4, 0.21), pos_hint={'x': 0.05}, on_press=self.on_inicio, font_name='Texto')
+        btn_inicio = ButtonRnd(text='Inicio', size_hint=(0.4, 0.28), pos_hint={'x': 0.05}, on_press=self.on_inicio, font_name='Texto')
         left_section.add_widget(btn_inicio)
         left_section.add_widget(Widget(size_hint_y=0.3))
 
@@ -60,11 +60,11 @@ class Calibrar(Screen):
         # Texto explicativo
         self.texto_explicativo = Label(
             text=self.textos_calibracion[0],
-            font_size=self.controlador.get_font_txts(),
+            font_size='30',
             font_name='Texto',
             halign='center',
             valign='middle',
-            color=(0,0,0,1)
+            color=(0,0,0,1), 
         )
         self.texto_explicativo.bind(size=self.texto_explicativo.setter('text_size'))
         left_section.add_widget(self.texto_explicativo)

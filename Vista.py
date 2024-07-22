@@ -7,6 +7,7 @@ from Recopilar import Recopilar
 from Reentrenar import Reentrenar
 from TablerosInstruc import TablerosInstruc
 from TablerosPruebas import TablerosPruebas
+from ReentrenarInstruc import ReentrenarInstruc
 
 
 class Vista:
@@ -42,6 +43,9 @@ class Vista:
 
         self.reentrenar = Reentrenar(self.controlador, name='reentrenar')
         self.sm.add_widget(self.reentrenar)
+
+        self.reentrenarinstruc = ReentrenarInstruc(self.controlador, name='reentrenarinstruc')
+        self.sm.add_widget(self.reentrenarinstruc)
 
         self.tabinstruc = TablerosInstruc(self.controlador, name='tabinstruc')
         self.sm.add_widget(self.tabinstruc)

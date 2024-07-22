@@ -180,8 +180,17 @@ class Controlador:
     def set_reentrenando(self, valor):
         self.modelo.recopilarRe = valor
 
-    def mostrar_reentrenando(self):
-        self.vista.reentrenar.texto_explicativo.text = 'Reentrenando...'
+    def get_reent_porcentaje(self):
+        return self.modelo.porcentaje_reent
+    
+    def sumar_reentrenamiento(self):
+        self.modelo.numero_entrenamientos += 1
+    
+    def get_numero_entrenamientos(self):
+        return self.modelo.numero_entrenamientos
+
+    def descartar_reentrenamientos(self):
+        self.modelo.descartar_reentrenamientos()
 
 # ---------------------------- FUNCIONES PARA EL MODO DE TABLEROS -------------------------
 #------------------------------------------------------------------------------------------

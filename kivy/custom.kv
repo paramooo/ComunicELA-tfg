@@ -47,6 +47,7 @@
     background_color: (0, 0, 0, 0) 
     color_down: 0.3, 0.3, 0.3, 1
     color: (0, 0, 0, 1)  # Texto negro
+    font_size: 25
     canvas.before:
         Color:
             rgba: self.color_down if self.state == 'down' else (0.7, 0.7, 0.7, 1)  
@@ -68,24 +69,25 @@
     font_size: 32
     size_hint: self.size_hint
     height: 40
-    background_color:  (0,0,0,0) # Un nivel de gris para las casillas que empiezan por "TAB.", otro nivel de gris para las demás
-    color_down: 0.6, 0.6, 0.6, 1  # El color del botón cuando se presiona
-    border: 10, 10, 10, 10  # Añade un borde alrededor del botón
+    background_color:  (0,0,0,0)
+    color: (0,0,0,1)
+    color_down: 0.4, 0.4, 0.4, 1  
+    border: 10, 10, 10, 10  
     canvas.before:
         Color:
-            rgba: self.color_down if self.state == 'down' else ((0.15, 0.15, 0.15, 1) if self.text.startswith('TAB.') else (0.25, 0.25, 0.25, 1))  # Cambia el color dependiendo del estado del botón
+            rgba: self.color_down if self.state == 'down' else ((0.5, 0.5, 0.5, 1) if self.text.startswith('TAB.') else (0.7, 0.7, 0.7, 1))  
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: [15,]
     canvas.after:
         Color:
-            rgba: 1, 1, 1, 1  # Añade un borde blanco alrededor del botón
+            rgba: 1, 1, 1, 1  
         Line:
             rounded_rectangle: self.x, self.y, self.width, self.height, 15
             width: 1.5
         Color:
-            rgba: 0.5, 0.5, 0.5, 1  # Añade un borde de un tono más oscuro
+            rgba: 0.4, 0.4, 0.4, 1  
         Line:
             rounded_rectangle: (self.x+self.width*0.05), (self.y+self.height*0.1),( self.width-self.width*0.1), (self.height-self.height*0.2), 15
             width: 1.5
@@ -95,11 +97,12 @@
     size_hint: self.size_hint
     height: 40
     background_color:  (0,0,0,0)
-    color_down: 0.6, 0.6, 0.6, 1
+    color_down: 0.4, 0.4, 0.4, 1 
+    color: (0,0,0,1)
     border: 10, 10, 10, 10
     canvas.before:
         Color:
-            rgba: self.color_down if self.state == 'down' else ((0.15, 0.15, 0.15, 1) if self.text.startswith('TAB.') else (0.25, 0.25, 0.25, 1))
+            rgba: self.color_down if self.state == 'down' else ((0.5, 0.5, 0.5, 1) if self.text.startswith('TAB.') else (0.7, 0.7, 0.7, 1))
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -111,7 +114,7 @@
             rounded_rectangle: self.x, self.y, self.width, self.height, 15
             width: 1.5
         Color:
-            rgba: 0.5, 0.5, 0.5, 1
+            rgba: 0.4, 0.4, 0.4, 1
         Line:
             rounded_rectangle: (self.x+self.width*0.06), (self.y+self.height*0.22),( self.width-self.width*0.1), (self.height-self.height*0.3), 15
             width: 1.5
@@ -120,4 +123,5 @@
         height: 50
         halign: 'center'
         valign: 'middle'
+        
     

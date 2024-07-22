@@ -33,6 +33,11 @@ incorporar posibilidad de guardar diferentes usuarios despues de calibrar
 pytorch2.2.2
 cuda12.1
 cudnn8.9.7
+canvas para el gif 
+ezgif.com
+drawboard pdf para las imagenes de los muñecos
+https://arasaac.org/terms-of-use pictogramas e ideas tableros
+
 
 
 

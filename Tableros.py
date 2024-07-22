@@ -275,5 +275,6 @@ class Tableros(Screen):
             else:
                 # Asegurar que el indice es correcto
                 self.botones[min(self.casilla_bloqueada - self.tablero.cols * self.tablero.rows,4)].dispatch('on_press')
+            self.casilla_bloqueada = None
         # Actualiza la casilla anterior
         self.casilla_anterior = indice_casilla

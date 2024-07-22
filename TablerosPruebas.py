@@ -91,7 +91,7 @@ class TablerosPruebas(Screen):
         self.dibujos_mirada = []
 
         # Pruebas
-        self.pruebas = ["Explicación", "SÍ", "NO", "BIEN", "MAL", "QUERER BEBER", "NECESITAR AYUDA", "ABRIR PUERTA", "YO PODER DORMIR MUCHO ?", "YO NECESITAR VER DOCTOR", "EL-ELLA ANTES VIAJAR MUCHO", "NOSOTROS-AS PODER IR PARQUE ?"]
+        self.pruebas = ["Explicacion", "SÍ", "NO", "BIEN", "MAL", "QUERER BEBER", "PIERNA DERECHA", "ABRIR VENTANA", "YO PODER DORMIR AHORA ?", "YO NECESITAR VER DOCTOR", "EL-ELLA ANTES VIAJAR MUCHO", "NOSOTROS-AS PODER IR PARQUE ?"]
         self.cursor_positions = []
         self.indice_prueba = 0
         self.pruebas_coordenadas = {}
@@ -113,39 +113,60 @@ class TablerosPruebas(Screen):
         self.pruebas_mensajes()
 
 
+
+    def establecer_configuracion(self):
+        # Pruebas NIVEL BASICO sin pictogramas y en el tablero rapido
+        if self.indice_prueba < 5:
+            self.controlador.set_pictogramas(False)
+            self.cambiar_tablero(self.controlador.obtener_tablero('rápido'))
+        
+        # Pruebas NIVEL INTERMEDIO con pictogramas y en el tablero inicial
+        if self.indice_prueba >= 5 and self.indice_prueba < 8:
+            self.controlador.set_pictogramas(True)
+            self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
+        
+        # Pruebas NIVEL AVANZADO con pictogramas y en el tablero inicial
+        if self.indice_prueba >= 8 and self.indice_prueba < 10:
+            self.controlador.set_pictogramas(True)
+            self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
+        
+        # Pruebas NIVEL EXPERTO sin pictogramas y en el tablero inicial
+        if self.indice_prueba >= 10:
+            self.controlador.set_pictogramas(False)
+            self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
+
     # Automatización de las pruebas
     def pruebas_mensajes(self, *args):
         if self.pruebas:
-            # Mensajes de las pruebas de inicio
+            #Establecemos el tablero y las configuraciones necesarias
+            self.establecer_configuracion()
+
+            # Mensajes de la explicacion
             if self.indice_prueba == 0:
-                message = "Gracias por participar, presiona continuar para empezar."
-                CustPopup(message, self.pruebas_indices, (0.5, 0.5), self.controlador, show_switch=False).open()
+                message = "Gracias por participar en las pruebas de ComunicELA\nSe pedirá escribir una serie de frases para evaluar\nel tiempo de respuesta y la precisión del software."
+                CustPopup(message, self.pruebas_indices, (0.5, 0.5), self.controlador, bt_empez=True, show_switch=False).open()
 
             # Mensaje de la primera prueba de selección de palabras
             elif self.indice_prueba == 1:
                 message = f"Prueba {self.indice_prueba}: Escriba '{self.pruebas[self.indice_prueba]}' y presione 'Reproducir'."
                 self.pruebas_coordenadas[self.pruebas[self.indice_prueba]] = {}
-                CustPopup(message, self.pruebas_indices, (0.5, 0.5), self.controlador, show_switch=False, func_saltar=self.saltar_prueba).open()
+                CustPopup(message, self.pruebas_indices, (0.5, 0.5), self.controlador, show_switch=False, bt_empez=True, func_saltar=self.saltar_prueba).open()
 
-            # Mensaje de las pruebas de selección de palabras y cambio a pictogramas en la 5
+            # Mensaje de las pruebas de selección de palabras
             elif self.indice_prueba < len(self.pruebas):
                 # Mensaje de las pruebas de selección de palabras
-                message = f"¡Prueba anterior completada con éxito!\nPrueba {self.indice_prueba}: Escriba '{self.pruebas[self.indice_prueba]}' y presione 'Reproducir'."
+                message = f"¡Prueba completada con éxito!\nPrueba {self.indice_prueba}: Escriba '{self.pruebas[self.indice_prueba]}' y presione 'Reproducir'."
 
                 #Cambio a pictogramas
                 if self.indice_prueba == 5:
-                    self.controlador.set_pictogramas(True)
-                    self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
                     message = f"¡Pruebas anteriores completadas con éxito!\nActivamos los pictogramas y los demás tableros\nPrueba {self.indice_prueba}: Escriba '{self.pruebas[self.indice_prueba]}' y presione 'Reproducir'."
 
                 # Vuelta a texto
                 if self.indice_prueba == 10:
-                    self.controlador.set_pictogramas(False)
-                    self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
-                    message = f"¡Pruebas anteriores completadas con éxito!\n Ahora desactivamos los pictogramas de nuevo\nPrueba {self.indice_prueba}: Escriba '{self.pruebas[self.indice_prueba]}' y presione 'Reproducir'."
+                    message = f"¡Pruebas anteriores completadas con éxito!\nDesactivamos los pictogramas de nuevo\nPrueba {self.indice_prueba}: Escriba '{self.pruebas[self.indice_prueba]}' y presione 'Reproducir'."
 
                 self.pruebas_coordenadas[self.pruebas[self.indice_prueba]] = {}
-                CustPopup(message, self.pruebas_indices, (0.5, 0.5), self.controlador, show_switch=False, func_saltar=self.saltar_prueba, func_volver=self.volver_anterior).open()
+                CustPopup(message, self.pruebas_indices, (0.5, 0.5), self.controlador, show_switch=False, bt_empez=True, func_saltar=self.saltar_prueba, func_volver=self.volver_anterior).open()
 
             else:
                 # Mensaje de fin de pruebas

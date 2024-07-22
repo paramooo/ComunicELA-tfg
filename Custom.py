@@ -30,7 +30,7 @@ class CasillaTableroPicto(ButtonBehavior, BoxLayout):
     def __init__(self, **kwargs):
         super(CasillaTableroPicto, self).__init__(**kwargs)
         self.orientation = 'vertical'
-        self.label = Label(text = self.text, size_hint_y=None, height=40, halign='center', valign='middle', font_name='Texto', font_size=32)
+        self.label = Label(text = self.text, size_hint_y=None, height=40, halign='center', valign='middle', font_name='Texto', font_size=32, color=(0, 0, 0, 1))
         #Comprobar la existencia de la imagen
         if not os.path.isfile(self.source):
             self.source = './tableros/pictogramas/NOFOTO.png'

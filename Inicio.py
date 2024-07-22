@@ -42,21 +42,23 @@ class Inicio(Screen):
             text='Cargando cámaras...',
             values=[],
             size_hint=(0.6, 0.1),
-            pos_hint={'center_x': 0.5},)
+            pos_hint={'center_x': 0.5},
+            font_name='Texto', 
+            font_size=self.controlador.get_font_txts())
 
-        self.btn_cal = ButtonRnd(text='Calibrar parpadeo', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('calibrar'), font_name='Texto')
+        self.btn_cal = ButtonRnd(text='Calibrar parpadeo', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('calibrar'), font_name='Texto', font_size='35sp')
 
-        self.btn_tst = ButtonRnd(text='Test', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('test'), font_name='Texto')
+        self.btn_tst = ButtonRnd(text='Test', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('test'), font_name='Texto', font_size='35sp')
 
-        self.btn_rec = ButtonRnd(text='Recopilar', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen_r('recopilar') , font_name='Texto')
+        self.btn_rec = ButtonRnd(text='Recopilar', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen_r('recopilar') , font_name='Texto', font_size='35sp')
 
-        self.btn_ree = ButtonRnd(text='Reentrenar', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('reentrenar'), font_name='Texto')
+        self.btn_ree = ButtonRnd(text='Reentrenar', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('reentrenarinstruc'), font_name='Texto', font_size='35sp')
 
-        self.btn_tab = ButtonRnd(text='Tableros', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('tabinstruc'), font_name='Texto')
+        self.btn_tab = ButtonRnd(text='Tableros', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('tabinstruc'), font_name='Texto', font_size='35sp')
 
-        self.btn_pruebas = ButtonRnd(text='Pruebas', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('tablerosprueb'), font_name='Texto')
+        self.btn_pruebas = ButtonRnd(text='Pruebas', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('tablerosprueb'), font_name='Texto', font_size='35sp')
 
-        self.txt_des = Label(text='Has activado las opciones de desarrollador, pulsa "D" para desactivarlas', halign='center', size_hint=(1, 0.1))
+        self.txt_des = Label(text='Has activado las opciones de desarrollador, pulsa "D" para desactivarlas', halign='center', size_hint=(1, 0.1), font_size='20sp')
         
         self.camera_spinner.bind(text=self.seleccionar_camara)
         espacio_blanco2 = BoxLayout(size_hint=(1, 0.05))
@@ -72,10 +74,11 @@ class Inicio(Screen):
         self.Izquierda.add_widget(self.btn_tab)
         self.Izquierda.add_widget(espacio_blanco2)
 
-
+        Derecha.add_widget(Widget(size_hint_y=0.05))    
         Derecha.add_widget(self.image_box)
+        Derecha.add_widget(Widget(size_hint_y=0.05))    
         Derecha.add_widget(self.camera_spinner)  
-        Derecha.add_widget(Widget(size_hint_y=0.1))    
+        Derecha.add_widget(Widget(size_hint_y=0.3))    
 
         caja.add_widget(self.Izquierda)
         caja.add_widget(Derecha)
