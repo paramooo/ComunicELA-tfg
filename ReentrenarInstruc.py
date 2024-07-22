@@ -42,7 +42,7 @@ class ReentrenarInstruc(Screen):
         left_instructions = BoxLayout(orientation='vertical', size_hint=(0.6, 1))
 
         # Botón de Inicio
-        btn_inicio = ButtonRnd(text='Inicio', size_hint=(0.3, 0.33), pos_hint={'x': 0.13}, on_press=self.on_inicio, font_name='Texto')
+        btn_inicio = ButtonRnd(text='Inicio', size_hint=(0.3, 0.4), pos_hint={'x': 0.13}, on_press=self.on_inicio, font_name='Texto')
         left_instructions.add_widget(btn_inicio)
         instrucciones_layout.add_widget(left_instructions)
 
