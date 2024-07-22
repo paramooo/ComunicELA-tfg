@@ -103,7 +103,8 @@ class Calibrar(Screen):
         menu = self.controlador.cambiar_estado_calibracion()
         if(menu == 0):
             self.controlador.change_screen('inicio')
-        self.update_view(menu)
+        elif menu != None:
+            self.update_view(menu)
 
     # Función para el botón inicio
     def on_inicio(self, *args):

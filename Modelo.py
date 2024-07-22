@@ -294,10 +294,10 @@ class Modelo:
         # Se obtienen los datos
         datos = self.detector.obtener_coordenadas_indices(self.get_frame())
 
-        #Si no se detecta cara, se devuelve 1 indicando error
+        #Si no se detecta cara, None
         if datos is None:
             self.mensaje('Calibración fallida, asegúrate de que el usuario está centrado y bien iluminado')
-            return self.estado_calibracion
+            return None
     
         # Se desempaquetan los datos
         _, _, coord_ear_izq, coord_ear_der, _, _ = self.detector.obtener_coordenadas_indices(self.get_frame())
