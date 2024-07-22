@@ -58,7 +58,7 @@ class ReentrenarInstruc(Screen):
         )
         left_instructions.add_widget(instruccion1)
         instruccion2 = Label(
-            text='Si cambia el usuario, se recomienda descartar el reentrenamiento previo',
+            text='El usuario debe seguir el punto rojo con la mirada hasta completar el proceso',
             font_size='24sp',
             halign='center',
             valign='middle', 
@@ -69,7 +69,7 @@ class ReentrenarInstruc(Screen):
         left_instructions.add_widget(instruccion2)
 
         instruccion3 = Label(
-            text='El usuario debe seguir el punto rojo con la mirada hasta completar el proceso',
+            text='Si cambia el usuario, se debe descartar el reentrenamiento previo',
             font_size='24sp',
             halign='center',
             valign='middle', 
@@ -79,8 +79,9 @@ class ReentrenarInstruc(Screen):
         )
         left_instructions.add_widget(instruccion3)
 
+        #ESTO ES PORQUE SE AJUSTA DEMASIADO LA RED AL USUARIO DEBO REVISAR COMO HACER LOS REENTRENOS
         instruccion4 = Label(
-            text='Si nota una pérdida de precisión, se recomienda descartar el reentrenamiento',
+            text='Más de un reentreno solo está recomendado para usuarios con movilidad limitada',
             font_size='24sp',
             halign='center',
             valign='middle', 
@@ -90,9 +91,20 @@ class ReentrenarInstruc(Screen):
         )
         left_instructions.add_widget(instruccion4)
 
+        instruccion5 = Label(
+            text='Si nota una pérdida de precisión, se recomienda descartar el reentrenamiento',
+            font_size='24sp',
+            halign='center',
+            valign='middle', 
+            pos_hint={'x': 0.08}, 
+            color=(0,0,0,1),
+            font_name='Texto'
+        )
+        left_instructions.add_widget(instruccion5)
+
         # Botón de Descartar Reentrenamiento
-        btn_descartar = ButtonRnd(text='Descartar reentrenamientos', size_hint=(0.4, 0.3), pos_hint={'center_x': 0.6}, on_press=self.on_descartar, font_name='Texto')
-        left_instructions.add_widget(btn_descartar)
+        self.btn_descartar = ButtonRnd(text=f'Descartar reentrenamientos ({self.controlador.get_numero_entrenamientos()})', size_hint=(0.4, 0.3), pos_hint={'center_x': 0.6}, on_press=self.on_descartar, font_name='Texto')
+        left_instructions.add_widget(self.btn_descartar)
 
         left_instructions.add_widget(Widget(size_hint_y=0.8))
 
@@ -111,9 +123,13 @@ class ReentrenarInstruc(Screen):
 
         instrucciones_layout.add_widget(right_buttons)
 
+    def on_enter(self, *args):
+        self.btn_descartar.text=f'Descartar reentrenamientos ({self.controlador.get_numero_entrenamientos()})'
+
     # Función para el botón de Descartar
     def on_descartar(self, *args):
-       self.controlador.descartar_reentrenamientos()
+        self.controlador.descartar_reentrenamientos()
+        self.btn_descartar.text=f'Descartar reentrenamientos ({self.controlador.get_numero_entrenamientos()})'
 
     # Función para el botón de Reentrenar
     def on_reentrenar(self, *args):

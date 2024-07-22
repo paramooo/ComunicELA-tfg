@@ -6,7 +6,9 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Color, Ellipse
 from kivy.graphics import InstructionGroup
 from kivy.clock import Clock
-
+from kivy.uix.widget import Widget
+from kivy.graphics import RoundedRectangle
+from PopUp import CustPopup
 
 class Reentrenar(Screen):
     def __init__(self, controlador, **kwargs):
@@ -20,19 +22,18 @@ class Reentrenar(Screen):
 
         self.layout = BoxLayout(orientation='vertical')
 
-        # El boton de inicio
-        self.btn_inicio = ButtonRnd(text='Inicio', size_hint=(.2, .1), pos_hint={'x': 0, 'top': 1}, on_press= self.on_inicio, font_name='Texto')
-        self.layout.add_widget(self.btn_inicio)
 
         # El texto explicativo
-        self.texto_explicativo = Label(text="", font_size=30, size_hint=(1, .8), font_name='Texto')
+        self.texto_explicativo = Label(text="", font_size=30, size_hint=(1, .8), font_name='Texto', color=(1, 1, 1, 1))
         self.layout.add_widget(self.texto_explicativo)
+        self.layout.add_widget(Widget(size_hint_y=0.1))
 
         self.add_widget(self.layout)
+        self.lanzado = False
 
     def on_pre_enter(self, *args):
         self.texto_explicativo.text = ""
-        self.btn_inicio.disabled = True
+        #self.btn_inicio.disabled = True
 
 
     def on_enter(self, *args):
@@ -51,6 +52,7 @@ class Reentrenar(Screen):
                 self.layout.canvas.add(self.circulo_instr)
         self.controlador.set_reentrenando(True)
         self.controlador.on_recopilar()
+        self.lanzado = False
 
 
 
@@ -59,6 +61,9 @@ class Reentrenar(Screen):
         self.controlador.change_screen('inicio')
         self.circulo_instr.clear()
         self.controlador.set_reentrenando(False)
+        Clock.unschedule(self.update)
+        self.lanzado = False
+        
 
     def on_leave(self, *args):
         # Elimina la tarea de actualización del reloj
@@ -93,16 +98,17 @@ class Reentrenar(Screen):
         elif self.escaneado:
             # Si el porcentaje de reentrenamiento es -1, muestra un mensaje de error
             if self.controlador.get_reent_porcentaje() == -1:
-                self.texto_explicativo.text = "Error en la recopilación de datos, vuelva a intentarlo"
-                self.btn_inicio.disabled = False
+                if not self.lanzado:
+                    self.lanzado = True
+                    CustPopup("Error en la recopilación de datos, vuelva a intentarlo", self.on_inicio, (0.5,0.5), controlador=self.controlador).open()
+
             # Si el porcentaje de reentrenamiento es 100, muestra el avance
             elif self.controlador.get_reent_porcentaje() < 100:
-                self.texto_explicativo.text = f"Datos recopilados, reentrenando... {self.controlador.get_reent_porcentaje()}%"
+                self.texto_explicativo.text = f"Reentrenando... {self.controlador.get_reent_porcentaje()}%"
             
             # Si el porcentaje de reentrenamiento es 100, muestra un mensaje de finalización
             else:
-                self.texto_explicativo.text = "Reentrenamiento completado, ya puede volver al Inicio"
-                #Si el boton de inicio está deshabilitado, lo habilita y suma 1 al contador de reentrenamientos
-                if self.btn_inicio.disabled:
+                if not self.lanzado:
+                    self.lanzado = True
                     self.controlador.sumar_reentrenamiento()
-                self.btn_inicio.disabled = False
+                    CustPopup("Reentrenamiento completado", self.on_inicio, (0.5,0.5), controlador=self.controlador).open()

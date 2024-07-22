@@ -77,8 +77,8 @@ class Tableros(Screen):
             halign='left',  
             font_name='Texto', 
             font_size=40,
-            background_color=(0, 0, 0, 0.4),
-            foreground_color=(1, 1, 1, 1),
+            background_color=(0.9, 0.9, 0.9, 0.8),
+            foreground_color=(0, 0, 0, 1),
         )
         self.label.bind(on_text=self.on_text)  # Añade un evento para cuando el texto cambie
         scroll.add_widget(self.label)
@@ -116,6 +116,7 @@ class Tableros(Screen):
     # Cambia el tablero antes de entrar para evitar el salto de la vista
     def on_pre_enter(self, *args):
         self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
+        self.label.text = self.controlador.get_frase()
 
 
     # Funcion para escanear al entrar

@@ -10,11 +10,20 @@ class Controlador:
     def change_screen(self, screen_name):
         self.vista.change_screen(screen_name)
 
+    #Condicionante para ver si esta calibrado
     def change_screen_r(self, screen_name):
         if self.modelo.calibrado:
             self.change_screen(screen_name)
         else:
             self.mensaje('Primero debe calibrar el parpadeo')
+
+    #Condicionante para ver si hay camara seleccionada
+    def change_screen_cam(self, screen_name):
+        if self.modelo.camara_activa():
+            self.change_screen(screen_name)
+        else:
+            self.mensaje('Primero debe seleccionar una cámara')
+
     def get_screen(self):
         return self.vista.get_screen()
     

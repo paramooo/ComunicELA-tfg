@@ -120,14 +120,15 @@ class Modelo:
         self.contador_r = 5 #Contador para la cuenta atras
         self.pos_r = (0, 0) #Posicion de la pelota roja
         self.salto_bajo, self.salto_alto = 60, 80 #Salto de la pelota roja
-        self.velocidad = 34
+        self.velocidad = 35
         self.direccion = 1 
 
     #Funcion para reiniciar los datos despues de cada reentrenamiento (se aprovecha para inicializarlos tambien)
+    #Son menos que en la recopilacion ya que esto es para solamente reajustar al usuario
     def reiniciar_datos_reent(self):
         self.recopilarRe = False
         self.salto_bajo_re, self.salto_alto_re = 100, 180
-        self.velocidad_re = 90
+        self.velocidad_re = 35
         self.numero_epochs = 100
         self.porcentaje_reent = 0
         
@@ -745,7 +746,7 @@ class Modelo:
         self.output = np.array(self.output)
 
         # Si los datos estan vacios se pone el porcentaje a 100
-        if len(self.input) == 0:
+        if len(self.input) < 10:
             print("No hay datos para reentrenar")
             self.porcentaje_reent = -1
             self.input = []
