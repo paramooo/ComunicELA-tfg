@@ -171,14 +171,21 @@ class Controlador:
     def get_escaneado(self):
         return self.modelo.escaneado  
 
-    def actualizar_pos_circle_r(self, tamano_pantalla, fichero=None):
-            return self.modelo.actualizar_pos_circle_r(tamano_pantalla, fichero)
+    def actualizar_pos_circle_r(self, tamano_pantalla):
+            return self.modelo.actualizar_pos_circle_r(tamano_pantalla)
 
     def get_recopilando(self):
         return self.modelo.recopilar
 
     def reiniciar_datos_r(self):
         self.modelo.reiniciar_datos_r() 
+    
+    #Funciones para el popup de guardar o descartar
+    def descartar_datos(self):
+        self.modelo.descartar_datos()
+
+    def guardar_final(self, fichero):
+        self.modelo.tarea_hilo(self.modelo.guardar_final(fichero))
 
 
 # ---------------------------- FUNCIONES PARA EL MODO DE REENTRENAMIENTO -------------------------

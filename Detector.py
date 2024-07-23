@@ -184,7 +184,6 @@ class Detector:
     def get_puntos_or(self, frame):
         if frame is None:
             return None
-        altura, ancho, _ = frame.shape              
         resultados = self.deteccion_cara.process(frame)  
         coordenadas_orientacion = []
         if resultados.multi_face_landmarks is not None:

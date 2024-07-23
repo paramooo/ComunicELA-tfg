@@ -9,6 +9,7 @@ from kivy.clock import Clock
 from kivy.uix.image import Image
 from kivy.graphics.texture import Texture
 from Custom import CustomSpinner
+from PopUp import CustPopup
 
 class Recopilar(Screen):
     def __init__(self, controlador, **kwargs):
@@ -55,6 +56,7 @@ class Recopilar(Screen):
         self.layout.add_widget(self.camera_spinner)
 
         self.add_widget(self.layout)
+        self.lanzado = False
 
     def on_enter(self, *args):
         self.escaneado = False
@@ -75,10 +77,15 @@ class Recopilar(Screen):
         self.btn_recopilar.disabled = False
 
     def on_inicio(self, *args):
+        Clock.unschedule(self.update)
+        Clock.unschedule(self.update_image_box)
         # Cambia a la pantalla de inicio
         self.controlador.change_screen('inicio')
         # Limpia las instrucciones de gráficos del círculo
         self.circulo_instr.clear()
+        # Borra los posibles datos recopilados
+        self.descartar_datos()
+
 
     # Funcion para el boton recopilar, pone recopilar a true e inicia la cuanta atras
     def on_recopilar(self, *args):
@@ -110,21 +117,37 @@ class Recopilar(Screen):
 
 
                 # Obtiene la próxima posición del círculo del controlador
-                proxima_pos_r = self.controlador.actualizar_pos_circle_r(tamano_pantalla, self.fichero)
+                proxima_pos_r = self.controlador.actualizar_pos_circle_r(tamano_pantalla)
 
                 # Actualiza la posición del círculo en la vista
                 if len(self.circulo_instr.children) > 1:
                     self.circulo_instr.children[1].pos = proxima_pos_r
-        # Si no recopilar, pero ya recopilo datos, muestra el texto de agradecimiento
+        # Si no recopilando, pero ya recopilo datos, muestra el texto de agradecimiento
         elif self.escaneado:
-            self.texto_explicativo.text = self.textos[1]
             #Volver a mostrar la imagen
             self.image_box.opacity = 1
             self.btn_recopilar.disabled = False
 
+            if not self.lanzado:
+                self.lanzado = True
+                #popup con opcion para guardar o descartar
+                #self.controlador.guardar
+                CustPopup("¡Gracias por su colaboración!", self.guardar_datos, (0.5,0.5), self.controlador, func_saltar=self.descartar_datos).open()
+
         else:
             # Si no recolecto datos aun, muestra el texto explicativo normal
             self.texto_explicativo.text = self.textos[0]
+
+    def guardar_datos(self, *args):
+        self.controlador.guardar_final(self.fichero)
+        self.escaneado = False
+        self.lanzado = False
+    
+    def descartar_datos(self, *args):
+        self.controlador.descartar_datos()
+        self.escaneado = False
+        self.lanzado = False
+
 
 
     def update_image_box(self, dt):
@@ -142,6 +165,4 @@ class Recopilar(Screen):
             self.image_box.texture = texture
 
 
-    def on_leave(self, *args):
-        Clock.unschedule(self.update)
-        Clock.unschedule(self.update_image_box)
+    

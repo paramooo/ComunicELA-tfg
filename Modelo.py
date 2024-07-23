@@ -372,7 +372,7 @@ class Modelo:
             Clock.unschedule(self.cuenta_atras)
             return False
 
-    def actualizar_pos_circle_r(self, tamano_pantalla, fichero):
+    def actualizar_pos_circle_r(self, tamano_pantalla):
         velocidad = self.velocidad_re if self.recopilarRe else self.velocidad
         salto_bajo = self.salto_bajo_re if self.recopilarRe else self.salto_bajo
         salto_alto = self.salto_alto_re if self.recopilarRe else self.salto_alto
@@ -400,12 +400,8 @@ class Modelo:
             if self.recopilarRe:
                 self.tarea_hilo(lambda: self.reentrenar())
                 self.reiniciar_datos_reent()
-                self.recopilarRe = False
             else:
-                #Si viene de la recopilacion de datos
-                self.tarea_hilo(lambda: self.guardar_final(fichero))    
-                # self.guardar_final(fichero)
-            self.reiniciar_datos_r()
+                self.reiniciar_datos_r()
         else:
             datos = self.obtener_datos()
             if datos is not None:                
@@ -440,8 +436,6 @@ class Modelo:
                 cv2.imwrite(f'./frames/{fichero}/frame_{num_lineas}.jpg', self.input_frames[i])
                 num_lineas += 1
 
-
-
         with open(f'./txts/output{fichero}.txt', 'a') as f:
             for linea in self.output:
                 # Convertir el elemento a cadena si es una lista o tupla
@@ -449,9 +443,17 @@ class Modelo:
                     linea = ', '.join(map(str, linea))
                 f.write(str(linea) + '\n')
 
-            # Limpiar las listas para la próxima vez
-            self.input = []
-            self.output = []
+        # Limpiar las listas para la próxima vez
+        self.input = []
+        self.output = []
+        self.input_frames = []
+
+    
+    def descartar_datos(self):
+        self.input = []
+        self.output = []
+        self.input_frames = []
+
 
        
 

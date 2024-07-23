@@ -36,10 +36,6 @@ class Test(Screen):
         self.background_color = (0, 0, 0, 1) 
         self.controlador.set_escanear(False)
 
-        texto_central = ("Mire al rededor de la pantalla y parpadee para confirmar el calibrado\n"+
-                        "Es un modelo en desarrollo, cuantos mas datos recopilemos, mejor funcionara en un futuro\n"+
-                        "El punto rojo deberia seguir su mirada, al parpadear debería escuchar un sonido de click y ver el punto verde")
-
         # Crea una imagen de fondo
         self.fondo = Image(source=self.controlador.get_fondo() , allow_stretch=True, keep_ratio=False)
         self.add_widget(self.fondo)
@@ -49,10 +45,6 @@ class Test(Screen):
         # El boton de inicio
         btn_inicio = ButtonRnd(text='Inicio', size_hint=(.2, .1), pos_hint={'x': 0, 'top': 1}, on_press= self.on_inicio, font_name='Texto')
         self.layout.add_widget(btn_inicio)
-
-        # El texto explicativo
-        self.texto_explicativo = Label(text=texto_central, font_size=self.controlador.get_font_txts(),halign='center', size_hint=(1, .8), font_name='Texto')
-        self.layout.add_widget(self.texto_explicativo)
 
         # Variables reconocidas
         self.texto_variables = Label(text="", font_size=self.controlador.get_font_txts(), size_hint=(1, .1), font_name='Texto')
@@ -125,7 +117,6 @@ class Test(Screen):
 
             # Si no se detecta cara, no hacer nada
             if datos is None:
-                self.controlador.mensaje("No se detecta cara")
                 return
             
             # Desempaqueta los datos
