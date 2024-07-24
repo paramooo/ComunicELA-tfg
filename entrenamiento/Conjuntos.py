@@ -37,7 +37,7 @@ class Conjuntos:
         [0-15] Distancias entre los puntos de referencia de los ojos
                 - Medias de los dos ojos
                 - Normalizadas entre ellas con min-max
-        [16-18] Coordenadas de la orientación de la cara
+        [16-18] Coordenadas de la orientación de la cara reducido el rando a 0.3-0.7
         [19-20] Coordenadas del centro de la cara
         [21-22] EAR y umbral EAR      
         """

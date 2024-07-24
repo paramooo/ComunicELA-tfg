@@ -120,7 +120,7 @@ class Modelo:
         self.contador_r = 5 #Contador para la cuenta atras
         self.pos_r = (0, 0) #Posicion de la pelota roja
         self.salto_bajo, self.salto_alto = 60, 80 #Salto de la pelota roja
-        self.velocidad = 35
+        self.velocidad = 25
         self.direccion = 1 
 
     #Funcion para reiniciar los datos despues de cada reentrenamiento (se aprovecha para inicializarlos tambien)
@@ -423,20 +423,20 @@ class Modelo:
         os.makedirs(f'frames/{fichero}', exist_ok=True)
 
         # Determinar el número de líneas existentes en el archivo
-        with open(f'./txts/input{fichero}.txt', 'r') as f:
+        with open(f'./entrenamiento/datos/txts/input{fichero}.txt', 'r') as f:
             num_lineas = sum(1 for _ in f)+1
 
         # Guardar los datos en los archivos
-        with open(f'./txts/input{fichero}.txt', 'a') as f:
+        with open(f'./entrenamiento/datos/txts/input{fichero}.txt', 'a') as f:
             for i, linea in enumerate(self.input):
                 # Convertir el elemento a cadena si es una lista o tupla
                 if isinstance(linea, (list, tuple, np.ndarray)):
                     linea = ', '.join(map(str, linea))
                 f.write(str(linea) + '\n')
-                cv2.imwrite(f'./frames/{fichero}/frame_{num_lineas}.jpg', self.input_frames[i])
+                cv2.imwrite(f'./entrenamiento/datos/frames/{fichero}/frame_{num_lineas}.jpg', self.input_frames[i])
                 num_lineas += 1
 
-        with open(f'./txts/output{fichero}.txt', 'a') as f:
+        with open(f'./entrenamiento/datos/txts/output{fichero}.txt', 'a') as f:
             for linea in self.output:
                 # Convertir el elemento a cadena si es una lista o tupla
                 if isinstance(linea, (list, tuple, np.ndarray)):
@@ -724,13 +724,9 @@ class Modelo:
         return self.cronometro_pruebas
     
     #Detiene el cronometro y guarda en el txt de resultados de los test el tiempo seguido de la frase
-    def stop_cronometro(self, guardar):
+    def stop_cronometro(self):
         Clock.unschedule(self.cronometro)
-        if self.cronometro_pruebas != 0 and self.frase != "" and guardar:
-            with open('./resultados/PRUEBAS_CRONO.txt', 'a') as f:
-                f.write(f'{self.frase} -> Segundos: {self.cronometro_pruebas} | Errores: {self.contador_borrar}\n')
-            self.cronometro_pruebas = 0
-            self.contador_borrar = 0
+
 
     def reiniciar_cronometro(self):
         Clock.unschedule(self.cronometro)

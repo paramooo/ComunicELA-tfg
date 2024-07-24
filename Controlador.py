@@ -143,8 +143,8 @@ class Controlador:
     def get_cronometro (self):
         return self.modelo.get_cronometro()
     
-    def stop_cronometro(self, guardar):
-        self.modelo.stop_cronometro(guardar)
+    def stop_cronometro(self):
+        self.modelo.stop_cronometro()
 
     def get_pictogramas(self):
         return self.modelo.pictogramas

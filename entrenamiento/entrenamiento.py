@@ -35,7 +35,7 @@ sys.path = sys_copy
 
 def analizar_datos_conjunto2():
     # Cargar los datos
-    input, output = cargar_datos()
+    input, output = cargar_datos1()
     input_c = input
     input = Conjuntos.conjunto_2(input)
 
@@ -64,7 +64,7 @@ def analizar_datos_conjunto2():
     results.set_index('Columna', inplace=True)
 
     # Imprimir la tabla en un excel
-    results.to_excel('./estadisticas.xlsx')
+    results.to_excel('./entrenamiento/resultados/estadisticas.xlsx')
     print(results)
 
     # Crear gráficos de barras para cada estadística
@@ -410,14 +410,14 @@ def optimizar_ponderacion():
 # Funcion para cargar los datos de entrenamiento
 def cargar_datos():
     # Cargar los datos
-    input = np.loadtxt('./txts/input0.txt', delimiter=',')
-    output = np.loadtxt('./txts/output0.txt', delimiter=',')
+    input = np.loadtxt('./entrenamiento/datos/txts/input0.txt', delimiter=',')
+    output = np.loadtxt('./entrenamiento/datos/txts/output0.txt', delimiter=',')
     return input, output
 
 def cargar_datos1():
     # Cargar los datos
-    input = np.loadtxt('./txts/input1.txt', delimiter=',')
-    output = np.loadtxt('./txts/output1.txt', delimiter=',')
+    input = np.loadtxt('./entrenamiento/datos/txts/input1.txt', delimiter=',')
+    output = np.loadtxt('./entrenamiento/datos/txts/output1.txt', delimiter=',')
     return input, output
 
 def suavizar_datos(data, sigma):
@@ -432,14 +432,18 @@ def suavizar_datos(data, sigma):
 def cargar_datos_cnn():
     # Cargar los inputs
     inputs = []
-    for nombre_archivo in os.listdir('./frames/1'):
-        img = cv2.imread(os.path.join('./frames/1', nombre_archivo), cv2.IMREAD_GRAYSCALE)/ 255.0        
+    archivos = os.listdir('./entrenamiento/datos/frames/1')
+    #Transformamos a escala de grises ya que el ojo es en blanco y la pupila en negro, no deberia afectar
+    for i, nombre_archivo in enumerate(archivos):
+        img = cv2.imread(os.path.join('./entrenamiento/datos/frames/1', nombre_archivo), cv2.IMREAD_GRAYSCALE)/ 255.0        
         inputs.append(img)
+        print(f'\rCargando.. {(i+1)/len(archivos)}%')
+        #Imprimir siempre en la
     inputs = np.array(inputs)    
     inputs = np.expand_dims(inputs, axis=1)  # Añade una dimensión para los canales
 
     # Cargar los outputs
-    output = np.loadtxt('./txts/output1.txt', delimiter=',')
+    output = np.loadtxt('./entrenamiento/datos/txts/output1.txt', delimiter=',')
     return inputs, output
 
 
@@ -450,7 +454,7 @@ def preparar_test(input, output, porcentaje):
     test_size = porcentaje / 100.0
     
     # Divide los datos en conjuntos de entrenamiento y prueba
-    #42 es la semilla
+    #42 es la semilla para que sean los experimentos repetibles
     input_train, input_test, output_train, output_test = train_test_split(input, output, test_size=test_size, random_state=42)
     
     return input_train, input_test, output_train, output_test
@@ -487,11 +491,13 @@ def crear_ann(entradas, topology):
     return model
 
 # Funcion para crear la cnn1 
-# Capa convolucional 1: 32 filtros de 3x3
+# Acepta imagenes de 200x50
+# Capa convolucional 1: 16 filtros de 3x3
 # Capa de pooling 1: Max pooling de 2x2
-# Capa convolucional 32:64 filtros de 3x3
+# Capa convolucional 16:32 filtros de 3x3
 # Capa de pooling 2: Max pooling de 2x2
 # Capa completamente conectada: 500 neuronas
+# Capa de salida: 2 neuronas
 def crear_cnn_1():
     model = nn.Sequential()
     
@@ -507,7 +513,7 @@ def crear_cnn_1():
     
     # Capa completamente conectada
     model.add_module('flatten', nn.Flatten())
-    model.add_module('fc1', nn.Linear(32*50*12, 250))  
+    model.add_module('fc1', nn.Linear(32*50*12, 250))  #32 filtros, 50x12 tamaño de la imagen despues de 2 maxpool
     model.add_module('relu3', nn.ReLU())
     
     # Capa de salida
@@ -516,30 +522,40 @@ def crear_cnn_1():
     
     return model
 
+#Funcion para crear la cnn2
+# Acepta imagenes de 200x50
+# Capa convolucional 1: 32 filtros de 3x3
+# Capa de pooling 1: Max pooling de 2x2
+# Capa convolucional 32:64 filtros de 3x3
+# Capa de pooling 2: Max pooling de 2x2
+# Capa completamente conectada: 500 neuronas
+# Capa de salida: 2 neuronas
+
 
 def crear_cnn_2():
     model = nn.Sequential()
     
     # Primera capa convolucional
-    model.add_module('conv1', nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=1))
+    model.add_module('conv1', nn.Conv2d(1, 16, kernel_size=3, stride=1, padding=1))
     model.add_module('relu1', nn.ReLU())
     model.add_module('pool1', nn.MaxPool2d(kernel_size=2, stride=2))
     
     # Segunda capa convolucional
-    model.add_module('conv2', nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1))
+    model.add_module('conv2', nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1))
     model.add_module('relu2', nn.ReLU())
     model.add_module('pool2', nn.MaxPool2d(kernel_size=2, stride=2))
     
     # Capa completamente conectada
     model.add_module('flatten', nn.Flatten())
-    model.add_module('fc1', nn.Linear(64*12*50, 500))  
+    model.add_module('fc1', nn.Linear(32*160*120, 250))  # Ajustado para imágenes de 640x480
     model.add_module('relu3', nn.ReLU())
     
     # Capa de salida
-    model.add_module('fc2', nn.Linear(500, 2))
+    model.add_module('fc2', nn.Linear(250, 2))
     model.add_module('output', nn.Sigmoid())
     
     return model
+
 
 # Clase para crear la red fusionada para poder editar el forward
 class FusionNet(nn.Module):
@@ -856,7 +872,7 @@ def entrenar_ann():
 
 def entrenar_cnn():
     # Definir la red neuronal
-    model = crear_cnn_1()
+    model = crear_cnn_2()
     model = model.to("cuda")  
 
     # Cargar los datos, procesarlos y moverlos a la GPU
@@ -884,7 +900,7 @@ def entrenar_cnn():
     model = model.to("cpu")  
 
     # Guardar el modelo
-    torch.save(model, './cnns/pytorch/modeloCNN.pth')
+    torch.save(model, './cnns/modeloCNN.pth')
 
     # Graficar las pérdidas
     graficar_perdidas(train_losses, test_losses)
@@ -1059,17 +1075,17 @@ def normalizar_frame(frame, coord_o_izq, coord_o_der, ratio, ancho, altoArriba, 
 
 def editar_frames(ratio, ancho, altoArriba, altoAbajo):
     #Crear la carpeta si no existe
-    if not os.path.exists(f'./frames/recortados/{ancho}-{altoArriba}-{altoAbajo}'):
-        os.makedirs(f'./frames/recortados/{ancho}-{altoArriba}-{altoAbajo}')
+    if not os.path.exists(f'./entrenamiento/datos/frames/recortados/{ancho}-{altoArriba}-{altoAbajo}'):
+        os.makedirs(f'./entrenamiento/datos/frames/recortados/{ancho}-{altoArriba}-{altoAbajo}')
     
     detector = Detector()
 
-    archivos = os.listdir('./frames/1')
+    archivos = os.listdir('./entrenamiento/datos/frames/1')
     for nombre_archivo in tqdm(archivos, desc="Procesando frames"):
-        frame = cv2.imread(os.path.join('./frames/1', nombre_archivo))
+        frame = cv2.imread(os.path.join('./entrenamiento/datos/frames/1', nombre_archivo))
         datos = detector.obtener_coordenadas_indices(frame)
         frame_editado = normalizar_frame(frame, datos[0], datos[1], ratio, ancho, altoArriba, altoAbajo)
-        cv2.imwrite(os.path.join(f'./frames/recortados/{ancho}-{altoArriba}-{altoAbajo}', nombre_archivo), frame_editado)
+        cv2.imwrite(os.path.join(f'./entrenamiento/datos/frames/recortados/{ancho}-{altoArriba}-{altoAbajo}', nombre_archivo), frame_editado)
 
 if __name__ == '__main__':
 #     # entrenar_resnet(1500)
@@ -1079,4 +1095,6 @@ if __name__ == '__main__':
     #optimizar_ponderacion()
     #entrenar_combinado()
     #entrenar_ann()
-    editar_frames(ratio=200/50, ancho=15, altoArriba=15, altoAbajo=15)
+    #editar_frames(ratio=200/50, ancho=15, altoArriba=15, altoAbajo=15)
+    #analizar_datos_conjunto2()
+    entrenar_cnn()

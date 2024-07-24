@@ -12,16 +12,16 @@ from scipy.ndimage import gaussian_filter1d
 # Funcion para cargar los datos de entrenamiento
 def cargar_datos():
     # Cargar los datos
-    input = np.loadtxt('./txts/input.txt', delimiter=',')
-    output = np.loadtxt('./txts/output.txt', delimiter=',')
+    input = np.loadtxt('./entrenamiento/datos/txts/input.txt', delimiter=',')
+    output = np.loadtxt('./entrenamiento/datos/txts/output.txt', delimiter=',')
 
     return input, output
 
 # Funcion para cargar los datos de test
 def cargar_datos_test():
     # Cargar los datos
-    input = np.loadtxt('./txts/input2.txt', delimiter=',')
-    output = np.loadtxt('./txts/output2.txt', delimiter=',')
+    input = np.loadtxt('./entrenamiento/datos/txts/input2.txt', delimiter=',')
+    output = np.loadtxt('./entrenamiento/datos/txts/output2.txt', delimiter=',')
 
     return input, output
 

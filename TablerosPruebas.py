@@ -59,8 +59,8 @@ class TablerosPruebas(Screen):
             halign='left',
             font_name='Texto',
             font_size=40,
-            background_color=(0, 0, 0, 0.4),
-            foreground_color=(1, 1, 1, 1),
+            background_color=(0.9, 0.9, 0.9, 0.8),
+            foreground_color=(0, 0, 0, 1),
         )
         self.label.bind(on_text=self.on_text)
         scroll.add_widget(self.label)
@@ -206,7 +206,7 @@ class TablerosPruebas(Screen):
         self.controlador.change_screen('inicio')
         Clock.unschedule(self.update)
         self.indice_prueba = 0
-        self.controlador.stop_cronometro(False)
+        self.controlador.stop_cronometro()
         self.pruebas_coordenadas = {}
         self.controlador.reiniciar_cronometro()
 
@@ -227,7 +227,7 @@ class TablerosPruebas(Screen):
         if self.label.text.strip() == self.pruebas[self.indice_prueba]:
             self.indice_prueba += 1
             self.evaluate_test()
-            self.controlador.stop_cronometro(False)
+            self.controlador.stop_cronometro()
             self.controlador.set_escanear(False)
             Clock.unschedule(self.update)
         else:
@@ -376,7 +376,7 @@ class TablerosPruebas(Screen):
     # Evalúa la prueba realizada
     def evaluate_test(self):       
         # Guarda los resultados de la prueba en un archivo CSV
-        with open('./resultados/prueba.csv', 'a', newline='') as f:
+        with open('./pruebas/pruebas.csv', 'a', newline='') as f:
             writer = csv.writer(f)
 
             tiempo_total = self.controlador.get_cronometro()
