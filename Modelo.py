@@ -418,35 +418,37 @@ class Modelo:
 
 
     def guardar_final(self, fichero):
-        # Si no existe la carpeta txts, se crea
-        os.makedirs('txts', exist_ok=True)
-        os.makedirs(f'frames/{fichero}', exist_ok=True)
+        def guardar_aux(fichero):
+            # Si no existe la carpeta txts, se crea
+            os.makedirs('txts', exist_ok=True)
+            os.makedirs(f'frames/{fichero}', exist_ok=True)
 
-        # Determinar el número de líneas existentes en el archivo
-        with open(f'./entrenamiento/datos/txts/input{fichero}.txt', 'r') as f:
-            num_lineas = sum(1 for _ in f)+1
+            # Determinar el número de líneas existentes en el archivo
+            with open(f'./entrenamiento/datos/txts/input{fichero}.txt', 'r') as f:
+                num_lineas = sum(1 for _ in f)+1
 
-        # Guardar los datos en los archivos
-        with open(f'./entrenamiento/datos/txts/input{fichero}.txt', 'a') as f:
-            for i, linea in enumerate(self.input):
-                # Convertir el elemento a cadena si es una lista o tupla
-                if isinstance(linea, (list, tuple, np.ndarray)):
-                    linea = ', '.join(map(str, linea))
-                f.write(str(linea) + '\n')
-                cv2.imwrite(f'./entrenamiento/datos/frames/{fichero}/frame_{num_lineas}.jpg', self.input_frames[i])
-                num_lineas += 1
+            # Guardar los datos en los archivos
+            with open(f'./entrenamiento/datos/txts/input{fichero}.txt', 'a') as f:
+                for i, linea in enumerate(self.input):
+                    # Convertir el elemento a cadena si es una lista o tupla
+                    if isinstance(linea, (list, tuple, np.ndarray)):
+                        linea = ', '.join(map(str, linea))
+                    f.write(str(linea) + '\n')
+                    cv2.imwrite(f'./entrenamiento/datos/frames/{fichero}/frame_{num_lineas}.jpg', self.input_frames[i])
+                    num_lineas += 1
 
-        with open(f'./entrenamiento/datos/txts/output{fichero}.txt', 'a') as f:
-            for linea in self.output:
-                # Convertir el elemento a cadena si es una lista o tupla
-                if isinstance(linea, (list, tuple, np.ndarray)):
-                    linea = ', '.join(map(str, linea))
-                f.write(str(linea) + '\n')
+            with open(f'./entrenamiento/datos/txts/output{fichero}.txt', 'a') as f:
+                for linea in self.output:
+                    # Convertir el elemento a cadena si es una lista o tupla
+                    if isinstance(linea, (list, tuple, np.ndarray)):
+                        linea = ', '.join(map(str, linea))
+                    f.write(str(linea) + '\n')
 
-        # Limpiar las listas para la próxima vez
-        self.input = []
-        self.output = []
-        self.input_frames = []
+            # Limpiar las listas para la próxima vez
+            self.input = []
+            self.output = []
+            self.input_frames = []
+        self.tarea_hilo(lambda: guardar_aux(fichero))
 
     
     def descartar_datos(self):
@@ -705,7 +707,7 @@ class Modelo:
                 pass
 
         #Se crea un hilo para reproducir el texto
-        self.tarea_hilo(reproducir_texto_hilo())
+        self.tarea_hilo(lambda: reproducir_texto_hilo())
 
     def get_bloqueado(self):
         return self.bloqueado
