@@ -185,7 +185,7 @@ class Controlador:
         self.modelo.descartar_datos()
 
     def guardar_final(self, fichero):
-        self.modelo.tarea_hilo(self.modelo.guardar_final(fichero))
+        self.modelo.guardar_final(fichero)
 
 
 # ---------------------------- FUNCIONES PARA EL MODO DE REENTRENAMIENTO -------------------------
