@@ -8,7 +8,6 @@ import matplotlib.colors as mcolors
 import torch
 import optuna
 from torch.nn.functional import mse_loss
-from entrenamiento import cargar_datos, cargar_datos1, suavizar_datos
 from EditorFrames import EditorFrames
 
 
@@ -373,12 +372,79 @@ def optimizar_ponderacion():
 
 
 
+#--------------------------------------------------------------------------------------------------------
+# def entrenar_resnet_ann(epochs):
+#     # Cargar los datos
+#     input_train, output_train = cargar_datos()
+#     input_train, input_test, output_train, output_test = preparar_test(input_train, output_train, 10)
+
+#     # Convertir a conjunto2
+#     input_train = Conjuntos.conjunto_2(input_train)
+#     input_test = Conjuntos.conjunto_2(input_test)
+
+#     input_train = np.reshape(input_train, (-1, 1, 23))
+#     input_test = np.reshape(input_test, (-1, 1, 23))
+
+#     input_train = np.repeat(input_train[:, :, np.newaxis], 3, axis=1)
+#     input_test = np.repeat(input_test[:, :, np.newaxis], 3, axis=1)
+
+#     # Cargar los datos y moverlos a la GPU
+#     input_train = torch.from_numpy(input_train).float().to("cuda")
+#     output_train = torch.from_numpy(output_train).float().to("cuda")
+#     input_test = torch.from_numpy(input_test).float().to("cuda")
+#     output_test = torch.from_numpy(output_test).float().to("cuda")
+
+#     # Cargar el modelo preentrenado normal no el custom
+#     model = models.resnet50(pretrained=True)
+
+#     # Congelar los pesos del modelo
+#     for param in model.parameters():
+#         param.requires_grad = False
+
+#     # Reemplazar la última capa del modelo para adaptarlo a tu problema
+#     num_ftrs = model.fc.in_features
+#     model.fc = nn.Linear(num_ftrs, 2)  # Asume que tu problema es de regresión con dos valores de salida
+
+#     # Definir el optimizador y la función de pérdida
+#     optimizer = optim.Adam(model.parameters(), lr=0.003)
+#     loss_function = nn.MSELoss()  # Usa la pérdida cuadrática media para la regresión
+
+#     model = model.to("cuda")
+
+#     # Entrenar el modelo
+#     train_losses = []
+#     test_losses = []
+#     for epoch in range(epochs):
+#         optimizer.zero_grad()
+#         train_predictions = model(input_train)
+#         train_loss = loss_function(train_predictions, output_train)
+#         train_loss.backward()
+#         optimizer.step()
+#         train_losses.append(train_loss.item())
+
+#         # Calcular la pérdida de prueba
+#         test_predictions = model(input_test)
+#         test_loss = loss_function(test_predictions, output_test)
+#         test_losses.append(test_loss.item())
+
+#         print(f'Epoch {epoch+1}, Train Loss: {train_loss.item()}, Test Loss: {test_loss.item()}')
+
+#     # Guardar el modelo en la cpu
+#     model = model.to("cpu")
+#     torch.save(model, './anns/pytorch/modelo.pth')
+#     graficar_perdidas(train_losses, test_losses)
+
+
+
 
 
 # Haz el main
 if __name__ == '__main__':
+    #------------ PARA GRAFICAS DE LOS DATOS SUAVIZADOS ----------------
+    #mostrar_graficas_suavizado_datos()
+
     #------------ PARA EDITAR LOS FRAMES Y RECORTARLOS ----------------
-    #EditorFrames((200,50), 15, 15, 15).editar_frames()
+    EditorFrames((200/50), 15, 15, 15).editar_frames()
     #mostrar_graficas_suavizado_datos()
 
     #------------ PARA EVALUAR POR ZONAS ----------------
