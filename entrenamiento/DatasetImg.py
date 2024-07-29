@@ -7,7 +7,7 @@ from Conjuntos import Conjuntos
 from PIL import Image
 from torchvision.transforms import ToTensor
 
-class Dataset(Dataset):
+class DatasetImg(Dataset):
     def __init__(self, img_dir, txt_input_file, txt_output_file, sigma, transform=None, conjunto=None):
         self.img_dir = img_dir
         # Cargar los datos de texto que no ocupan tanto espacio en el init

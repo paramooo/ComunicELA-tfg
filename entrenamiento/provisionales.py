@@ -11,6 +11,20 @@ from torch.nn.functional import mse_loss
 from EditorFrames import EditorFrames
 
 
+# Funcion para cargar los datos de entrenamiento
+def cargar_datos():
+    # Cargar los datos
+    input = np.loadtxt('./entrenamiento/datos/txts/input.txt', delimiter=',')
+    output = np.loadtxt('./entrenamiento/datos/txts/output.txt', delimiter=',')
+
+    return input, output
+
+def suavizar_datos(data, sigma):
+    # Aplicar filtro gaussiano a cada columna
+    for i in range(data.shape[1]):
+        data[:, i] = gaussian_filter1d(data[:, i], sigma)
+    return data
+
 #---------------------------------------------------------------
 #------------------ FUNCIONES PARA LAS GRAFICAS ------------------
 #---------------------------------------------------------------
@@ -286,7 +300,7 @@ def ponderar_graficas2():
 def optimizar_ponderacion():
     # Cargar el modelo y los datos
     model = torch.load('./anns/pytorch/modeloRELU.pth')
-    input, output = cargar_datos1()
+    input, output = cargar_datos()
     input = Conjuntos.conjunto_2(input)
 
     # Limpiar los datos con el ojo cerrado
@@ -444,8 +458,7 @@ if __name__ == '__main__':
     #mostrar_graficas_suavizado_datos()
 
     #------------ PARA EDITAR LOS FRAMES Y RECORTARLOS ----------------
-    EditorFrames((200/50), 15, 15, 15).editar_frames()
-    #mostrar_graficas_suavizado_datos()
+    #EditorFrames((200/50), 15, 15, 15).editar_frames()
 
     #------------ PARA EVALUAR POR ZONAS ----------------
     # Hay que revisar como hace porque tengo q mirar ahora como va con imagenes tbn

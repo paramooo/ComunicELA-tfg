@@ -15,8 +15,8 @@ class Conjuntos:
     def conjunto_1(data):
         """
         Entradas: 39 -> TODOS LOS DATOS (NORMALIZAR MIN MAX DISTANCIAS)
-        [0-15] Distancias entre los puntos de referencia 
-        [16-31] Distancias entre los puntos de referencia
+        [0-15] Distancias entre los puntos de referencia ojo derecho min max
+        [16-31] Distancias entre los puntos de referencia ojo izquierdo min max
         [32-34] Coordenadas de la orientación de la cara
         [35-36] Coordenadas del centro de la cara
         [37-38] EAR y umbral EAR 
@@ -37,7 +37,7 @@ class Conjuntos:
         [0-15] Distancias entre los puntos de referencia de los ojos
                 - Medias de los dos ojos
                 - Normalizadas entre ellas con min-max
-        [16-18] Coordenadas de la orientación de la cara reducido el rando a 0.3-0.7
+        [16-18] Coordenadas de la orientación de la cara
         [19-20] Coordenadas del centro de la cara
         [21-22] EAR y umbral EAR      
         """
@@ -49,11 +49,6 @@ class Conjuntos:
         # Normalizar cada valor de los primeros 16 de cada fila entre ellos mismos
         data[:, :16] = (data[:, :16] - np.min(data[:, :16], axis=1, keepdims=True)) / (np.max(data[:, :16], axis=1, keepdims=True) - np.min(data[:, :16], axis=1, keepdims=True))
 
-        # Pasar las cifras de entre 0.3 y 0.7 a 0 y 1
-        data[:, 16:21] = (data[:, 16:21] - 0.3) / (0.7 - 0.3)
-        # A 0 y 1
-        data[:, 16:21] = np.clip(data[:, 16:21], 0, 1)
-
         return data
     
 
@@ -63,16 +58,20 @@ class Conjuntos:
     def conjunto_3(data):
         """
         Entradas: 39
-        [0-31] Distancias entre los puntos de referencia de los ojos
-                - Medias de los dos ojos
-                - Normalizadas entre ellas con min-max
-        [32-34] Coordenadas de la orientación de la cara
-        [35-36] Coordenadas del centro de la cara
-        [37-38] EAR y umbral EAR      
+        [0-31] Distancias entre los puntos de referencia de los ojos (min-max)
+        [32-34] Coordenadas de la orientación de la cara reducido el rango a 0.3-0.7
+        [35-36] Coordenadas del centro de la cara reducido el rango a 0.3-0.7
+        [37-38] EAR y umbral EAR
         """
-        # Normalizar cada valor de los primeros 16 de cada fila entre ellos mismos
-        data[:, :32] = (data[:, :32] - np.min(data[:, :32], axis=1, keepdims=True)) / (np.max(data[:, :32], axis=1, keepdims=True) - np.min(data[:, :32], axis=1, keepdims=True))
+        # Normalizar cada valor de los primeros 16 de cada fila entre ellos mismos PARA NORMALIZAR EL OJO DERECHO
+        data[:, :16] = (data[:, :16] - np.min(data[:, :16], axis=1, keepdims=True)) / (np.max(data[:, :16], axis=1, keepdims=True) - np.min(data[:, :16], axis=1, keepdims=True))
 
+        # Normalizar cada valor de los segundos 16 de cada fila entre ellos mismos PARA NORMALIZAR EL OJO IZQUIERDO
+        data[:, 16:32] = (data[:, 16:32] - np.min(data[:, 16:32], axis=1, keepdims=True)) / (np.max(data[:, 16:32], axis=1, keepdims=True) - np.min(data[:, 16:32], axis=1, keepdims=True))
+
+        # Pasar las cifras de entre 0.3 y 0.7 a 0 y 1
+        data[:, 32:37] = (data[:, 32:37] - 0.3) / (0.7 - 0.3)
+        
         # Todo clip entre 0 y 1
         data[:, :] = np.clip(data[:, :], 0, 1)
 
@@ -83,14 +82,15 @@ class Conjuntos:
     def conjunto_4(data):
         """
             Entradas: 37
-            [0-31] Distancias entre los puntos de referencia de los ojos
-                    - Medias de los dos ojos
-                    - Normalizadas entre ellas con min-max
+            [0-31] Distancias entre los puntos de referencia de los ojos(min-max)
             [32-34] Coordenadas de la orientación de la cara
             [35-36] Coordenadas del centro de la cara
         """
-        # Normalizar cada valor de los primeros 16 de cada fila entre ellos mismos
-        data[:, :32] = (data[:, :32] - np.min(data[:, :32], axis=1, keepdims=True)) / (np.max(data[:, :32], axis=1, keepdims=True) - np.min(data[:, :32], axis=1, keepdims=True))
+        # Normalizar cada valor de los primeros 16 de cada fila entre ellos mismos PARA NORMALIZAR EL OJO DERECHO
+        data[:, :16] = (data[:, :16] - np.min(data[:, :16], axis=1, keepdims=True)) / (np.max(data[:, :16], axis=1, keepdims=True) - np.min(data[:, :16], axis=1, keepdims=True))
+
+        # Normalizar cada valor de los segundos 16 de cada fila entre ellos mismos PARA NORMALIZAR EL OJO IZQUIERDO
+        data[:, 16:32] = (data[:, 16:32] - np.min(data[:, 16:32], axis=1, keepdims=True)) / (np.max(data[:, 16:32], axis=1, keepdims=True) - np.min(data[:, 16:32], axis=1, keepdims=True))
 
         # Todo clip entre 0 y 1
         data[:, :] = np.clip(data[:, :], 0, 1)
