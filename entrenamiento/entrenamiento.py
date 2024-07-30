@@ -108,6 +108,9 @@ def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, l
             # Mover los datos a la GPU
             data = [item.to("cuda") for item in data]
 
+            # Reiniciar los gradientes
+            optimizer.zero_grad()
+
             # Entrenamiento y cálculo de la pérdida
             if num_args == 2:
                 train_predictions = model(data[0], data[1])
@@ -119,7 +122,6 @@ def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, l
             train_loss_total += train_loss.item()
 
             # Actualizar el modelo
-            optimizer.zero_grad()
             train_loss.backward()
             optimizer.step()
 
@@ -151,6 +153,12 @@ def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, l
         if rounds_without_improvement >= early_stopping_rounds:
             # print("Entrenamiento detenido por falta de mejora en el error de validación.")
             break
+
+        # Si no ha mejorado en 5 rondas seguidas, aumentar el learning rate
+        if rounds_without_improvement == 5:
+            lr += 0.001
+            optimizer = optim.Adam(model.parameters(), lr=lr)
+            print("Learning rate aumentado a", lr)
 
         # Test
         if test_dataloader is not None:
@@ -279,38 +287,37 @@ def entrenar_con_kfold(modelo, dataloader, cambios_de_persona, epochs, lr, ejecu
 def aproximacion1():
     # Crear un dataframe
     df = pd.DataFrame(columns=['Modelo', 'Mean EMC Val', 'Std EMC Val', 'Mean EUC Loss', 'Std EUC Loss'])
-
-    #Conjuntos
-    conjuntos = [1]
-    models = {
-        1 : [ANNs().crear_ann_1_13()],
-        2 : [ANNs().crear_ann_2_6(), ANNs().crear_ann_2_7()],
-        3 : [ANNs().crear_ann_3_6(), ANNs().crear_ann_3_7()],
-        4 : [ANNs().crear_ann_4_6(), ANNs().crear_ann_4_7()]}
-
+    
     #Indices de cambio de persona para el k-fold con personas diferentes
     indices_cambio_persona = [2174, 4280, 6318, 8596, 13000, 15278, 19834, 22112, 24390, 24759, 26958, 29086, 31285, 33487]
+    
+    #Modelos
+    models = {
+        1 : [ANNs().crear_ann_1_1(), ANNs().crear_ann_1_2(), ANNs().crear_ann_1_3(), ANNs().crear_ann_1_4(),
+             ANNs().crear_ann_1_5(), ANNs().crear_ann_1_6(), ANNs().crear_ann_1_7(), ANNs().crear_ann_1_8(),
+             ANNs().crear_ann_1_9(), ANNs().crear_ann_1_10(), ANNs().crear_ann_1_11(), ANNs().crear_ann_1_12(), ANNs().crear_ann_1_13()],
+        2 : [ANNs().crear_ann_2_11()],
+        3 : [ANNs().crear_ann_3_11()],
+        4 : [ANNs().crear_ann_4_11()]}
 
     # Bucle principal
-    for conjunto in conjuntos:
+    #for conjunto in conjuntos:
+    for conjunto, models in models.items():
         #Crear un Dataset
         dataset = DatasetText('./entrenamiento/datos/txts/input1.txt', './entrenamiento/datos/txts/output1.txt', 21, conjunto=conjunto)
 
         #Crear un DataLoader
         total_dataloader = DataLoader(dataset, batch_size=50000, num_workers=4)  
 
-        #Cargar los modelos
-        models = models[conjunto]    
-
         for j, model in enumerate(models):
-            train_losses, val_losses, euc_losses = entrenar_con_kfold(model, total_dataloader, indices_cambio_persona, epochs=800, lr=0.05, ejecuciones_fold=10, ann=True, graficas=False)
+            _, val_losses, euc_losses = entrenar_con_kfold(model, total_dataloader, indices_cambio_persona, epochs=800, lr=0.01, ejecuciones_fold=10, ann=True, graficas=False)
 
             # Añadir los resultados al DataFrame
-            linea = pd.Series({'Modelo': j+13, 'Mean EMC Val': np.mean(val_losses), 'Std EMC Val': np.std(val_losses), 'Mean EUC Loss': np.mean(euc_losses), 'Std EUC Loss': np.std(euc_losses)})
+            linea = pd.Series({'Modelo': f"{j}-{conjunto}", 'Mean EMC Val': np.mean(val_losses), 'Std EMC Val': np.std(val_losses), 'Mean EUC Loss': np.mean(euc_losses), 'Std EUC Loss': np.std(euc_losses)})
             df = pd.concat([df, linea.to_frame().T])
 
             # Imprimirlos por pantalla
-            print("Modelo: ", j+13, "Conjunto: ", conjunto, 
+            print("Modelo: ", j, "Conjunto: ", conjunto, 
                 "\nMean EMC Val: ", np.mean(val_losses), 
                 "\nStd EMC Val: ", np.std(val_losses),
                 "\nMean EUC Loss: ", np.mean(euc_losses),
@@ -323,24 +330,99 @@ def aproximacion1():
 
 
 def aproximacion2():
-    #model = CNNs().crear_cnn_1()
+    # Crear un dataframe
+    df = pd.DataFrame(columns=['Modelo', 'Mean EMC Val', 'Std EMC Val', 'Mean EUC Loss', 'Std EUC Loss'])
+
+    #Indices de cambio de persona para el k-fold con personas diferentes
+    indices_cambio_persona = [2174, 4280, 6318, 8596, 13000, 15278, 19834, 22112, 24390, 24759, 26958, 29086, 31285, 33487]
+
+    #Modelos
+    models = {"15-15-15":[CNNs().crear_cnn_1((200,50)), CNNs().crear_cnn_2((200,50)), CNNs().crear_cnn_3((200,50)), CNNs().crear_cnn_4((200,50))],
+                "15-35-15":[CNNs().crear_cnn_1((200,70)), CNNs().crear_cnn_2((200,70)), CNNs().crear_cnn_3((200,70)), CNNs().crear_cnn_4((200,70))],
+                "20-35-55":[CNNs().crear_cnn_1((210, 120)), CNNs().crear_cnn_2((210, 120)), CNNs().crear_cnn_3((210, 120)), CNNs().crear_cnn_4((210, 120))]
+                }
+
+    for carpeta, modelos in models.items():
+        #Crear un Dataset
+        dataset = DatasetImg(f'./entrenamiento/datos/frames/recortados/{carpeta}', './entrenamiento/datos/txts/input1.txt', './entrenamiento/datos/txts/output1.txt', 21)
+
+        #Crear un DataLoader
+        total_dataloader = DataLoader(dataset, batch_size=100, num_workers=4)
+
+        for i, model in enumerate(modelos):
+            _, val_losses, euc_losses = entrenar_con_kfold(model, total_dataloader, indices_cambio_persona, epochs=1, lr=0.01, ejecuciones_fold=1, graficas=False)
+            
+            # Añadir los resultados al DataFrame
+            linea = pd.Series({'Modelo': f"{i}-{carpeta}", 'Mean EMC Val': np.mean(val_losses), 'Std EMC Val': np.std(val_losses), 'Mean EUC Loss': np.mean(euc_losses), 'Std EUC Loss': np.std(euc_losses)})
+            df = pd.concat([df, linea.to_frame().T])
+
+            # Imprimirlos por pantalla
+            print("Modelo: ", i, "Carpeta: ", carpeta, 
+                "\nMean EMC Val: ", np.mean(val_losses), 
+                "\nStd EMC Val: ", np.std(val_losses),
+                "\nMean EUC Loss: ", np.mean(euc_losses),
+                "\nStd EUC Loss: ", np.std(euc_losses))
+
+    df_existente = pd.read_excel('./entrenamiento/resultados/Aproximacion2.xlsx')
+    df = pd.concat([df_existente, df])
+    df.to_excel('./entrenamiento/resultados/Aproximacion2.xlsx', index=False)
+    
+
+
+def aproximacion_resnet():
+    #Crear un Dataframe
+    df = pd.DataFrame(columns=['Modelo', 'Mean EMC Val', 'Std EMC Val', 'Mean EUC Loss', 'Std EUC Loss'])
+
+    #Indices de cambio de persona para el k-fold con personas diferentes
+    indices_cambio_persona = [2174, 4280, 6318, 8596, 13000, 15278, 19834, 22112, 24390, 24759, 26958, 29086, 31285, 33487]
+
+    #Modelos y carpetas
+    modelos = [models.resnet18(pretrained=True), models.resnet34(pretrained=True), models.resnet50(pretrained=True)]
+    carpetas = ["15-15-15", "15-35-15", "20-35-55"]
+
+    for i, modelo in enumerate(modelos):
+        #Crear un Dataset
+        dataset = DatasetImg(f'./entrenamiento/datos/frames/recortados/{carpetas[i]}', './entrenamiento/datos/txts/input1.txt', './entrenamiento/datos/txts/output1.txt', 21)
+
+        #Crear un DataLoader
+        total_dataloader = DataLoader(dataset, batch_size=100, num_workers=4)
+
+        #Modificar la resnet para que tenga 1 canal de entrada y solo 2 salidas en sigmoide ( de 0 a 1)
+        modelo.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        modelo.fc = nn.Sequential(
+            nn.Linear(modelo.fc.in_features, 2),
+            nn.Sigmoid()
+        )
+
+
+        _, val_losses, euc_losses = entrenar_con_kfold(modelo, total_dataloader, indices_cambio_persona, epochs=800, lr=0.05, ejecuciones_fold=10, graficas=True)
+        
+        # Añadir los resultados al DataFrame
+        linea = pd.Series({'Modelo': f"ResNet{i}", 'Mean EMC Val': np.mean(val_losses), 'Std EMC Val': np.std(val_losses), 'Mean EUC Loss': np.mean(euc_losses), 'Std EUC Loss': np.std(euc_losses)})
+        df = pd.concat([df, linea.to_frame().T])
+
+        # Imprimirlos por pantalla
+        print("Modelo: ", f"ResNet{i}", 
+            "\nMean EMC Val: ", np.mean(val_losses), 
+            "\nStd EMC Val: ", np.std(val_losses),
+            "\nMean EUC Loss: ", np.mean(euc_losses),
+            "\nStd EUC Loss: ", np.std(euc_losses))
+
+    df_existente = pd.read_excel('./entrenamiento/resultados/AproximacionResNet.xlsx')
+    df = pd.concat([df_existente, df])
+    df.to_excel('./entrenamiento/resultados/AproximacionResNet.xlsx', index=False)
+
 
     
-    #Coger los indices
-    # indices = list(range(len(dataset)))
-    # train_indices, temp_indices = train_test_split(indices, test_size=0.2, random_state=42)
-    # val_indices, test_indices = train_test_split(temp_indices, test_size=0.5, random_state=42)
 
-    # Crear un DataLoader
-    # train_dataloader = DataLoader(dataset, batch_size=5000, sampler=SubsetRandomSampler(train_indices), num_workers=4)
-    # val_dataloader = DataLoader(dataset, batch_size=5000, sampler=SubsetRandomSampler(val_indices), num_workers=4)
-    # test_dataloader = DataLoader(dataset, batch_size=5000, sampler=SubsetRandomSampler(test_indices), num_workers=4)
-    pass
+
+
+
 def aproximacion3():
+
+
     #model = FusionNet()
 
-    
-    
     pass
 def entrenar_final():
     #Coger los indices
@@ -372,7 +454,13 @@ if __name__ == '__main__':
     np.random.seed(42)
     
     # Aproximacion 1
-    aproximacion1()
+    #aproximacion1()
+
+    # Aproximacion 2
+    aproximacion2()
+
+    # Aproximacion ResNet
+    #aproximacion_resnet()
 
 
 

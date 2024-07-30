@@ -61,29 +61,17 @@ class ANNs:
         return self.crear_ann(39, [150, 150])
     
 
-    # La mejor aproximacion es la del modelo 6 y el 7
+    # La mejor aproximacion es la del modelo 11
     # Ahora probamos con diferentes conjuntos de datos normalizados de cierta manera (limitando la orientacion de la cabeza, etc)
-    def crear_ann_2_6(self):
-        return self.crear_ann(23, [90])
-    
-    def crear_ann_2_7(self):
-        return self.crear_ann(23, [20, 20])
+    def crear_ann_2_11(self):
+        return self.crear_ann(23, [150])
     
     
     # Como los resultados han empeorado, mantenemos las caracteristicas del conjunto1 pero recortando a 0.3-0.7 los ultimos (por probar)
-    def crear_ann_3_6(self):
-        return self.crear_ann(39, [90])
-    
-    def crear_ann_3_7(self):
-        return self.crear_ann(39, [20, 20])
+    def crear_ann_3_11(self):
+        return self.crear_ann(39, [150])
     
 
     # Como la mejor es la 3_7 pues probamos ahora con el conjunto 4
-    def crear_ann_4_6(self):
-        return self.crear_ann(37, [90])
-    
-    def crear_ann_4_7(self):
-        return self.crear_ann(37, [20, 20])
-
-    
-    
+    def crear_ann_4_11(self):
+        return self.crear_ann(37, [150])

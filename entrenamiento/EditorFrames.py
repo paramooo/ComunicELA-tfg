@@ -12,7 +12,8 @@ sys.path = sys_copy
 
 class EditorFrames:
     def __init__(self, ratio, ancho, altoArriba, altoAbajo):
-        self.ratio = ratio
+        self.ratio_ancho, self.ratio_alto = ratio
+        self.ratio = self.ratio_ancho / self.ratio_alto
         self.ancho = ancho
         self.altoArriba = altoArriba
         self.altoAbajo = altoAbajo
@@ -46,7 +47,7 @@ class EditorFrames:
         rect_frame = frame[y1:y2, x1:x2]
 
         # Redimensionar a 200x50 manteniendo la relación de aspecto
-        rect_frame = cv2.resize(rect_frame, (200, 50), interpolation = cv2.INTER_AREA)
+        rect_frame = cv2.resize(rect_frame, (self.ratio_ancho, self.ratio_alto), interpolation = cv2.INTER_AREA)
 
         return rect_frame
 
