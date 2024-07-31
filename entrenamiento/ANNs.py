@@ -4,7 +4,7 @@ class ANNs:
     def __init__(self):
         pass
 
-    def crear_ann(self, entradas, topology):
+    def crear_ann(self, entradas, topology, salidas=2):
         model = nn.Sequential()
         model.add_module("dense_in", nn.Linear(entradas, topology[0]))  # Entrada
         model.add_module("relu_in", nn.ReLU())
@@ -12,7 +12,7 @@ class ANNs:
             model.add_module("dense"+str(i+1), nn.Linear(topology[i], topology[i+1]))
             model.add_module("relu"+str(i+1), nn.ReLU())
         
-        model.add_module("dense_out", nn.Linear(topology[-1], 2))  # Salida
+        model.add_module("dense_out", nn.Linear(topology[-1], salidas))  # Salida
         # Limita salida a rango 0-1
         model.add_module("sigmoid_out", nn.Sigmoid())
 
@@ -75,3 +75,10 @@ class ANNs:
     # Como la mejor es la 3_7 pues probamos ahora con el conjunto 4
     def crear_ann_4_11(self):
         return self.crear_ann(37, [150])
+    
+
+
+    # ---------------------------- ANNS PARA LA FUSIONNET ----------------------------
+
+    def crear_ann_fusion_1(self):
+        pass

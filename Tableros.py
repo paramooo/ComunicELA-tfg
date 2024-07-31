@@ -229,6 +229,10 @@ class Tableros(Screen):
             casilla_ancho = 1 / self.tablero.cols
             casilla_alto = 0.8 / self.tablero.rows  # Quita el 0.2 inferior
 
+            # Limita las coordenadas 
+            x = min(x, 1 - 1e-9)
+            y = min(y, 1 - 1e-9)
+
             # Calcula a qué casilla corresponde la posición de la vista
             casilla_x = int(x / casilla_ancho)
             casilla_y = self.tablero.rows - 1 - int((y - 0.2) / casilla_alto)  # Resta 0.2 de y antes de calcular casilla_y

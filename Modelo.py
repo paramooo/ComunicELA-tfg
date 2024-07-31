@@ -19,6 +19,10 @@ import torch.optim as optim
 from kivy.clock import Clock
 import json
 import copy
+from PIL import Image, ImageDraw, ImageFont
+from torch.nn.functional import mse_loss
+import optuna
+
 
 class Modelo:
     def __init__(self):
@@ -34,6 +38,8 @@ class Modelo:
         # Variables para el modelo de test
         self.conjunto = 2
         self.modelo_org = torch.load('./anns/pytorch/modelo_ajustado.pth')
+        # self.conjunto = 1
+        # self.modelo_org = torch.load('./entrenamiento/modelos/modelo_ann_1_11_0.pth')
         self.modelo = copy.deepcopy(self.modelo_org)
 
         # Variables de control para el tamaño de la fuente de los textos
@@ -66,7 +72,7 @@ class Modelo:
         self.historial2 = []    # Suaviza las medianas asi el puntero se mueve suave
         self.cantidad_suavizado = 18
         self.cantidad_suavizado2 = 5
-        self.hist_max = 60
+        self.hist_max = 90
         #self.retroceso_click = 0
 
         # Variables para uso de los tableros
@@ -84,12 +90,12 @@ class Modelo:
         self.cronometro_pruebas = 0 #Variable para el cronometro de las pruebas
         self.contador_borrar = 0
 
-        # # Ponderar la mirada
-        # self.limiteAbajoIzq = [0.10,0.07]
-        # self.limiteAbajoDer = [0.87,0.09]
-        # self.limiteArribaIzq = [0.05,0.81]
-        # self.limiteArribaDer = [0.93,0.89]
-        # self.Desplazamiento = [0.5,0.5]
+        # Ponderar la mirada
+        self.limiteAbajoIzq = [0.10,0.07]
+        self.limiteAbajoDer = [0.87,0.09]
+        self.limiteArribaIzq = [0.03,0.81]
+        self.limiteArribaDer = [0.93,0.89]
+        self.Desplazamiento = [0.5,0.5]
 
         # los del optimizador
         # self.limiteAbajoIzq = [0.045,0.048]
@@ -99,11 +105,11 @@ class Modelo:
         # self.Desplazamiento = [0.484,0.45]
 
         #SIN PONDERAR 
-        self.limiteAbajoIzq = [0,0]
-        self.limiteAbajoDer = [1,0]
-        self.limiteArribaIzq = [0,1]
-        self.limiteArribaDer = [1,1]
-        self.Desplazamiento = [0.5,0.5]
+        # self.limiteAbajoIzq = [0,0]
+        # self.limiteAbajoDer = [1,0]
+        # self.limiteArribaIzq = [0,1]
+        # self.limiteArribaDer = [1,1]
+        # self.Desplazamiento = [0.5,0.5]
 
         # Aplicar un umbral
         self.fondo_frame_editado = cv2.imread('./imagenes/fondo_marco_amp.png', cv2.IMREAD_GRAYSCALE)
@@ -112,6 +118,12 @@ class Modelo:
 
         #Variables para el reentrenamiento
         self.numero_entrenamientos = 0
+
+        #Variables para la optimizacion
+        self.optimizando = False
+        self.progreso_opt = 0
+        self.optimizar = False #Variable para acivar o desactivar el optimizador al acabar el reentreno
+        self.trials_opt = 70
 
 
     #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
@@ -207,9 +219,22 @@ class Modelo:
     def get_frame_editado(self):
         frame = self.get_frame()
         if frame is None:
-            frame = np.zeros((480, 640, 3), dtype=np.uint8)
-            # Poner un texto de que no esta la camara activa alineado al centro y en blanco y con la fuente de texto
-            cv2.putText(frame, 'Selecciona una camara', (220, 430), cv2.FONT_ITALIC, 0.6, (255, 255, 255), 2)
+            # Croger la imagen con la forma
+            frame_pil = Image.fromarray(self.mask_rgb)
+
+            # Seleccionar la fuente y el tamaño
+            font = ImageFont.truetype("./kivy/FrancoisOne-Regular.ttf", 30)
+
+            # Calcular el ancho del texto
+            text = "Selecciona una cámara"
+            
+            # Dibujar el texto en la imagen
+            draw = ImageDraw.Draw(frame_pil)
+            draw.text((180, 430), text, font=font, fill=(255, 255, 255, 0))
+
+            # Convertir la imagen de PIL de vuelta a un array de numpy
+            frame = np.array(frame_pil)
+            
             return frame
 
         # Blanco por defecto
@@ -594,30 +619,40 @@ class Modelo:
         return mirada
 
 
-    def ponderar(self, mirada):
+    def ponderar(self, mirada, limiteAbajoIzq=None, limiteAbajoDer=None, limiteArribaIzq=None, limiteArribaDer=None, Desplazamiento=None):
         def calcular_limites_esquina(cuadrante):
-            if cuadrante == 0:
-                return self.limiteAbajoIzq[0], self.limiteAbajoIzq[1], self.limiteAbajoDer[0], self.limiteArribaIzq[1]
-            elif cuadrante == 1:
-                return self.limiteAbajoIzq[0], self.limiteAbajoDer[1], self.limiteAbajoDer[0], self.limiteArribaDer[1]
-            elif cuadrante == 2:
-                return self.limiteArribaIzq[0], self.limiteAbajoIzq[1], self.limiteArribaDer[0], self.limiteArribaIzq[1]
-            elif cuadrante == 3:
-                return self.limiteArribaIzq[0], self.limiteAbajoDer[1], self.limiteArribaDer[0], self.limiteArribaDer[1]
+            if limiteAbajoDer is None:
+                if cuadrante == 0:
+                    return self.limiteAbajoIzq[0], self.limiteAbajoIzq[1], self.limiteAbajoDer[0], self.limiteArribaIzq[1]
+                elif cuadrante == 1:
+                    return self.limiteAbajoIzq[0], self.limiteAbajoDer[1], self.limiteAbajoDer[0], self.limiteArribaDer[1]
+                elif cuadrante == 2:
+                    return self.limiteArribaIzq[0], self.limiteAbajoIzq[1], self.limiteArribaDer[0], self.limiteArribaIzq[1]
+                elif cuadrante == 3:
+                    return self.limiteArribaIzq[0], self.limiteAbajoDer[1], self.limiteArribaDer[0], self.limiteArribaDer[1]
+            else:
+                if cuadrante == 0:
+                    return limiteAbajoIzq[0], limiteAbajoIzq[1], limiteAbajoDer[0], limiteArribaIzq[1]
+                elif cuadrante == 1:
+                    return limiteAbajoIzq[0], limiteAbajoDer[1], limiteAbajoDer[0], limiteArribaDer[1]
+                elif cuadrante == 2:
+                    return limiteArribaIzq[0], limiteAbajoIzq[1], limiteArribaDer[0], limiteArribaIzq[1]
+                elif cuadrante == 3:
+                    return limiteArribaIzq[0], limiteAbajoDer[1], limiteArribaDer[0], limiteArribaDer[1]
         
         def ponderar_esquina(mirada, esquina_limites):
             LimiteBajoX, LimiteBajoY, LimiteAltoX, LimiteAltoY = esquina_limites
 
             # Calculamos los límites de la zona no afectada
-            ComienzoZonaNoAfectadaX = LimiteBajoX + (self.Desplazamiento[0] - LimiteBajoX) / 2
-            FinZonaNoAfectadaX = LimiteAltoX - (LimiteAltoX - self.Desplazamiento[0]) / 2
-            ComienzoZonaNoAfectadaY = LimiteBajoY + (self.Desplazamiento[1] - LimiteBajoY) / 2
-            FinZonaNoAfectadaY = LimiteAltoY - (LimiteAltoY - self.Desplazamiento[1]) / 2
+            ComienzoZonaNoAfectadaX = LimiteBajoX + ((self.Desplazamiento[0] if limiteAbajoDer is None else Desplazamiento[0]) - LimiteBajoX) / 2
+            FinZonaNoAfectadaX = LimiteAltoX - (LimiteAltoX - (self.Desplazamiento[0] if limiteAbajoDer is None else Desplazamiento[0])) / 2
+            ComienzoZonaNoAfectadaY = LimiteBajoY + ((self.Desplazamiento[1] if limiteAbajoDer is None else Desplazamiento[1]) - LimiteBajoY) / 2
+            FinZonaNoAfectadaY = LimiteAltoY - (LimiteAltoY - (self.Desplazamiento[1] if limiteAbajoDer is None else Desplazamiento[1])) / 2
 
             # Calculamos las x y las y de las Xs
-            Xx = np.array([LimiteBajoX, ComienzoZonaNoAfectadaX, self.Desplazamiento[0], FinZonaNoAfectadaX, LimiteAltoX])
+            Xx = np.array([LimiteBajoX, ComienzoZonaNoAfectadaX, (self.Desplazamiento[0] if limiteAbajoDer is None else Desplazamiento[0]), FinZonaNoAfectadaX, LimiteAltoX])
             Xy = np.array([0, ComienzoZonaNoAfectadaX, 0.5, FinZonaNoAfectadaX, 1])
-            Yx = np.array([LimiteBajoY, ComienzoZonaNoAfectadaY, self.Desplazamiento[1], FinZonaNoAfectadaY, LimiteAltoY])
+            Yx = np.array([LimiteBajoY, ComienzoZonaNoAfectadaY, (self.Desplazamiento[1] if limiteAbajoDer is None else Desplazamiento[1]), FinZonaNoAfectadaY, LimiteAltoY])
             Yy = np.array([0, ComienzoZonaNoAfectadaY, 0.5, FinZonaNoAfectadaY, 1])
 
             # Crear la función polinómica
@@ -631,7 +666,11 @@ class Modelo:
             return np.sqrt((mirada[0] - esquina[0])**2 + (mirada[1] - esquina[1])**2)
 
         # Definir las cuatro esquinas
-        esquinas = [self.limiteAbajoIzq, self.limiteAbajoDer, self.limiteArribaIzq, self.limiteArribaDer]
+        esquinas = []
+        if limiteAbajoDer is None:
+            esquinas = [self.limiteAbajoIzq, self.limiteAbajoDer, self.limiteArribaIzq, self.limiteArribaDer]
+        else:
+            esquinas = [limiteAbajoIzq, limiteAbajoDer, limiteArribaIzq, limiteArribaDer]
         ponderaciones = []
 
         # Calcular la ponderación para cada esquina
@@ -755,16 +794,16 @@ class Modelo:
 
         # Se eliminan los datos con el ojo cerrado
         index = np.where(self.input[:, -2] < self.input[:, -1])
-        input = np.delete(self.input, index, axis=0)
-        output = np.delete(self.output, index, axis=0)
+        self.input = np.delete(self.input, index, axis=0)
+        self.output = np.delete(self.output, index, axis=0)
 
         # Se obtiene el conjunto 
         normalizar_funcion = getattr(Conjuntos, f'conjunto_{self.conjunto}')
-        input = normalizar_funcion(input)
+        input_conj = normalizar_funcion(self.input)
 
         # Se convierten a tensores
-        input_train = torch.from_numpy(input).float()
-        output_train = torch.from_numpy(output).float()
+        input_train = torch.from_numpy(input_conj).float()
+        output_train = torch.from_numpy(self.output).float()
 
         # Se reentrena al modelo
         # Definir el optimizador
@@ -775,13 +814,19 @@ class Modelo:
         models = []
         loss = nn.MSELoss()
         first_loss = loss(self.modelo(input_train), output_train).item()
+        
+        if self.optimizar:
+            self.optimizando = True
+            self.progreso_opt = 0
+
         #COMPROBAR EL NUMERO DE EPOCHS CREO QUE SON DEMASIADOS FAVORECE AL OVERFITTING
         for epoch in range(self.numero_epochs+1):
+            optimizer.zero_grad()
+
             # Entrenamiento y cálculo de la pérdida
             train_predictions = self.modelo(input_train)
             train_loss = loss(train_predictions, output_train)
             train_losses.append(train_loss.item())
-            print("Epoch: ", epoch, " Loss: ", train_loss.item())
 
             # Guardar el mejor modelo
             if train_loss.item() < best_loss:
@@ -789,7 +834,6 @@ class Modelo:
             models.append(self.modelo)
 
             # Actualizar el modelo
-            optimizer.zero_grad()
             train_loss.backward()
             optimizer.step()
 
@@ -797,12 +841,37 @@ class Modelo:
             self.porcentaje_reent = int((epoch/self.numero_epochs)*100)
 
         self.modelo = models[train_losses.index(min(train_losses))]
-        print("Se ha elegido el epoch ", train_losses.index(min(train_losses)))
-        print("Perdida antes del reentreno a los valores del usuario: ", first_loss, "Perdida final: ", min(train_losses))
         
-        # Se limpian los datos
-        self.input = []
-        self.output = []
+        # Se optimizan las esquinas
+        if self.optimizar:
+            print("Optimizando las esquinas")
+            indices, error_esquinas = self.optimizar_esquinas()
+
+            #Calcular la perdida en las esquinas
+            input_esq_sin = self.input[indices]
+            output_esq_sin = self.output[indices]
+            input_conj_esq_sin = normalizar_funcion(input_esq_sin)
+            input_conj_esq_sin_tensor = torch.from_numpy(input_conj_esq_sin).float()
+            train_predictions_esq_sin = self.modelo(input_conj_esq_sin_tensor)
+            train_predictions_esq_sin_tensor = torch.tensor(train_predictions_esq_sin).float()
+            output_esq_sin_tensor = torch.tensor(output_esq_sin).float()
+            error_esquinas_sin = mse_loss(output_esq_sin_tensor, train_predictions_esq_sin_tensor).item()
+            print("Error en las esquinas sin optimizar: ", error_esquinas_sin)
+            print("Error en las esquinas optimizadas: ", error_esquinas)
+
+            # Calcular la perdida en toda la pantalla
+            input_conj = normalizar_funcion(self.input)
+            input_conj_tensor = torch.from_numpy(input_conj).float()
+            train_predictions = self.modelo(input_conj_tensor).detach().numpy()
+            train_predictions_ponderadas = []
+            for i, prediccion in enumerate(train_predictions):
+                train_predictions_ponderadas.append(self.ponderar(prediccion))
+            train_predictions_ponderadas_tensor = torch.tensor(train_predictions_ponderadas)
+            perdida_final = mse_loss(output_train, train_predictions_ponderadas_tensor).item()
+            print("Perdida final con las esquinas optimizadas: ", perdida_final)
+        print("Perdida final sin las esquinas optimizadas: ", min(train_losses))
+        print("Perdida antes del reentreno a los valores del usuario: ", first_loss)
+
 
 
     def descartar_reentrenamientos(self):
@@ -812,3 +881,89 @@ class Modelo:
         self.modelo = self.modelo_org
         self.mensaje(f'Se han descartado {self.numero_entrenamientos} reentrenamientos')
         self.numero_entrenamientos = 0
+
+        # Limpiamos los datos de reentrenamiento
+        self.input = []
+        self.output = []
+
+        # Reajustamos las esquinas a su valor orignial
+        self.limiteAbajoIzq = [0,0]
+        self.limiteAbajoDer = [1,0]
+        self.limiteArribaIzq = [0,1]
+        self.limiteArribaDer = [1,1]
+        self.Desplazamiento = [0.5,0.5]
+
+
+    def optimizar_esquinas(self):
+        #Recoger los indices de los outputs que esten en las zonas (0-0,25;0-0,25), (0,75-1;0-0,25), (0-0,25;0,75-1), (0,75-1;0,75-1)
+        indices = []
+        for i, output in enumerate(self.output):
+            if output[0] < 0.25 and output[1] < 0.25:
+                indices.append(i)
+            elif output[0] > 0.75 and output[1] < 0.25:
+                indices.append(i)
+            elif output[0] < 0.25 and output[1] > 0.75:
+                indices.append(i)
+            elif output[0] > 0.75 and output[1] > 0.75:
+                indices.append(i)
+        
+        # Hacer un nuevo input y output con los indices
+        input_opt = self.input[indices]
+        output_opt = self.output[indices]
+
+        # Se obtiene el conjunto y los tensores
+        normalizar_funcion = getattr(Conjuntos, f'conjunto_{self.conjunto}')
+        input_conj_opt = normalizar_funcion(input_opt)
+        input_conj_opt = torch.from_numpy(input_conj_opt).float()
+
+        def objective(trial):
+            # Definir los límites de las esquinas y el desplazamiento
+            limiteAbajoIzqX = trial.suggest_float('limiteAbajoIzqX', 0.00, 0.15)
+            limiteAbajoIzqY = trial.suggest_float('limiteAbajoIzqY', 0.00, 0.15)
+            limiteAbajoDerX = trial.suggest_float('limiteAbajoDerX', 0.85, 1.00)
+            limiteAbajoDerY = trial.suggest_float('limiteAbajoDerY', 0.00, 0.15)
+            limiteArribaIzqX = trial.suggest_float('limiteArribaIzqX', 0.00, 0.15)
+            limiteArribaIzqY = trial.suggest_float('limiteArribaIzqY', 0.85, 1.00)
+            limiteArribaDerX = trial.suggest_float('limiteArribaDerX', 0.85, 1.00)
+            limiteArribaDerY = trial.suggest_float('limiteArribaDerY', 0.85, 1.00)
+            DesplazamientoX = trial.suggest_float('DesplazamientoX', 0.46, 0.54)
+            DesplazamientoY = trial.suggest_float('DesplazamientoY', 0.46, 0.54)
+
+            limiteAbajoIzq = [limiteAbajoIzqX, limiteAbajoIzqY]
+            limiteAbajoDer = [limiteAbajoDerX, limiteAbajoDerY]
+            limiteArribaIzq = [limiteArribaIzqX, limiteArribaIzqY]
+            limiteArribaDer = [limiteArribaDerX, limiteArribaDerY]
+            Desplazamiento = [DesplazamientoX, DesplazamientoY]
+
+            # Calcular las predicciones del modelo
+            predicciones = self.modelo((input_conj_opt)).detach().numpy()
+
+            for i, prediccion in enumerate(predicciones):
+                predicciones[i] = self.ponderar(prediccion, limiteAbajoIzq, limiteAbajoDer, limiteArribaIzq, limiteArribaDer, Desplazamiento)
+
+            
+            # Calcular el error
+            output_tensor = torch.from_numpy(output_opt).float()
+            predicciones_tensor = torch.from_numpy(predicciones).float()
+
+            error = mse_loss(output_tensor, predicciones_tensor).item()
+
+            return error
+        
+        
+        def actualizar_progreso_opt(study, trial):
+            self.progreso_opt = int(((trial.number+1) / self.trials_opt) * 100)
+
+        study = optuna.create_study(direction='minimize')
+        study.optimize(objective, n_trials=self.trials_opt, callbacks=[actualizar_progreso_opt],show_progress_bar=False)
+
+        # Guardar los resultados
+        self.limiteAbajoIzq = [study.best_params['limiteAbajoIzqX'], study.best_params['limiteAbajoIzqY']]
+        self.limiteAbajoDer = [study.best_params['limiteAbajoDerX'], study.best_params['limiteAbajoDerY']]
+        self.limiteArribaIzq = [study.best_params['limiteArribaIzqX'], study.best_params['limiteArribaIzqY']]
+        self.limiteArribaDer = [study.best_params['limiteArribaDerX'], study.best_params['limiteArribaDerY']]
+        self.Desplazamiento = [study.best_params['DesplazamientoX'], study.best_params['DesplazamientoY']]
+        
+        self.optimizando = False
+        self.progreso_opt = 0
+        return indices, study.best_value  

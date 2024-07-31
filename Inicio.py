@@ -92,7 +92,7 @@ class Inicio(Screen):
             (self.camera_spinner, 'Bienvenido a ComunicELA, primero debe seleccionar la cámara que desea utilizar'),
             (self.btn_cal, 'Despues debe calibrar el parpadeo para comenzar a usar la aplicación'),
             (self.btn_tab, 'Posteriormente ya podrá utilizar los tableros de comunicación'),
-            (self.btn_ree, 'Si no está satisfecho con el rendimiento de la aplicación,\n puede reentrenar el modelo para que se ajuste mejor a sus necesidades'),
+            (self.btn_ree, 'Si no está satisfecho con el rendimiento de la aplicación, puede reentrenar el modelo para ajustarlo a sus necesidades'),
         ]
 
 
@@ -154,17 +154,16 @@ class Inicio(Screen):
 
     def seleccionar_camara(self, _, text):
         if text.startswith('Cámara '):
-            # Extrae el número de la cámara del texto
-            camara = int(text.split(' ')[1])
-            self.controlador.seleccionar_camara(camara)
+            camara = text.split(' ')[1]
+            if camara == 'principal':
+                camara = 0
+            self.controlador.seleccionar_camara(int(camara))
         elif text == 'Actualizar cámaras':
             self.controlador.obtener_camaras()
         elif text == 'Seleccionar cámara' or text == 'Cargando cámaras...':
             pass
-        else:
-            self.controlador.seleccionar_camara(int(text))
-            self.camera_spinner.text = f'Cámara {text}'
-
+        
+        
     def update_image_box(self, dt):
         frame = self.controlador.get_frame_editado()
         if frame is None:

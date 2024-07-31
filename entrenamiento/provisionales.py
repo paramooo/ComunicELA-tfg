@@ -299,9 +299,9 @@ def ponderar_graficas2():
 
 def optimizar_ponderacion():
     # Cargar el modelo y los datos
-    model = torch.load('./anns/pytorch/modeloRELU.pth')
+    model = torch.load('./entrenamiento/modelos/modelo_ann_1_11.pth')
     input, output = cargar_datos()
-    input = Conjuntos.conjunto_2(input)
+    input = Conjuntos.conjunto_1(input)
 
     # Limpiar los datos con el ojo cerrado
     index = np.where(input[:, -2] < input[:, -1])
@@ -384,54 +384,6 @@ def optimizar_ponderacion():
 
 # ---------------------------------------------------------------------------------------------------------
 
-
-
-#--------------------------------------------------------------------------------------------------------
-def aprox_reesnet():
-    # Cargar el modelo preentrenado normal no el custom
-    model = models.resnet50(pretrained=True)
-
-    # Congelar los pesos del modelo
-    for param in model.parameters():
-        param.requires_grad = False
-
-    # Reemplazar la última capa del modelo para adaptarlo a tu problema
-    num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, 2)  # Asume que tu problema es de regresión con dos valores de salida
-
-    # Definir el optimizador y la función de pérdida
-    optimizer = optim.Adam(model.parameters(), lr=0.05)
-    loss_function = nn.MSELoss()  # Usa la pérdida cuadrática media para la regresión
-
-    model = model.to("cuda")
-
-    # Entrenar el modelo
-    train_losses = []
-    test_losses = []
-    for epoch in range(epochs):
-        optimizer.zero_grad()
-        train_predictions = model(input_train)
-        train_loss = loss_function(train_predictions, output_train)
-        train_loss.backward()
-        optimizer.step()
-        train_losses.append(train_loss.item())
-
-        # Calcular la pérdida de prueba
-        test_predictions = model(input_test)
-        test_loss = loss_function(test_predictions, output_test)
-        test_losses.append(test_loss.item())
-
-        print(f'Epoch {epoch+1}, Train Loss: {train_loss.item()}, Test Loss: {test_loss.item()}')
-
-    # Guardar el modelo en la cpu
-    model = model.to("cpu")
-    torch.save(model, './anns/pytorch/modelo.pth')
-    graficar_perdidas(train_losses, test_losses)
-
-
-
-
-
 # Haz el main
 if __name__ == '__main__':
     #------------ PARA GRAFICAS DE LOS DATOS SUAVIZADOS ----------------
@@ -460,7 +412,7 @@ if __name__ == '__main__':
     #ponderar_graficas2()
 
     #Para optimizar la ponderacion hay que ajustar las cosas dentro de la funcion con el modelo a probar etc
-    #optimizar_ponderacion()
+    optimizar_ponderacion()
 
     #------------ PARA COMPROBAR NEURONAS MUERTAS ----------------
     #Lo comentado al final

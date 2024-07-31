@@ -79,8 +79,9 @@ class Controlador:
         Clock.schedule_once(lambda dt: self._actualizar_spinner(camaras))
 
     def _actualizar_spinner(self, camaras):
-        self.vista.inicio.camera_spinner.values = ['Cámara ' + str(i) for i in camaras] + ['Actualizar cámaras']
+        self.vista.inicio.camera_spinner.values = ['Cámara principal' if i == 0 else 'Cámara ' + str(i) for i in camaras] + ['Actualizar cámaras']
         self.vista.inicio.camera_spinner.text = 'Seleccionar cámara'
+
 
     def seleccionar_camara(self, camara):
         self.modelo.seleccionar_camara(camara)
@@ -207,6 +208,12 @@ class Controlador:
 
     def descartar_reentrenamientos(self):
         self.modelo.descartar_reentrenamientos()
+
+    def get_optimizando(self):
+        return self.modelo.optimizando
+    
+    def get_progreso_opt(self):
+        return self.modelo.progreso_opt
 
 # ---------------------------- FUNCIONES PARA EL MODO DE TABLEROS -------------------------
 #------------------------------------------------------------------------------------------

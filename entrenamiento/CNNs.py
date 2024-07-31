@@ -87,20 +87,16 @@ class CNNs:
     def crear_cnn_4(self, tamaño_img):
         ancho, alto = tamaño_img
         model = nn.Sequential()
-        model.add_module('conv1', nn.Conv2d(1, 16, kernel_size=3, stride=1, padding=1))
+        model.add_module('conv1', nn.Conv2d(1, 8, kernel_size=3, stride=1, padding=1))
         model.add_module('relu1', nn.ReLU())
         model.add_module('pool1', nn.MaxPool2d(kernel_size=2, stride=2))
         ancho, alto = self.dividir(ancho, alto)
-        model.add_module('conv2', nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1))
+        model.add_module('conv2', nn.Conv2d(8, 16, kernel_size=3, stride=1, padding=1))
         model.add_module('relu2', nn.ReLU())
         model.add_module('pool2', nn.MaxPool2d(kernel_size=2, stride=2))
         ancho, alto = self.dividir(ancho, alto)
-        model.add_module('conv3', nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1))
-        model.add_module('relu3', nn.ReLU())
-        model.add_module('pool3', nn.MaxPool2d(kernel_size=2, stride=2))
-        ancho, alto = self.dividir(ancho, alto)
         model.add_module('flatten', nn.Flatten())
-        model.add_module('fc1', nn.Linear(64*ancho*alto, 250))  #64 filtros, 25x6 tamaño de la imagen despues de 3 maxpool
+        model.add_module('fc1', nn.Linear(16*ancho*alto, 250))  #64 filtros, 25x6 tamaño de la imagen despues de 3 maxpool
         model.add_module('relu3', nn.ReLU())
         model.add_module('fc2', nn.Linear(250, 100))
         model.add_module('relu4', nn.ReLU())

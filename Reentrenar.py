@@ -108,7 +108,10 @@ class Reentrenar(Screen):
             
             # Si el porcentaje de reentrenamiento es 100, muestra un mensaje de finalización
             else:
-                if not self.lanzado:
-                    self.lanzado = True
-                    self.controlador.sumar_reentrenamiento()
-                    CustPopup("Reentrenamiento completado", self.on_inicio, (0.5,0.5), controlador=self.controlador).open()
+                if self.controlador.get_optimizando():
+                    self.texto_explicativo.text = f"Optimizando... {self.controlador.get_progreso_opt()}%"
+                else:
+                    if not self.lanzado:
+                        self.lanzado = True
+                        self.controlador.sumar_reentrenamiento()
+                        CustPopup("Reentrenamiento completado", self.on_inicio, (0.5,0.5), controlador=self.controlador).open()

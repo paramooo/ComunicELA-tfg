@@ -2,6 +2,9 @@ import os
 import cv2
 from tqdm import tqdm
 import sys
+from PIL import Image
+import numpy as np
+
 
 #Importamos el detector
 sys_copy = sys.path.copy()

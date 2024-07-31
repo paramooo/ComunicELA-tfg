@@ -232,6 +232,7 @@ class TablerosPruebas(Screen):
             Clock.unschedule(self.update)
         else:
             self.controlador.mensaje("Inténtalo de nuevo, escribe: " + self.pruebas[self.indice_prueba])
+            self.on_borrar_todo(instance)
 
     
         
@@ -313,6 +314,8 @@ class TablerosPruebas(Screen):
             casilla_alto = 0.8 / self.tablero.rows  # Quita el 0.2 inferior
 
             # Calcula a qué casilla corresponde la posición de la vista
+            x = min(x, 1 - 1e-9)
+            y = min(y, 1 - 1e-9)
             casilla_x = int(x / casilla_ancho)
             casilla_y = self.tablero.rows - 1 - int((y - 0.2) / casilla_alto)  # Resta 0.2 de y antes de calcular casilla_y
 
@@ -361,7 +364,10 @@ class TablerosPruebas(Screen):
             if self.casilla_bloqueada < self.tablero.cols * self.tablero.rows:
                 #Se apunta el tiempo que se tardo en elegir la primera palabra
                 word = self.tablero.casillas[self.casilla_bloqueada].text
-                self.tablero.casillas[self.casilla_bloqueada].dispatch('on_press')
+                if self.casilla_bloqueada == 0 and self.indice_prueba < 5:
+                    pass
+                else:
+                    self.tablero.casillas[self.casilla_bloqueada].dispatch('on_press')
                 self.palabras_y_coordenadas.append((word, self.casilla_bloqueada, self.cursor_positions.copy(), self.controlador.get_cronometro()))
                 self.cursor_positions.clear()
             else:

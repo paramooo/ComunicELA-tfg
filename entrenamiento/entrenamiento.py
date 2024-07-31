@@ -55,12 +55,14 @@ def graficar_perdidas_vt(train_losses, val_losses, test_losses):
     plt.legend()
     plt.show()
 
-def graficar_perdidas(train_losses, val_losses, test_losses):
+def graficar_perdidas(train_losses, val_losses, test_losses, euc_losses):
     plt.figure(figsize=(10,5))
     plt.plot(train_losses, label='Entrenamiento', color='blue')
-    plt.plot(val_losses, label='Validación', color='green')
+    plt.plot(val_losses, label='Test', color='red')
     if test_losses is not None:
-        plt.plot(test_losses, label='Prueba', color='red')
+        plt.plot(test_losses, label='Prueba', color='orange')
+    if euc_losses is not None:
+        plt.plot(euc_losses, label='Euc Loss', color='green')
     plt.title('Pérdida durante el entrenamiento')
     plt.xlabel('Época')
     plt.ylabel('Pérdida')
@@ -88,6 +90,7 @@ def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, l
 
     best_val_loss = float('inf')
     rounds_without_improvement = 0
+    rounds_without_improvement_lr = 0
 
     if graficas:
         plt.ion()  # Activa el modo interactivo de matplotlib
@@ -147,18 +150,21 @@ def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, l
         if val_loss_avg < best_val_loss:
             best_val_loss = val_loss_avg
             rounds_without_improvement = 0
+            rounds_without_improvement_lr = 0
         else:
             rounds_without_improvement += 1
+            rounds_without_improvement_lr += 1
 
         if rounds_without_improvement >= early_stopping_rounds:
             # print("Entrenamiento detenido por falta de mejora en el error de validación.")
             break
 
         # Si no ha mejorado en 5 rondas seguidas, aumentar el learning rate
-        if rounds_without_improvement == 5:
-            lr += 0.001
-            optimizer = optim.Adam(model.parameters(), lr=lr)
-            print("Learning rate aumentado a", lr)
+        if rounds_without_improvement_lr == 5:
+            lr -= 0.0001
+            for g in optimizer.param_groups:
+                g['lr'] = lr
+            rounds_without_improvement_lr = 0
 
         # Test
         if test_dataloader is not None:
@@ -194,6 +200,8 @@ def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, l
 
         euc_loss_avg = euc_loss_total / len(val_dataloader)
         euc_losses.append(euc_loss_avg)
+
+        print(f'Epoch {epoch}, Train Loss: {train_loss_avg}, Validation Loss: {val_loss_avg}, Sin mejorar: {rounds_without_improvement}/{early_stopping_rounds}', end='\r')
 
         
 
@@ -310,7 +318,7 @@ def aproximacion1():
         total_dataloader = DataLoader(dataset, batch_size=50000, num_workers=4)  
 
         for j, model in enumerate(models):
-            _, val_losses, euc_losses = entrenar_con_kfold(model, total_dataloader, indices_cambio_persona, epochs=800, lr=0.01, ejecuciones_fold=10, ann=True, graficas=False)
+            _, val_losses, euc_losses = entrenar_con_kfold(model, total_dataloader, indices_cambio_persona, epochs=800, lr=0.05, ejecuciones_fold=10, ann=True, graficas=False)
 
             # Añadir los resultados al DataFrame
             linea = pd.Series({'Modelo': f"{j}-{conjunto}", 'Mean EMC Val': np.mean(val_losses), 'Std EMC Val': np.std(val_losses), 'Mean EUC Loss': np.mean(euc_losses), 'Std EUC Loss': np.std(euc_losses)})
@@ -342,15 +350,17 @@ def aproximacion2():
                 "20-35-55":[CNNs().crear_cnn_1((210, 120)), CNNs().crear_cnn_2((210, 120)), CNNs().crear_cnn_3((210, 120)), CNNs().crear_cnn_4((210, 120))]
                 }
 
+
+
     for carpeta, modelos in models.items():
         #Crear un Dataset
         dataset = DatasetImg(f'./entrenamiento/datos/frames/recortados/{carpeta}', './entrenamiento/datos/txts/input1.txt', './entrenamiento/datos/txts/output1.txt', 21)
 
         #Crear un DataLoader
-        total_dataloader = DataLoader(dataset, batch_size=100, num_workers=4)
+        total_dataloader = DataLoader(dataset, batch_size=1000, num_workers=4)
 
         for i, model in enumerate(modelos):
-            _, val_losses, euc_losses = entrenar_con_kfold(model, total_dataloader, indices_cambio_persona, epochs=1, lr=0.01, ejecuciones_fold=1, graficas=False)
+            _, val_losses, euc_losses = entrenar_con_kfold(model, total_dataloader, indices_cambio_persona, epochs=800, lr=0.001, ejecuciones_fold=5, graficas=False)
             
             # Añadir los resultados al DataFrame
             linea = pd.Series({'Modelo': f"{i}-{carpeta}", 'Mean EMC Val': np.mean(val_losses), 'Std EMC Val': np.std(val_losses), 'Mean EUC Loss': np.mean(euc_losses), 'Std EUC Loss': np.std(euc_losses)})
@@ -385,7 +395,7 @@ def aproximacion_resnet():
         dataset = DatasetImg(f'./entrenamiento/datos/frames/recortados/{carpetas[i]}', './entrenamiento/datos/txts/input1.txt', './entrenamiento/datos/txts/output1.txt', 21)
 
         #Crear un DataLoader
-        total_dataloader = DataLoader(dataset, batch_size=100, num_workers=4)
+        total_dataloader = DataLoader(dataset, batch_size=200, num_workers=4)
 
         #Modificar la resnet para que tenga 1 canal de entrada y solo 2 salidas en sigmoide ( de 0 a 1)
         modelo.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
@@ -395,7 +405,7 @@ def aproximacion_resnet():
         )
 
 
-        _, val_losses, euc_losses = entrenar_con_kfold(modelo, total_dataloader, indices_cambio_persona, epochs=800, lr=0.05, ejecuciones_fold=10, graficas=True)
+        _, val_losses, euc_losses = entrenar_con_kfold(modelo, total_dataloader, indices_cambio_persona, epochs=800, lr=0.001, ejecuciones_fold=5, graficas=False)
         
         # Añadir los resultados al DataFrame
         linea = pd.Series({'Modelo': f"ResNet{i}", 'Mean EMC Val': np.mean(val_losses), 'Std EMC Val': np.std(val_losses), 'Mean EUC Loss': np.mean(euc_losses), 'Std EUC Loss': np.std(euc_losses)})
@@ -424,43 +434,63 @@ def aproximacion3():
     #model = FusionNet()
 
     pass
+
+
 def entrenar_final():
+    #Crear un dataset con el conjunto 1 ya que es el mejor
+    dataset = DatasetText('./entrenamiento/datos/txts/input0.txt', './entrenamiento/datos/txts/output0.txt', 21, conjunto=1)
+    
     #Coger los indices
-    # indices = list(range(len(dataset)))
-    # train_indices, temp_indices = train_test_split(indices, test_size=0.2, random_state=42)
+    indices = list(range(len(dataset)))
+    train_indices, val_indices = train_test_split(indices, test_size=0.05, random_state=42)
     # val_indices, test_indices = train_test_split(temp_indices, test_size=0.5, random_state=42)
 
     # Crear un DataLoader
-    # train_dataloader = DataLoader(dataset, batch_size=5000, sampler=SubsetRandomSampler(train_indices), num_workers=4)
-    # val_dataloader = DataLoader(dataset, batch_size=5000, sampler=SubsetRandomSampler(val_indices), num_workers=4)
+    train_dataloader = DataLoader(dataset, batch_size=50000, sampler=SubsetRandomSampler(train_indices), num_workers=4)
+    val_dataloader = DataLoader(dataset, batch_size=50000, sampler=SubsetRandomSampler(val_indices), num_workers=4)
     # test_dataloader = DataLoader(dataset, batch_size=5000, sampler=SubsetRandomSampler(test_indices), num_workers=4)
 
-    #  Mover el modelo a la CPU
-    #model = model.to("cpu")
+    # Crear el modelo
+    model = ANNs().crear_ann_1_11()
+
+    # Entrenar el modelo
+    model, train_losses, val_losses, _, euc_losses, j = entrenar(model, train_dataloader, val_dataloader, None, epochs=800, lr=0.05, ann=True, graficas=False)
+
+    # Impresión de los resultados
+    print(f"Error de entrenamiento: {train_losses[j]}")
+    print(f"Error de validación: {val_losses[j]}")
+    print(f"Error euclidiano: {euc_losses[j]}")
+
 
     # Guardar el modelo con el nombre adecuado y el error 
-    #torch.save(model, f'./entrenamiento/modelos/modelo_cnn_entera.pth')
+    torch.save(model, f'./entrenamiento/modelos/modelo_ann_1_11_0.pth')
 
     # Graficar las pérdidas
-    #graficar_perdidas(train_losses, val_losses, None)
+    graficar_perdidas(train_losses, val_losses, None, euc_losses)
     pass
 
 
 if __name__ == '__main__':
 
     #Semilla aleatoriedad
-    torch.cuda.manual_seed(42)
-    torch.manual_seed(42)
-    np.random.seed(42)
+    #seed = 42
+    #torch.cuda.manual_seed(seed)
+    #torch.manual_seed(seed)
+    #np.random.seed(seed)
     
     # Aproximacion 1
+    # lr = 0.05, rounds_without_improvement = 20, lr -= 0.0001
     #aproximacion1()
 
     # Aproximacion 2
-    aproximacion2()
+    # lr = 0.001, rounds_without_improvement = 20, lr -= 0.0001
+    #aproximacion2()
 
     # Aproximacion ResNet
     #aproximacion_resnet()
+
+    # Entrenar el modelo final
+    entrenar_final()
 
 
 

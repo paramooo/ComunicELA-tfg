@@ -10,14 +10,55 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import AsyncImage
 import os
 from kivy.uix.widget import Widget
+from kivy.core.window import Window
 
 
 Builder.load_file('kivy/custom.kv')
+class HoverBehavior(object):
+    """Hover behavior.
+    :Events:
+        `on_enter`
+            Fired when mouse enter the widget.
+        `on_leave`
+            Fired when mouse leave the widget.
+    """
 
-class ButtonRnd(Button):
+    def __init__(self, **kwargs):
+        self.hovered = False
+        self.register_event_type('on_enter')
+        self.register_event_type('on_leave')
+        super(HoverBehavior, self).__init__(**kwargs)
+        Window.bind(mouse_pos=self._on_mouse_pos)
+
+    def _on_mouse_pos(self, *args):
+        pos = args[1]
+        # Check if mouse is inside the widget
+        inside = self.collide_point(*self.to_widget(*pos))
+        visible = self.get_root_window() is not None
+        if self.hovered == inside or not visible:              
+            return
+        self.hovered = inside
+        if inside:
+            Window.set_system_cursor('hand')
+            self.dispatch('on_enter')
+        else:
+            Window.set_system_cursor('arrow')
+            self.dispatch('on_leave')
+
+    def on_press(self):
+        Window.set_system_cursor('arrow')
+        Button.on_press(self)
+
+    def on_enter(self):
+        pass
+
+    def on_leave(self):
+        pass
+
+class ButtonRnd(HoverBehavior, Button):
     size_hint = ListProperty([1, None])
-
-class CustomSpinner(Spinner):
+    
+class CustomSpinner(HoverBehavior, Spinner):
     pass
 
 class CasillaTablero(Button):
