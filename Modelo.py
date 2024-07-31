@@ -141,7 +141,7 @@ class Modelo:
         self.recopilarRe = False
         self.salto_bajo_re, self.salto_alto_re = 100, 180
         self.velocidad_re = 35
-        self.numero_epochs = 100
+        self.numero_epochs = 20
         self.porcentaje_reent = 0
         
 
