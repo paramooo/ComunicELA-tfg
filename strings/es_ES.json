@@ -1,0 +1,86 @@
+{   "_comment1": " ----------- PANTALLA DE INICIO ----------- ",
+    "btn_inicio_calibrar" : "Calibrar parpadeo",
+    "btn_inicio_reentrenar": "Reentrenar",
+    "btn_inicio_tableros": "Tableros",
+    "btn_inicioDes_test": "Test",
+    "btn_inicioDes_reco": "Recopilar",
+    "btn_inicioDes_pruebas": "Pruebas",
+    "btn_inicioDes_seleccionarCam": "Seleccionar cámara",
+    "mensaje_inicio_op_des": "Ha activado las opciones de desarrollo, pulse \"D\" para desactivarlas",
+    "mensaje_frame_editado": "Seleccione una cámara",
+    "cargando_camara": "Cargando cámaras...",
+    "camara" : "Cámara ",
+    "principal" : "principal",
+    "camara_principal" : "Cámara principal",
+    "actualizar_camaras": "Actualizar cámaras",
+    "inicio": "Inicio",
+
+    "_comment2": " ----------- MENSAJES AL USUARIO ----------- ",
+    "mensaje_calibracion_fallida": "Calibración fallida, asegúrese de que el usuario está centrado y bien iluminado",
+    "mensaje_error_camara": "Error de la cámara, asegúrese de que está conectada y bien configurada",
+    "mensaje_no_cara": "No se detecta ninguna cara",
+    "mensaje_no_reentrenamientos": "No hay reentrenamientos que descartar",
+    "mensaje_descartados": "Se han descartado los reentrenamientos",
+    "mensaje_primero_calibrar": "Primero debe calibrar el parpadeo",
+    "mensaje_primero_camara": "Primero debe seleccionar una cámara",
+    "mensaje_error_reproduccion": "Error al reproducir el texto",
+
+    "_comment3": " ----------- MENSAJES DEL TUTORIAL ----------- ",
+    "mensaje_tutorial_1": "Bienvenido a ComunicELA, primero deberá seleccionar una cámara",
+    "mensaje_tutorial_2": "Después debe calibrar el parpadeo para comenzar a usar la aplicación",
+    "mensaje_tutorial_3": "Posteriormente ya podrá utilizar los tableros de comunicación",
+    "mensaje_tutorial_4": "Si no está satisfecho con el rendimiento de la aplicación, puede reentrenar el modelo para ajustarlo a sus necesidades",
+    "no_volver_mostrar": "No volver a mostrar",
+
+
+    "_comment4": " ----------- PANTALLA CALIBRAR ----------- ",
+    "mensaje_calibracion_1": "Coloque la cámara a la altura de los ojos del usuario y a 50/60cm\n\n Debe situar el círculo dentro del punto central de la cara",
+    "mensaje_calibracion_2": "Mientras el usuario mira al punto amarillo, presione continuar",
+    "mensaje_calibracion_3": "Mientras el usuario mantiene los ojos cerrados\n\n vuelva a presionar el botón de Continuar",
+    "mensaje_calibracion_4": "Calibración completada, pulse Continuar para volver al menú principal",
+    "continuar": "Continuar",
+
+    "_comment5": " ----------- PANTALLA REENTRENAR INSTRUCCIONES ----------- ",
+    "instrucciones": "INSTRUCCIONES",
+    "instruccion_re1": "El reentrenamiento personaliza el software al usuario actual",
+    "instruccion_re2": "El usuario debe seguir el punto rojo con la mirada hasta completar el proceso",
+    "instruccion_re3": "Si cambia el usuario, se debe descartar el reentrenamiento previo",
+    "instruccion_re4": "Más de un reentreno puede sobreajustar el modelo, y no mejorar el rendimiento",
+    "instruccion_re5": "Si nota una pérdida de precisión, se recomienda descartar el reentrenamiento",
+    "descartar_ree" : "Descartar reentrenamientos",
+    "reentrenar": "Reentrenar",
+
+    "_comment6": " ----------- PANTALLA REENTRENAR ----------- ",
+    "reentrenamiento_completado": "Reentrenamiento completado",
+    "error_recop_ree": "Error al recopilar datos para el reentrenamiento, vuelva a intentarlo",
+    "reentrenando": "Reentrenando...",
+    "optimizando": "Optimizando...",
+
+
+    "_comment7": " ----------- PANTALLA TABLEROS INSTRUCCIONES ----------- ",
+    "instruccion_tab1":"El cursor se moverá donde dirija su mirada",
+    "instruccion_tab2":"Manténga el cursor sobre una casilla para bloquearla",
+    "instruccion_tab3":"Una vez bloqueada, parpadee para confirmar",
+    "instruccion_tab4":"Toque el cuadro con el texto para reproducirlo",
+    "instruccion_tab5":"Active el modo descanso cerrando los ojos 3 segundos",
+    "comenzar_con_pic": "Comenzar con pictogramas",
+    "comenzar_con_texto": "Comenzar con texto",
+
+    "_comment100": " ----------- PopUp ----------- ",
+    "comenzar": "Comenzar",
+    "atras": "Atrás",
+    "saltar": "Saltar", 
+
+    "_comment8": " ----------- PANTALLA TABLEROS ----------- ",
+    "borrar": "Borrar",
+    "borrar_todo": "Borrar todo",
+    "reproducir": "Reproducir",
+    "alarma": "Alarma",
+    "mensaje_descanso": "Modo descanso, mantenga los ojos cerrados 3 segundos para desbloquear",
+
+    "_comment9": " ----------- PANTALLAS DESARROLLADOR NO TRADUCIDAS ----------- "
+
+
+
+
+}   

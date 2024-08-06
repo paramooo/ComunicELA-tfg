@@ -49,7 +49,7 @@ class Recopilar(Screen):
         # Menu de seleccion de fichero
         self.camera_spinner = CustomSpinner(
         text='Seleccione fichero',
-        values=["0","1"],
+        values=["0","1","2"],
         size_hint=(0.2, 0.1),
         pos_hint={'right': 1, 'top': 0.1},
         )

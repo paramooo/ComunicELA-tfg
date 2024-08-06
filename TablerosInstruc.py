@@ -23,7 +23,7 @@ class TablerosInstruc(Screen):
         # Título de Instrucciones
         titulo_layout = BoxLayout(orientation='vertical', size_hint=(1, 0.1))
         titulo = Label(
-            text='INSTRUCCIONES', 
+            text=self.controlador.get_string('instrucciones'), 
             font_size='50sp', 
             font_name='Texto',  # Usar tu fuente personalizada
             halign='center', 
@@ -41,12 +41,12 @@ class TablerosInstruc(Screen):
         left_instructions = BoxLayout(orientation='vertical', size_hint=(0.5, 1))
 
         # Botón de Inicio
-        btn_inicio = ButtonRnd(text='Inicio', size_hint=(0.37, 0.35), pos_hint={'x': 0.15}, on_press=self.on_inicio, font_name='Texto')
-        left_instructions.add_widget(btn_inicio)
-        left_instructions.add_widget(Widget(size_hint_y=0.15))
+        self.btn_inicio = ButtonRnd(text=self.controlador.get_string('inicio'), size_hint=(0.37, 0.35), pos_hint={'x': 0.15}, on_press=self.on_inicio, font_name='Texto')
+        left_instructions.add_widget(self.btn_inicio)
+        left_instructions.add_widget(Widget(size_hint_y=0.10))
         
-        instruccion1 = Label(
-            text='El cursor debe seguir su mirada',
+        self.instruccion1 = Label(
+            text=self.controlador.get_string('instruccion_tab1'),
             font_size='25sp',
             halign='center',
             valign='middle',
@@ -54,9 +54,9 @@ class TablerosInstruc(Screen):
             color=(0,0,0,1),
             font_name='Texto'
         )
-        left_instructions.add_widget(instruccion1)
-        instruccion2 = Label(
-            text='Mantener el cursor sobre una casilla para seleccionarla',
+        left_instructions.add_widget(self.instruccion1)
+        self.instruccion2 = Label(
+            text=self.controlador.get_string('instruccion_tab2'),
             font_size='25sp',
             halign='center',
             valign='middle', 
@@ -64,9 +64,9 @@ class TablerosInstruc(Screen):
             color=(0,0,0,1),
             font_name='Texto'
         )
-        left_instructions.add_widget(instruccion2)
-        instruccion3 = Label(
-            text='Parpadear para confirmar la selección',
+        left_instructions.add_widget(self.instruccion2)
+        self.instruccion3 = Label(
+            text=self.controlador.get_string('instruccion_tab3'),
             font_size='25sp',
             halign='center',
             valign='middle', 
@@ -74,9 +74,9 @@ class TablerosInstruc(Screen):
             color=(0,0,0,1),
             font_name='Texto'
         )
-        left_instructions.add_widget(instruccion3)
-        instruccion4 = Label(
-            text='Mantener los ojos cerrados 3 segundos para modo descanso',
+        left_instructions.add_widget(self.instruccion3)
+        self.instruccion4 = Label(
+            text=self.controlador.get_string('instruccion_tab4'),
             font_size='25sp',
             halign='center',
             valign='middle', 
@@ -84,7 +84,19 @@ class TablerosInstruc(Screen):
             color=(0,0,0,1),
             font_name='Texto'
         )
-        left_instructions.add_widget(instruccion4)
+        left_instructions.add_widget(self.instruccion4)
+
+        self.instruccion5 = Label(
+            text=self.controlador.get_string('instruccion_tab5'),
+            font_size='25sp',
+            halign='center',
+            valign='middle',
+            pos_hint={'x': 0.08},
+            color=(0,0,0,1),
+            font_name='Texto'
+        )
+        left_instructions.add_widget(self.instruccion5)
+
         left_instructions.add_widget(Widget(size_hint_y=0.8))
 
         instrucciones_layout.add_widget(left_instructions)
@@ -97,8 +109,8 @@ class TablerosInstruc(Screen):
         right_instructions.add_widget(imagen1)
 
         # Botón de Comenzar
-        btn_comenzar = ButtonRnd(text='Comenzar con pictogramas', size_hint=(0.6, 0.05), pos_hint={'center_x': 0.5}, on_press=self.on_comenzar, font_name='Texto')
-        right_instructions.add_widget(btn_comenzar)
+        self.btn_comenzar = ButtonRnd(text=self.controlador.get_string('comenzar_con_pic'), size_hint=(0.6, 0.05), pos_hint={'center_x': 0.5}, on_press=self.on_comenzar, font_name='Texto')
+        right_instructions.add_widget(self.btn_comenzar)
         right_instructions.add_widget(Widget(size_hint_y=0.05))
 
         # Imagen 2
@@ -106,8 +118,8 @@ class TablerosInstruc(Screen):
         right_instructions.add_widget(imagen2)
 
         # Botón de Comenzar2
-        btn_comenzar2 = ButtonRnd(text='Comenzar sin pictogramas', size_hint=(0.6, 0.05), pos_hint={'center_x': 0.5}, on_press=self.on_comenzar2, font_name='Texto')
-        right_instructions.add_widget(btn_comenzar2)
+        self.btn_comenzar2 = ButtonRnd(text=self.controlador.get_string('comenzar_con_texto'), size_hint=(0.6, 0.05), pos_hint={'center_x': 0.5}, on_press=self.on_comenzar2, font_name='Texto')
+        right_instructions.add_widget(self.btn_comenzar2)
         right_instructions.add_widget(Widget(size_hint_y=0.1))
 
         instrucciones_layout.add_widget(right_instructions)
@@ -125,3 +137,16 @@ class TablerosInstruc(Screen):
     def on_comenzar2(self, *args):
         self.controlador.set_pictogramas(False)
         self.controlador.change_screen('tableros')
+
+    def on_pre_enter(self, *args):
+        self.actualizar_idioma()
+
+    def actualizar_idioma(self):
+        self.btn_inicio.text = self.controlador.get_string('inicio')
+        self.btn_comenzar.text = self.controlador.get_string('comenzar_con_pic')
+        self.btn_comenzar2.text = self.controlador.get_string('comenzar_con_texto')
+        self.instruccion1.text = self.controlador.get_string('instruccion_tab1')
+        self.instruccion2.text = self.controlador.get_string('instruccion_tab2')
+        self.instruccion3.text = self.controlador.get_string('instruccion_tab3')
+        self.instruccion4.text = self.controlador.get_string('instruccion_tab4')
+        self.instruccion5.text = self.controlador.get_string('instruccion_tab5')

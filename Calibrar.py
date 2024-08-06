@@ -22,10 +22,10 @@ class Calibrar(Screen):
 
         # Textos de calibración
         self.textos_calibracion = [
-            'Coloque la cámara a la altura de los ojos del usuario y a 50/60cm\n\n Debe situar el círculo dentro del punto central de la cara',
-            'Mientras el usuario mira al punto amarillo, presionar continuar',
-            'Mientras el usuario mantiene los ojos cerrados\n\n volver a presionar el botón de Continuar',
-            'Calibración completada, presionar Continuar para ir al Inicio'
+            self.controlador.get_string('mensaje_calibracion_1'),
+            self.controlador.get_string('mensaje_calibracion_2'),
+            self.controlador.get_string('mensaje_calibracion_3'),
+            self.controlador.get_string('mensaje_calibracion_4'),
         ]
 
         # Crear el contenedor principal
@@ -37,7 +37,7 @@ class Calibrar(Screen):
         self.layout.add_widget(self.menu_layout)
 
         # Botón de Continuar
-        self.btn_comenzar = ButtonRnd(text='Continuar', size_hint=(0.25, 0.05), pos_hint={'center_x': 0.5}, on_press=self.on_continuar, font_name='Texto')
+        self.btn_comenzar = ButtonRnd(text=self.controlador.get_string('continuar'), size_hint=(0.25, 0.05), pos_hint={'center_x': 0.5}, on_press=self.on_continuar, font_name='Texto')
         self.layout.add_widget(self.btn_comenzar)
         self.layout.add_widget(Widget(size_hint_y=0.1))
 
@@ -49,8 +49,8 @@ class Calibrar(Screen):
 
         # Botón de Inicio
         left_section.add_widget(Widget(size_hint_y=0.6))
-        btn_inicio = ButtonRnd(text='Inicio', size_hint=(0.4, 0.28), pos_hint={'x': 0.05}, on_press=self.on_inicio, font_name='Texto')
-        left_section.add_widget(btn_inicio)
+        self.btn_inicio = ButtonRnd(text=self.controlador.get_string('inicio'), size_hint=(0.4, 0.28), pos_hint={'x': 0.05}, on_press=self.on_inicio, font_name='Texto')
+        left_section.add_widget(self.btn_inicio)
         left_section.add_widget(Widget(size_hint_y=0.3))
 
         # Foto calibrar.png
@@ -81,8 +81,10 @@ class Calibrar(Screen):
         # Programar la actualización de la image_box
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)
 
+
     # Función para dibujar la línea divisoria del layout
     def on_enter(self, *args):
+        self.update_idioma()
         self.update_divisoria()
         # Schedule the update of the image box every 1/30 seconds
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)
@@ -116,7 +118,7 @@ class Calibrar(Screen):
 
     # Función para actualizar la vista
     def update_view(self, estado):
-        self.texto_explicativo.text = self.textos_calibracion[estado]
+        self.texto_explicativo.text = self.controlador.get_string(f'mensaje_calibracion_{estado+1}')
         self.image.source = f'./imagenes/calibrar{estado}.png'
 
         if estado == 1:
@@ -151,3 +153,8 @@ class Calibrar(Screen):
 
     def on_leave(self, *args):
         Clock.unschedule(self.update_image_box)
+
+    def update_idioma(self):
+        self.btn_comenzar.text = self.controlador.get_string('continuar')
+        self.texto_explicativo.text = self.controlador.get_string(f'mensaje_calibracion_1')
+        self.btn_inicio.text = self.controlador.get_string('inicio')

@@ -100,18 +100,18 @@ class Reentrenar(Screen):
             if self.controlador.get_reent_porcentaje() == -1:
                 if not self.lanzado:
                     self.lanzado = True
-                    CustPopup("Error en la recopilación de datos, vuelva a intentarlo", self.on_inicio, (0.5,0.5), controlador=self.controlador).open()
+                    CustPopup(self.controlador.get_string('error_recop_ree'), self.on_inicio, (0.5,0.5), controlador=self.controlador).open()
 
             # Si el porcentaje de reentrenamiento es 100, muestra el avance
             elif self.controlador.get_reent_porcentaje() < 100:
-                self.texto_explicativo.text = f"Reentrenando... {self.controlador.get_reent_porcentaje()}%"
+                self.texto_explicativo.text = self.controlador.get_string('reentrenando') + f"... {self.controlador.get_reent_porcentaje()}%"
             
             # Si el porcentaje de reentrenamiento es 100, muestra un mensaje de finalización
             else:
                 if self.controlador.get_optimizando():
-                    self.texto_explicativo.text = f"Optimizando... {self.controlador.get_progreso_opt()}%"
+                    self.texto_explicativo.text = self.controlador.get_string('optimizando') + f"... {self.controlador.get_progreso_opt()}%"
                 else:
                     if not self.lanzado:
                         self.lanzado = True
                         self.controlador.sumar_reentrenamiento()
-                        CustPopup("Reentrenamiento completado", self.on_inicio, (0.5,0.5), controlador=self.controlador).open()
+                        CustPopup(self.controlador.get_string('reentrenamiento_completado'), self.on_inicio, (0.5,0.5), controlador=self.controlador).open()

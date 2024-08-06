@@ -59,9 +59,9 @@ class EditorFrames:
         if not os.path.exists(f'./entrenamiento/datos/frames/recortados/{self.ancho}-{self.altoArriba}-{self.altoAbajo}'):
             os.makedirs(f'./entrenamiento/datos/frames/recortados/{self.ancho}-{self.altoArriba}-{self.altoAbajo}')
         
-        archivos = os.listdir('./entrenamiento/datos/frames/1')
+        archivos = os.listdir('./entrenamiento/datos/frames/total')
         for nombre_archivo in tqdm(archivos, desc="Procesando frames"):
-            frame = cv2.imread(os.path.join('./entrenamiento/datos/frames/1', nombre_archivo))
+            frame = cv2.imread(os.path.join('./entrenamiento/datos/frames/total', nombre_archivo))
             datos = self.detector.obtener_coordenadas_indices(frame)
             frame_editado = self.normalizar_frame(frame, datos[0], datos[1])
             cv2.imwrite(os.path.join(f'./entrenamiento/datos/frames/recortados/{self.ancho}-{self.altoArriba}-{self.altoAbajo}', nombre_archivo), frame_editado)

@@ -6,23 +6,23 @@ class Controlador:
         self.modelo = modelo
         self.vista = vista
 
-# FUNCION GENERAL PARA CAMBIAR ENTRE PANTALLAS
+    # FUNCIONES PARA EL MANEJO DE PANTALLAS
     def change_screen(self, screen_name):
-        self.vista.change_screen(screen_name)
+        self.vista.change_screen(screen_name)    
 
     #Condicionante para ver si esta calibrado
     def change_screen_r(self, screen_name):
         if self.modelo.calibrado:
             self.change_screen(screen_name)
         else:
-            self.mensaje('Primero debe calibrar el parpadeo')
+            self.mensaje(self.get_string('mensaje_primero_calibrar'))
 
     #Condicionante para ver si hay camara seleccionada
     def change_screen_cam(self, screen_name):
         if self.modelo.camara_activa():
             self.change_screen(screen_name)
         else:
-            self.mensaje('Primero debe seleccionar una cámara')
+            self.mensaje(self.get_string('mensaje_primero_camara'))
 
     def get_screen(self):
         return self.vista.get_screen()
@@ -34,6 +34,19 @@ class Controlador:
         return self.vista.get_fondo2()
 
 
+# FUNCION PARA EL MAJNEJO DEL IDIOMA
+    def get_string(self, nombre):
+        return self.modelo.get_string(nombre)
+    
+    def cambiar_idioma(self):
+        self.modelo.cambiar_idioma()
+        #self.vista.cambiar_idioma()
+
+    def get_idioma_string(self):
+        return self.modelo.get_idioma_string()
+    
+    def get_idioma_imagen(self):
+        return self.modelo.get_idioma_imagen()
 
 # FUNCION GENERAL PARA EL MANEJO DE MENSAJES AL USUARIO
     def mensaje(self, mensaje):
@@ -70,7 +83,8 @@ class Controlador:
         return self.modelo.get_frame()
     
     def obtener_camaras(self):
-        self.vista.inicio.camera_spinner.text = 'Cargando cámaras...'
+        self.modelo.camara_act = None
+        self.vista.inicio.camera_spinner.text = self.get_string('cargando_camara')
         threading.Thread(target=self._obtener_camaras_aux).start()
 
     def _obtener_camaras_aux(self):
@@ -79,8 +93,8 @@ class Controlador:
         Clock.schedule_once(lambda dt: self._actualizar_spinner(camaras))
 
     def _actualizar_spinner(self, camaras):
-        self.vista.inicio.camera_spinner.values = ['Cámara principal' if i == 0 else 'Cámara ' + str(i) for i in camaras] + ['Actualizar cámaras']
-        self.vista.inicio.camera_spinner.text = 'Seleccionar cámara'
+        self.vista.inicio.camera_spinner.values = [self.get_string('camara_principal') if i == 0 else self.get_string('camara') + str(i) for i in camaras] + [self.get_string('actualizar_camaras')]
+        self.vista.inicio.camera_spinner.text = self.get_string('btn_inicioDes_seleccionarCam')
 
 
     def seleccionar_camara(self, camara):
@@ -239,6 +253,9 @@ class Controlador:
 
     def obtener_tablero(self, nombre_tablero):
         return self.modelo.obtener_tablero(nombre_tablero)
+    
+    def obtener_tablero_inicial(self):
+        return self.modelo.obtener_tablero_inicial()
     
     def get_frase(self):
         return self.modelo.get_frase()

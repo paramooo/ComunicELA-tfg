@@ -9,7 +9,20 @@ import torch
 import optuna
 from torch.nn.functional import mse_loss
 from EditorFrames import EditorFrames
+from DatasetEntero import DatasetEntero
+from torch.utils.data import DataLoader
+import time
+import os
+import shutil 
+from tqdm import tqdm
+from PIL import Image
+from torchvision.transforms import ToTensor
 
+#Importamos el detector
+sys_copy = sys.path.copy()
+sys.path.append('./')
+from Detector import Detector
+sys.path = sys_copy
 
 # Funcion para cargar los datos de entrenamiento
 def cargar_datos():
@@ -61,7 +74,7 @@ def mostrar_graficas_suavizado_datos():
 
 
 #----------------------------------------------------------------------------
-# No es una buena manera de evaluar ya que los puntos que estan en el borde entre dos zonas logicamente no los va a acertar 
+# No es una buena manera de evaluar ya que los puntos que estan en el borde entre dos zonas logicamente no los va a acertar
 # bien siempre, entonces va a dar una media mas baja de la que realmente tendría, hay que evaluar con metricas como las de loss, error medio, etc.
 #----------------------------------------------------------------------------
 # Funcion para evaluar por zonas en pantalla la precision de un modelo
@@ -80,13 +93,13 @@ def evaluar_zonas(conjunto, model, hor_div, ver_div):
     for i in range(ver_div):
         for j in range(hor_div):
             # Encontrar los índices de los outputs que caen dentro de esta zona
-            indices = np.where((outputs[:, 0] >= hor_limits[j]) & (outputs[:, 0] < hor_limits[j + 1]) & 
+            indices = np.where((outputs[:, 0] >= hor_limits[j]) & (outputs[:, 0] < hor_limits[j + 1]) &
                                (outputs[:, 1] >= ver_limits[i]) & (outputs[:, 1] < ver_limits[i + 1]))
 
             # Extraer los inputs y outputs correspondientes
             zone_inputs = inputs[indices]
 
-            # Normalizar los datos al conjunto 
+            # Normalizar los datos al conjunto
             normalizar_funcion = getattr(Conjuntos, f'conjunto_{conjunto}')
             zone_input_norm = normalizar_funcion(zone_inputs)
 
@@ -94,7 +107,7 @@ def evaluar_zonas(conjunto, model, hor_div, ver_div):
             zone_predictions = model.predict(zone_input_norm)
 
             # Verificar si las predicciones caen dentro de la zona
-            correct_predictions = np.where((zone_predictions[:, 0] >= hor_limits[j]) & (zone_predictions[:, 0] < hor_limits[j + 1]) & 
+            correct_predictions = np.where((zone_predictions[:, 0] >= hor_limits[j]) & (zone_predictions[:, 0] < hor_limits[j + 1]) &
                                            (zone_predictions[:, 1] >= ver_limits[i]) & (zone_predictions[:, 1] < ver_limits[i + 1]))
 
             # Calcular el porcentaje de aciertos
@@ -172,7 +185,7 @@ def ponderar_graficas():
         polinomioY = np.poly1d(np.polyfit(Yx, Yy, 4))
 
         # Calcular el valor ponderado
-        return np.array([np.clip(polinomioX(mirada[0]),0,1), np.clip(polinomioY(mirada[1]),0,1)])      
+        return np.array([np.clip(polinomioX(mirada[0]),0,1), np.clip(polinomioY(mirada[1]),0,1)])
 
 
     # Generar valores de mirada desde 0 hasta 1
@@ -204,7 +217,7 @@ def ponderar(mirada, limiteAbajoIzq, limiteAbajoDer, limiteArribaIzq, limiteArri
             return limiteArribaIzq[0], limiteAbajoIzq[1], limiteArribaDer[0], limiteArribaIzq[1]
         elif cuadrante == 3:
             return limiteArribaIzq[0], limiteAbajoDer[1], limiteArribaDer[0], limiteArribaDer[1]
-    
+
     def ponderar_esquina(mirada, esquina_limites):
         LimiteBajoX, LimiteBajoY, LimiteAltoX, LimiteAltoY = esquina_limites
 
@@ -239,7 +252,7 @@ def ponderar(mirada, limiteAbajoIzq, limiteAbajoDer, limiteArribaIzq, limiteArri
         ponderacion_esquina = ponderar_esquina(mirada, calcular_limites_esquina(esquinas.index(esquina_limites)))
         ponderaciones.append(ponderacion_esquina)
 
-    
+
     # Calcular la distancia de la mirada a cada esquina
     distancias = [calcular_distancia(mirada, esquina) for esquina in esquinas]
 
@@ -352,6 +365,60 @@ def optimizar_ponderacion():
     print('Los mejores parámetros son:', study.best_params)
 
 
+def imprimir_estructura_modelo(model):
+    for i, layer in enumerate(model.modules()):
+        print(i, layer)
+
+
+#Comparar los modelos de texto con las bd conjuntas:
+def comparar_modelos_1_aprox(models_conjs):
+    for i, model_conj in enumerate(models_conjs):
+        model = model_conj[0]
+        conjunto = model_conj[1]
+
+        # Cargar los datos
+        DatasetText1 = DatasetEntero('./entrenamiento/datos/txts/input0.txt', './entrenamiento/datos/txts/output0.txt', 21, conjunto=conjunto, imagenes=False)
+        DatasetText2 = DatasetEntero('./entrenamiento/datos/txts/input1.txt', './entrenamiento/datos/txts/output1.txt', 21, conjunto=conjunto, imagenes=False)
+
+        #Unir los datasets
+        input = np.concatenate((DatasetText1.txt_input_data, DatasetText2.txt_input_data))
+        output = np.concatenate((DatasetText1.txt_output_data, DatasetText2.txt_output_data))
+        dataset = torch.utils.data.TensorDataset(torch.tensor(input).float(), torch.tensor(output).float())
+
+        #Crear el dataloader
+        data_loader = DataLoader(dataset, batch_size=5000, shuffle=True)
+
+        #Evaluar el modelo
+        model.eval()
+
+        error = 0
+        for inputs, outputs in data_loader:
+            outputs_m = model(inputs)
+            error += mse_loss(outputs_m, outputs)
+
+        error /= len(data_loader)
+        print(f'Error del modelo {i}: {error}')
+
+def crear_tensores_database():
+    img_dir = './entrenamiento/datos/frames/recortados/15-35-15'
+    img_dir_destino = './entrenamiento/datos/frames/byn/15-35-15'
+    imagenes = os.listdir(img_dir)
+    imagenes_ordenadas = sorted(imagenes, key=lambda x: int(x.split('_')[1].split('.')[0]))
+    list_dir_destino = os.listdir(img_dir_destino)
+
+    # Inicializamos una lista para almacenar todas las imágenes
+    images = []
+
+    for file_name in tqdm(imagenes_ordenadas):
+        if file_name.endswith('.jpg'):
+            if file_name not in list_dir_destino:
+                # Cargamos la imagen, la convertimos a escala de grises y la normalizamos
+                image = Image.open(os.path.join(img_dir, file_name)).convert('L')
+                tensor_image = ToTensor()(image) / 255
+                images.append(tensor_image)
+
+    # Guardamos todas las imágenes en un solo archivo tensor
+    torch.save(images, os.path.join(img_dir_destino, 'imagenes.pt'))
 
 
 # ----------------------------       COMPROBAR NEURONAS MUERTAS      -------------------------------------
@@ -382,10 +449,14 @@ def optimizar_ponderacion():
     # dead_neurons = check_dead_neurons(model, data_loader)
     # print(dead_neurons)
 
+# Funcion para renombrar archivos frame añadiendole al nombre original la persona a la que pertenece sabiendo los rangos de las personas
+
+
 # ---------------------------------------------------------------------------------------------------------
 
 # Haz el main
 if __name__ == '__main__':
+    pruebas_palm()
     #------------ PARA GRAFICAS DE LOS DATOS SUAVIZADOS ----------------
     #mostrar_graficas_suavizado_datos()
 
@@ -408,13 +479,39 @@ if __name__ == '__main__':
     #Para la grafica de minimo, empezar, medio, fin, maximo
     #ponderar_graficas()
 
-    #Para la grafica de las flechas de colores 
+    #Para la grafica de las flechas de colores
     #ponderar_graficas2()
 
     #Para optimizar la ponderacion hay que ajustar las cosas dentro de la funcion con el modelo a probar etc
-    optimizar_ponderacion()
+    #optimizar_ponderacion()
+
+    #------------ PARA VERIFICAR LA ESTRUCTURA DE UN MODELO GUARDADO ----------------
+    # model = torch.load('./entrenamiento/modelos/modelo_ajustado.pth')
+    # imprimir_estructura_modelo(model)
+
 
     #------------ PARA COMPROBAR NEURONAS MUERTAS ----------------
     #Lo comentado al final
+
+    #------------ PARA COMPARAR LOS MODELOS DE TEXTO ----------------
+    #model1 = torch.load('./entrenamiento/modelos/modelo_ann_1_11_inpt0.pth')
+    #model2 = torch.load('./entrenamiento/modelos/modelo_ann_1_11_inpt1.pth')
+    # model3 = torch.load('./entrenamiento/modelos/modelo_ajustado.pth')
+    # models_conjs  = [(model1, 1), (model2, 1), (model3, 2)]
+    # comparar_modelos_1_aprox(models_conjs)
+
+    #------------ PARA LIMPIAR LOS INDICES DE LA BASE DE DATOS ----------------
+    #Sirve para borrar a una persona de la base de datos cogiendo el numero de la primera foto "frame_XXXX.jpg" y el de la ultima +1
+    #Asi borramos datos que esten mal o que no queramos tener en la BD
+    #limpiar_indices_database(range(26519, 28717+1))
+
+    #------------ PARA CONCATENAR LOS DATOS DE LOS TXTS Y LOS FRAMES ----------------  
+    #renombrar_frames()
+    # concat_db()
+
+    #------------ PARA CREAR TENSORES DE LAS BASES DE DATOS ----------------
+    #crear_tensores_database()
+
+
 
     pass

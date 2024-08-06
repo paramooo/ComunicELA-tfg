@@ -40,7 +40,7 @@ class CustPopup(ModalView):
 
         if show_switch:
             checkbox_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.2))
-            checkbox_label = Label(text='No volver a mostrar el tutorial', color=(0, 0, 0, 1), font_name='Texto')
+            checkbox_label = Label(text=self.controlador.get_string('no_volver_mostrar'), color=(0, 0, 0, 1), font_name='Texto')
             self.tutorial_checkbox = CheckBox(active=False, color=(0,0,0,1))
             checkbox_layout.add_widget(Widget(size_hint_x = 1))
             checkbox_layout.add_widget(checkbox_label)
@@ -51,9 +51,9 @@ class CustPopup(ModalView):
 
         # Añade un botón para cerrar el popup
         if bt_empez:
-            button = ButtonRnd(text='Empezar', size_hint=(1, 0.3), on_release=self.on_continuar, font_name='Texto')
+            button = ButtonRnd(text=self.controlador.get_string('comenzar'), size_hint=(1, 0.3), on_release=self.on_continuar, font_name='Texto')
         else:
-            button = ButtonRnd(text='Continuar', size_hint=(1, 0.3), on_release=self.on_continuar,font_name='Texto')
+            button = ButtonRnd(text=self.controlador.get_string('continuar'), size_hint=(1, 0.3), on_release=self.on_continuar,font_name='Texto')
         layout.add_widget(button)
 
 
@@ -66,17 +66,17 @@ class CustPopup(ModalView):
             
             # Añade un botón para volver 
             if func_volver:
-                button_volver = ButtonRnd(text='Atrás', size_hint=(0.45, 1), on_release=self.on_volver, font_name='Texto')
+                button_volver = ButtonRnd(text=self.controlador.get_string('atras'), size_hint=(0.45, 1), on_release=self.on_volver, font_name='Texto')
             else:
-                button_volver = ButtonRnd(text='Atrás', size_hint=(0.45, 1), disabled=True, font_name='Texto')
+                button_volver = ButtonRnd(text=self.controlador.get_string('atras'), size_hint=(0.45, 1), disabled=True, font_name='Texto')
             layout_botones.add_widget(button_volver)
 
 
             # Añade un botón para saltar            
             if func_saltar:
-                button_siguiente = ButtonRnd(text='Saltar', size_hint=(0.45, 1), on_release=self.on_saltar, font_name='Texto')
+                button_siguiente = ButtonRnd(text=self.controlador.get_string('saltar'), size_hint=(0.45, 1), on_release=self.on_saltar, font_name='Texto')
             else:
-                button_siguiente = ButtonRnd(text='Saltar', size_hint=(0.45, 1), disabled=True, font_name='Texto')
+                button_siguiente = ButtonRnd(text=self.controlador.get_string('saltar'), size_hint=(0.45, 1), disabled=True, font_name='Texto')
             layout_botones.add_widget(button_siguiente)
 
             layout.add_widget(layout_botones)

@@ -30,8 +30,22 @@ class Inicio(Screen):
         # Alineamos horizontalmente para separar en dos
         Principal = BoxLayout(orientation='vertical', padding=20)
 
-        titulo = Label(text='ComunicELA', font_size='100sp', halign='center', color=(1, 1, 1, 1), size_hint=(1, 0.2), font_name='Titulo')
-        
+        TituloIdioma = BoxLayout(orientation='horizontal', size_hint=(1, 0.2))
+
+        titulo = Label(text='ComunicELA', font_size='100sp', halign='center', color=(1, 1, 1, 1), size_hint=(0.85, 1), font_name='Titulo')
+
+        idioma = BoxLayout(orientation='vertical', size_hint=(0.05, 1))
+
+        self.imagenIdioma = Button(
+            background_normal=self.controlador.get_idioma_imagen(),
+            background_down=self.controlador.get_idioma_imagen(),  # Mantén la imagen al hacer clic
+            background_color=(1, 1, 1, 1),  # Color de fondo transparente
+            size_hint=(1, 0.8)
+        )        
+        self.imagenIdioma.bind(on_release=self.on_idioma_click)
+
+        self.textIdioma = Label(text=self.controlador.get_idioma_string(), font_size='22sp', halign='center', valign='middle', color=(1, 1, 1, 1), size_hint=(1, 0.5), font_name='Texto')
+
         caja = BoxLayout(orientation='horizontal', size_hint=(1, 0.8))
 
         # Parte izquierda con los botones y el titulo
@@ -39,26 +53,26 @@ class Inicio(Screen):
 
         # Menu de seleccion de camara
         self.camera_spinner = CustomSpinner(
-            text='Cargando cámaras...',
+            text=self.controlador.get_string('cargando_camara'),
             values=[],
             size_hint=(0.6, 0.1),
             pos_hint={'center_x': 0.5},
             font_name='Texto', 
             font_size=self.controlador.get_font_txts())
 
-        self.btn_cal = ButtonRnd(text='Calibrar parpadeo', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen_cam('calibrar'), font_name='Texto', font_size='35sp')
+        self.btn_cal = ButtonRnd(text=self.controlador.get_string('btn_inicio_calibrar'), size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen_cam('calibrar'), font_name='Texto', font_size='35sp')
 
-        self.btn_tst = ButtonRnd(text='Test', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('test'), font_name='Texto', font_size='35sp')
+        self.btn_tst = ButtonRnd(text=self.controlador.get_string('btn_inicioDes_test'), size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('test'), font_name='Texto', font_size='35sp')
 
-        self.btn_rec = ButtonRnd(text='Recopilar', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen_r('recopilar') , font_name='Texto', font_size='35sp')
+        self.btn_rec = ButtonRnd(text=self.controlador.get_string('btn_inicioDes_reco'), size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen_r('recopilar') , font_name='Texto', font_size='35sp')
 
-        self.btn_ree = ButtonRnd(text='Reentrenar', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen_r('reentrenarinstruc'), font_name='Texto', font_size='35sp')
+        self.btn_ree = ButtonRnd(text=self.controlador.get_string('btn_inicio_reentrenar'), size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen_r('reentrenarinstruc'), font_name='Texto', font_size='35sp')
 
-        self.btn_tab = ButtonRnd(text='Tableros', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen_r('tabinstruc'), font_name='Texto', font_size='35sp')
+        self.btn_tab = ButtonRnd(text=self.controlador.get_string('btn_inicio_tableros'), size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('tabinstruc'), font_name='Texto', font_size='35sp')
 
-        self.btn_pruebas = ButtonRnd(text='Pruebas', size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen_r('tablerosprueb'), font_name='Texto', font_size='35sp')
+        self.btn_pruebas = ButtonRnd(text=self.controlador.get_string('btn_inicioDes_pruebas'), size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen_r('tablerosprueb'), font_name='Texto', font_size='35sp')
 
-        self.txt_des = Label(text='Has activado las opciones de desarrollador, pulsa "D" para desactivarlas', halign='center', size_hint=(1, 0.1), font_size='20sp')
+        self.txt_des = Label(text=self.controlador.get_string('mensaje_inicio_op_des'), halign='center', size_hint=(1, 0.1), font_size='20sp')
         
         self.camera_spinner.bind(text=self.seleccionar_camara)
         espacio_blanco2 = BoxLayout(size_hint=(1, 0.05))
@@ -82,17 +96,26 @@ class Inicio(Screen):
 
         caja.add_widget(self.Izquierda)
         caja.add_widget(Derecha)
+        idioma.add_widget(Widget(size_hint_y=0.1))
+        idioma.add_widget(self.imagenIdioma)
+        idioma.add_widget(self.textIdioma)
+        idioma.add_widget(Widget(size_hint_y=0.6))
+        TituloIdioma.add_widget(Widget(size_hint_x=0.1))
+        TituloIdioma.add_widget(titulo)
+        TituloIdioma.add_widget(idioma)
+        TituloIdioma.add_widget(Widget(size_hint_x=0.02))
 
-        Principal.add_widget(titulo)
+        Principal.add_widget(TituloIdioma)
+        
         Principal.add_widget(caja)
 
         self.add_widget(Principal)
 
         self.tutorial_buttons = [
-            (self.camera_spinner, 'Bienvenido a ComunicELA, primero debe seleccionar la cámara que desea utilizar'),
-            (self.btn_cal, 'Despues debe calibrar el parpadeo para comenzar a usar la aplicación'),
-            (self.btn_tab, 'Posteriormente ya podrá utilizar los tableros de comunicación'),
-            (self.btn_ree, 'Si no está satisfecho con el rendimiento de la aplicación, puede reentrenar el modelo para ajustarlo a sus necesidades'),
+            (self.camera_spinner, self.controlador.get_string('mensaje_tutorial_1')),
+            (self.btn_cal, self.controlador.get_string('mensaje_tutorial_2')),
+            (self.btn_tab, self.controlador.get_string('mensaje_tutorial_3')),
+            (self.btn_ree, self.controlador.get_string('mensaje_tutorial_4')),
         ]
 
 
@@ -153,14 +176,14 @@ class Inicio(Screen):
 
 
     def seleccionar_camara(self, _, text):
-        if text.startswith('Cámara '):
+        if text.startswith(self.controlador.get_string('camara')):
             camara = text.split(' ')[1]
-            if camara == 'principal':
+            if camara == self.controlador.get_string('principal'):
                 camara = 0
             self.controlador.seleccionar_camara(int(camara))
-        elif text == 'Actualizar cámaras':
+        elif text == self.controlador.get_string('actualizar_camaras'):
             self.controlador.obtener_camaras()
-        elif text == 'Seleccionar cámara' or text == 'Cargando cámaras...':
+        elif text == self.controlador.get_string('btn_inicioDes_seleccionarCam') or text == self.controlador.get_string('cargando_camara'):
             pass
         
         
@@ -181,3 +204,12 @@ class Inicio(Screen):
         Clock.unschedule(self.update_image_box)
         self._keyboard_closed()
 
+
+    def on_idioma_click(self, *args):
+        self.controlador.cambiar_idioma()
+        imagen = self.controlador.get_idioma_imagen()
+        self.imagenIdioma.background_normal = imagen
+        self.textIdioma.text = self.controlador.get_idioma_string()
+        self.btn_cal.text = self.controlador.get_string('btn_inicio_calibrar')
+        self.btn_ree.text = self.controlador.get_string('btn_inicio_reentrenar')
+        self.btn_tab.text = self.controlador.get_string('btn_inicio_tableros')

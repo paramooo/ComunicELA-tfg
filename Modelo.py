@@ -22,6 +22,10 @@ import copy
 from PIL import Image, ImageDraw, ImageFont
 from torch.nn.functional import mse_loss
 import optuna
+import pyttsx3
+import time
+import locale
+import openpyxl
 
 
 class Modelo:
@@ -29,18 +33,26 @@ class Modelo:
         # Para el sonido del click
         pygame.mixer.init()
 
+        self.engine = pyttsx3.init()
+        voices = self.engine.getProperty('voices')
+        self.engine.setProperty('voice', voices[1].id)  
         # Se inicializa el detector
         self.detector = Detector()
         self.camara = Camara()
         self.camara_act = None
         self.desarrollador = False
+        
+        # Cargar el archivo de idioma correspondiente
+        with open(f"./strings/{self.get_idioma()}.json", "r", encoding='utf-8') as f:
+            self.strings = json.load(f)
 
         # Variables para el modelo de test
-        self.conjunto = 2
-        self.modelo_org = torch.load('./anns/pytorch/modelo_ajustado.pth')
-        # self.conjunto = 1
-        # self.modelo_org = torch.load('./entrenamiento/modelos/modelo_ann_1_11_0.pth')
-        self.modelo = copy.deepcopy(self.modelo_org)
+        self.conjunto = 1
+        self.modelo_org = './entrenamiento/modelos/modelo_ann_1_11_inpt0.pth'
+        # self.conjunto = 2
+        # self.modelo_org = './entrenamiento/modelos/modelo_ajustado.pth'
+        
+        self.modelo = torch.load(self.modelo_org)
 
         # Variables de control para el tamaño de la fuente de los textos
         self.tamaño_fuente_txts = 25
@@ -90,26 +102,26 @@ class Modelo:
         self.cronometro_pruebas = 0 #Variable para el cronometro de las pruebas
         self.contador_borrar = 0
 
-        # Ponderar la mirada
-        self.limiteAbajoIzq = [0.10,0.07]
-        self.limiteAbajoDer = [0.87,0.09]
-        self.limiteArribaIzq = [0.03,0.81]
-        self.limiteArribaDer = [0.93,0.89]
-        self.Desplazamiento = [0.5,0.5]
-
-        # los del optimizador
-        # self.limiteAbajoIzq = [0.045,0.048]
-        # self.limiteAbajoDer = [0.98,0.006]
-        # self.limiteArribaIzq = [0.008,0.94]
-        # self.limiteArribaDer = [0.983,0.956]
-        # self.Desplazamiento = [0.484,0.45]
+        # Ponderar la mirada del ajustado
+        # self.limiteAbajoIzq_org = [0.10,0.07]
+        # self.limiteAbajoDer_org = [0.87,0.09]
+        # self.limiteArribaIzq_org = [0.03,0.81]
+        # self.limiteArribaDer_org = [0.93,0.89]
+        # self.Desplazamiento_org = [0.5,0.5]
 
         #SIN PONDERAR 
-        # self.limiteAbajoIzq = [0,0]
-        # self.limiteAbajoDer = [1,0]
-        # self.limiteArribaIzq = [0,1]
-        # self.limiteArribaDer = [1,1]
-        # self.Desplazamiento = [0.5,0.5]
+        self.limiteAbajoIzq_org = [0,0]
+        self.limiteAbajoDer_org = [1,0]
+        self.limiteArribaIzq_org = [0,1]
+        self.limiteArribaDer_org = [1,1]
+        self.Desplazamiento_org = [0.5,0.5]
+
+        # Variables para la ponderacion
+        self.limiteAbajoIzq = self.limiteAbajoIzq_org
+        self.limiteAbajoDer = self.limiteAbajoDer_org
+        self.limiteArribaIzq = self.limiteArribaIzq_org
+        self.limiteArribaDer = self.limiteArribaDer_org
+        self.Desplazamiento = self.Desplazamiento_org
 
         # Aplicar un umbral
         self.fondo_frame_editado = cv2.imread('./imagenes/fondo_marco_amp.png', cv2.IMREAD_GRAYSCALE)
@@ -146,7 +158,8 @@ class Modelo:
         
 
 
-
+    def get_string(self, clave):
+        return self.strings[clave]
 
     # Cargamos la configuracion del tutorial
     def get_show_tutorial(self):    
@@ -162,10 +175,41 @@ class Modelo:
         with open('config.json', 'w') as f:
             json.dump(config, f)
 
+    def cambiar_idioma(self):
+        idioma = "gal_ES" if self.get_idioma() == "es_ES" else "es_ES"
+        with open('config.json', 'r') as f:
+            config = json.load(f)
+        config["idioma"] = idioma
+        with open('config.json', 'w') as f:
+            json.dump(config, f)
+
+        #Actualizar el idioma de los strings
+        with open(f"./strings/{idioma}.json", "r", encoding='utf-8') as f:
+            self.strings = json.load(f)
+        #Actualizar el idioma de los tableros
+        self.cargar_tableros()
+        
+        
+
+    def get_idioma(self):
+        try:
+            with open('./config.json', 'r') as f:
+                config = json.load(f)
+                return config["idioma"]
+        except FileNotFoundError:
+            return "es_ES"
+        
+    def get_idioma_string(self):
+        idiomas = {
+            "es_ES": "Español",
+            "gal_ES": "Galego",
+        }
+        return idiomas.get(self.get_idioma(), "Galego")
+
+    def get_idioma_imagen(self):
+        return f'./imagenes/idiomas/{self.get_idioma()}.png'
     
     
-
-
     
 # ---------------------------   FUNCIONES DE CONTROL GENERAL    -------------------------------
 #-------------------------------------------------------------------------------------------
@@ -226,7 +270,7 @@ class Modelo:
             font = ImageFont.truetype("./kivy/FrancoisOne-Regular.ttf", 30)
 
             # Calcular el ancho del texto
-            text = "Selecciona una cámara"
+            text = self.get_string('mensaje_frame_editado')
             
             # Dibujar el texto en la imagen
             draw = ImageDraw.Draw(frame_pil)
@@ -322,7 +366,7 @@ class Modelo:
 
         #Si no se detecta cara, None
         if datos is None:
-            self.mensaje('Calibración fallida, asegúrate de que el usuario está centrado y bien iluminado')
+            self.mensaje(self.get_string("mensaje_calibracion_fallida"))
             return None
     
         # Se desempaquetan los datos
@@ -444,10 +488,6 @@ class Modelo:
 
     def guardar_final(self, fichero):
         def guardar_aux(fichero):
-            # Si no existe la carpeta txts, se crea
-            os.makedirs('txts', exist_ok=True)
-            os.makedirs(f'frames/{fichero}', exist_ok=True)
-
             # Determinar el número de líneas existentes en el archivo
             with open(f'./entrenamiento/datos/txts/input{fichero}.txt', 'r') as f:
                 num_lineas = sum(1 for _ in f)+1
@@ -473,6 +513,8 @@ class Modelo:
             self.input = []
             self.output = []
             self.input_frames = []
+
+            print('Datos guardados correctamente')
         self.tarea_hilo(lambda: guardar_aux(fichero))
 
     
@@ -490,13 +532,13 @@ class Modelo:
     def obtener_datos(self):
         frame = self.get_frame()
         if frame is None:
-            self.mensaje("Error de la camara")
+            self.mensaje(self.get_string("mensaje_error_camara"))
             return None
         datos = self.detector.obtener_coordenadas_indices(frame)
         
         #Si no se detecta cara, se devuelve None
         if datos is None:
-            self.mensaje("No se detecta ninguna cara")
+            self.mensaje(self.get_string("mensaje_no_cara"))
             return None
         
         # Se desempaquetan los datos
@@ -702,17 +744,40 @@ class Modelo:
 #--------------------------------FUNCIONES PARA LOS TABLEROS--------------------------------
 #-------------------------------------------------------------------------------------------
 
+    # def cargar_tableros(self):
+    #     idioma = self.get_idioma()
+    #     filename = f'./tableros/{idioma}.xlsx'
+    #     if os.path.isfile(filename):
+    #         xls = pd.ExcelFile(filename)
+    #         for sheet_name in xls.sheet_names:
+    #             df = pd.read_excel(xls, sheet_name=sheet_name, header=None)
+    #             palabras = df.values.tolist()  # Convierte el DataFrame a una lista de listas
+    #             self.tableros[sheet_name] = palabras  # Añade el tablero al diccionario
+
     def cargar_tableros(self):
-        filename = './tableros/tableros.xlsx'  # Nombre del archivo de Excel
+        idioma = self.get_idioma()
+        filename = f'./tableros/tableros_{idioma}.xlsx'
         if os.path.isfile(filename):
-            xls = pd.ExcelFile(filename)
-            for sheet_name in xls.sheet_names:
-                df = pd.read_excel(xls, sheet_name=sheet_name, header=None)
-                palabras = df.values.tolist()  # Convierte el DataFrame a una lista de listas
-                self.tableros[sheet_name] = palabras  # Añade el tablero al diccionario
+            wb = openpyxl.load_workbook(filename)
+            for sheet_name in wb.sheetnames:
+                ws = wb[sheet_name]
+                palabras_con_imagenes = []
+                for row in ws.iter_rows():
+                    fila = []
+                    for i in range(0, len(row), 2):
+                        imagen_celda = row[i]
+                        palabra_celda = row[i + 1]
+                        fila.append((imagen_celda.value, palabra_celda.value))
+                    palabras_con_imagenes.append(fila)
+                self.tableros[sheet_name] = palabras_con_imagenes
+
 
     def obtener_tablero(self, nombre):
         return self.tableros.get(nombre.lower())
+    
+    def obtener_tablero_inicial(self):
+        # Se coge el tablero con indice 0 
+        return list(self.tableros.keys())[0]
     
     def get_frase(self):
         return self.frase
@@ -729,6 +794,11 @@ class Modelo:
         self.contador_borrar += numero_palabras
         self.frase = ''
 
+    def get_frase_bien(self):
+        frase = self.frase.lower()
+        #LLamada a api de GEMINI / LLAMA 
+        pass
+
 
     def reproducir_texto(self):
         #Empezar un hulo separado:
@@ -742,7 +812,7 @@ class Modelo:
                 pygame.mixer.music.play()
 
             except:
-                print("Error al reproducir el texto")
+                self.mensaje(self.get_string("mensaje_error_reproduccion")) 
                 pass
 
         #Se crea un hilo para reproducir el texto
@@ -876,10 +946,10 @@ class Modelo:
 
     def descartar_reentrenamientos(self):
         if self.numero_entrenamientos == 0:
-            self.mensaje('No hay reentrenamientos que descartar')
+            self.mensaje(self.get_string("mensaje_no_reentrenamientos"))
             return
-        self.modelo = self.modelo_org
-        self.mensaje(f'Se han descartado {self.numero_entrenamientos} reentrenamientos')
+        self.modelo = torch.load(self.modelo_org)
+        self.mensaje(self.get_string("mensaje_descartados"))
         self.numero_entrenamientos = 0
 
         # Limpiamos los datos de reentrenamiento
@@ -887,11 +957,11 @@ class Modelo:
         self.output = []
 
         # Reajustamos las esquinas a su valor orignial
-        self.limiteAbajoIzq = [0,0]
-        self.limiteAbajoDer = [1,0]
-        self.limiteArribaIzq = [0,1]
-        self.limiteArribaDer = [1,1]
-        self.Desplazamiento = [0.5,0.5]
+        self.limiteAbajoIzq = self.limiteAbajoIzq_org
+        self.limiteAbajoDer = self.limiteAbajoDer_org
+        self.limiteArribaIzq = self.limiteArribaIzq_org
+        self.limiteArribaDer = self.limiteArribaDer_org
+        self.Desplazamiento = self.Desplazamiento_org
 
 
     def optimizar_esquinas(self):

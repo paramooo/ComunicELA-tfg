@@ -15,15 +15,16 @@ from kivy.uix.widget import Widget
 from kivy.graphics import Rectangle
 
 class PantallaBloqueada(BoxLayout):
-    def __init__(self, **kwargs):
+    def __init__(self, controlador, **kwargs):
         super(PantallaBloqueada, self).__init__(**kwargs)
+        self.controlador = controlador
         self.orientation = 'vertical'
         self.size_hint = (1, 1)
         with self.canvas.before:
             Color(0, 0, 0, 0.85)  # color negro con alpha a 0.7
             self.rect = Rectangle(size=self.size, pos=self.pos)
         self.bind(size=self._update_rect, pos=self._update_rect)
-        self.add_widget(Label(text='Mantenga los ojos cerrados 3 segundos para desbloquear', color=(1, 1, 1, 1)))
+        self.add_widget(Label(text=self.controlador.get_string("mensaje_descanso"), color=(1, 1, 1, 1)))
 
     def _update_rect(self, instance, value):
         self.rect.pos = instance.pos
@@ -46,9 +47,9 @@ class Tableros(Screen):
         
         # Tablero
         if self.controlador.get_pictogramas():
-            self.tablero = TableroPicto(self.controlador.obtener_tablero('inicial'), self.controlador, size_hint=(1, 0.8))
+            self.tablero = TableroPicto(self.controlador.obtener_tablero(self.controlador.obtener_tablero_inicial()), self.controlador, size_hint=(1, 0.8))
         else:
-            self.tablero = Tablero(self.controlador.obtener_tablero('inicial'), self.controlador, size_hint=(1, 0.8))
+            self.tablero = Tablero(self.controlador.obtener_tablero(self.controlador.obtener_tablero_inicial()), self.controlador, size_hint=(1, 0.8))
 
         self.layout_principal.add_widget(self.tablero)
 
@@ -64,7 +65,7 @@ class Tableros(Screen):
         self.layout_principal.add_widget(self.layout_vertical)
 
         # El boton de inicio
-        self.btn_inicio = ButtonRnd(text='Inicio', size_hint=(.12, 1), on_press= self.on_inicio, font_name='Texto')
+        self.btn_inicio = ButtonRnd(text=self.controlador.get_string("inicio"), size_hint=(.12, 1), on_press= self.on_inicio, font_name='Texto')
         layout_botones.add_widget(self.btn_inicio)
 
         # Espacio para texto
@@ -86,19 +87,19 @@ class Tableros(Screen):
 
 
         # El boton para borrar una palabra
-        self.btn_borrar_palabra = ButtonRnd(text='Borrar', size_hint=(.12, 1), on_press=self.on_borrar_palabra, font_name='Texto')
+        self.btn_borrar_palabra = ButtonRnd(text=self.controlador.get_string("borrar"), size_hint=(.12, 1), on_press=self.on_borrar_palabra, font_name='Texto')
         layout_botones.add_widget(self.btn_borrar_palabra)
 
         # El boton para borrar todo el texto
-        self.btn_borrar_todo = ButtonRnd(text='Borrar todo', size_hint=(.12, 1), on_press=self.on_borrar_todo, font_name='Texto')
+        self.btn_borrar_todo = ButtonRnd(text=self.controlador.get_string("borrar_todo"), size_hint=(.12, 1), on_press=self.on_borrar_todo, font_name='Texto')
         layout_botones.add_widget(self.btn_borrar_todo)
 
         # El boton para reproducir el texto
-        self.btn_reproducir = ButtonRnd(text='Reproducir', size_hint=(.12, 1), on_press=self.on_reproducir, font_name='Texto')
+        self.btn_reproducir = ButtonRnd(text=self.controlador.get_string("reproducir"), size_hint=(.12, 1), on_press=self.on_reproducir, font_name='Texto')
         layout_botones.add_widget(self.btn_reproducir)
 
         # El boton de alarma
-        self.btn_alarma = ButtonRnd(text='Alarma', size_hint=(.12, 1), on_press=self.on_alarma, font_name='Texto')
+        self.btn_alarma = ButtonRnd(text=self.controlador.get_string("alarma"), size_hint=(.12, 1), on_press=self.on_alarma, font_name='Texto')
         layout_botones.add_widget(self.btn_alarma)
 
         # Variables para emular el movimiento y clic
@@ -172,59 +173,58 @@ class Tableros(Screen):
             self.canvas.remove(dibujo)
 
         self.dibujos_mirada = []
+        if self.controlador.get_camara_seleccionada() is not None:
+            if self.controlador.get_escanear() and self.controlador.get_screen() == 'tableros':
 
-        if self.controlador.get_escanear() and self.controlador.get_screen() == 'tableros':
+                # Obtiene la posición de la mirada y el ear
+                datos = self.controlador.obtener_posicion_mirada_ear()
 
-            # Obtiene la posición de la mirada y el ear
-            datos = self.controlador.obtener_posicion_mirada_ear()
+                # Si no se detecta cara, no hacer nada
+                if datos is None:
+                    return
+                
+                # Desempaqueta los datos
+                pos, click = datos
+                pos = pos.flatten()
+                x, y = pos
 
-            # Si no se detecta cara, no hacer nada
-            if datos is None:
-                return
-            
-            # Desempaqueta los datos
-            pos, click = datos
-            pos = pos.flatten()
-            x, y = pos
+                # Emula el movimiento y clic
+                if self.controlador.get_bloqueado():
+                    if not hasattr(self, 'pantalla_bloqueada'):
+                        self.pantalla_bloqueada = PantallaBloqueada(controlador=self.controlador)
+                        self.add_widget(self.pantalla_bloqueada)
+                else:
+                    if hasattr(self, 'pantalla_bloqueada'):
+                        self.remove_widget(self.pantalla_bloqueada)
+                        del self.pantalla_bloqueada
 
-            # Emula el movimiento y clic
-            if self.controlador.get_bloqueado():
-                if not hasattr(self, 'pantalla_bloqueada'):
-                    self.pantalla_bloqueada = PantallaBloqueada()
-                    self.add_widget(self.pantalla_bloqueada)
-            else:
-                if hasattr(self, 'pantalla_bloqueada'):
-                    self.remove_widget(self.pantalla_bloqueada)
-                    del self.pantalla_bloqueada
+                    # Emula el movimiento con las casillas 
+                    self.emular_movimiento_y_clic(x,y, click)
 
-                # Emula el movimiento con las casillas 
-                self.emular_movimiento_y_clic(x,y, click)
+                    # Normaliza las coordenadas
+                    x, y = pos*self.size
 
-                # Normaliza las coordenadas
-                x, y = pos*self.size
+                    # Dibuja el cursor
+                    tamaño_cruz = 20
+                    with self.canvas:
+                        Color(1, 1, 1)
+                        cruz1 = Line(points=[x - tamaño_cruz, y, x + tamaño_cruz, y], width=1)
+                        cruz2 = Line(points=[x, y - tamaño_cruz, x, y + tamaño_cruz], width=1)
+                        
+                        # Normaliza contador_frames entre 0 y tamaño_cruz
+                        radio_circulo = (self.contador_frames / self.frames_bloqueo) * tamaño_cruz
 
-                # Dibuja el cursor
-                tamaño_cruz = 20
-                with self.canvas:
-                    Color(1, 1, 1)
-                    cruz1 = Line(points=[x - tamaño_cruz, y, x + tamaño_cruz, y], width=1)
-                    cruz2 = Line(points=[x, y - tamaño_cruz, x, y + tamaño_cruz], width=1)
-                    
-                    # Normaliza contador_frames entre 0 y tamaño_cruz
-                    radio_circulo = (self.contador_frames / self.frames_bloqueo) * tamaño_cruz
+                        # Pinta un círculo con radio variable
+                        circulo = Line(circle=(x, y, radio_circulo), width=2)
 
-                    # Pinta un círculo con radio variable
-                    circulo = Line(circle=(x, y, radio_circulo), width=2)
-
-                # Añade los dibujos a la lista para eliminarlos en la próxima actualización
-                self.dibujos_mirada.extend([cruz1, cruz2, circulo])
+                    # Añade los dibujos a la lista para eliminarlos en la próxima actualización
+                    self.dibujos_mirada.extend([cruz1, cruz2, circulo])
 
 
 
 
 
     def emular_movimiento_y_clic(self, x, y, click):        
-        #Si la y es mayor que 0.2, casillas:
         if y > 0.15:
             casilla_ancho = 1 / self.tablero.cols
             casilla_alto = 0.8 / self.tablero.rows  # Quita el 0.2 inferior

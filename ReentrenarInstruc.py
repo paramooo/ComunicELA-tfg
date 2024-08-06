@@ -23,15 +23,15 @@ class ReentrenarInstruc(Screen):
 
         # Título de Instrucciones
         titulo_layout = BoxLayout(orientation='vertical', size_hint=(1, 0.1))
-        titulo = Label(
-            text='INSTRUCCIONES', 
+        self.titulo = Label(
+            text=self.controlador.get_string('instrucciones'), 
             font_size='50sp', 
             font_name='Texto',  # Usar tu fuente personalizada
             halign='center', 
             color=(1, 1, 1, 1),
             size_hint=(1, 1)
         )
-        titulo_layout.add_widget(titulo)
+        titulo_layout.add_widget(self.titulo)
         self.layout.add_widget(titulo_layout)
 
         # Layout para las instrucciones
@@ -42,13 +42,13 @@ class ReentrenarInstruc(Screen):
         left_instructions = BoxLayout(orientation='vertical', size_hint=(0.6, 1))
 
         # Botón de Inicio
-        btn_inicio = ButtonRnd(text='Inicio', size_hint=(0.3, 0.4), pos_hint={'x': 0.13}, on_press=self.on_inicio, font_name='Texto')
-        left_instructions.add_widget(btn_inicio)
+        self.btn_inicio = ButtonRnd(text=self.controlador.get_string('inicio'), size_hint=(0.3, 0.4), pos_hint={'x': 0.13}, on_press=self.on_inicio, font_name='Texto')
+        left_instructions.add_widget(self.btn_inicio)
         instrucciones_layout.add_widget(left_instructions)
 
         #Instrucciones
-        instruccion1 = Label(
-            text='El reentrenamiento personaliza el software al usuario actual',
+        self.instruccion1 = Label(
+            text=self.controlador.get_string('instruccion_re1'),
             font_size='24sp',
             halign='center',
             valign='middle',
@@ -56,9 +56,9 @@ class ReentrenarInstruc(Screen):
             color=(0,0,0,1),
             font_name='Texto'
         )
-        left_instructions.add_widget(instruccion1)
-        instruccion2 = Label(
-            text='El usuario debe seguir el punto rojo con la mirada hasta completar el proceso',
+        left_instructions.add_widget(self.instruccion1)
+        self.instruccion2 = Label(
+            text=self.controlador.get_string('instruccion_re2'),
             font_size='24sp',
             halign='center',
             valign='middle', 
@@ -66,10 +66,10 @@ class ReentrenarInstruc(Screen):
             color=(0,0,0,1),
             font_name='Texto'
         )
-        left_instructions.add_widget(instruccion2)
+        left_instructions.add_widget(self.instruccion2)
 
-        instruccion3 = Label(
-            text='Si cambia el usuario, se debe descartar el reentrenamiento previo',
+        self.instruccion3 = Label(
+            text=self.controlador.get_string('instruccion_re3'),
             font_size='24sp',
             halign='center',
             valign='middle', 
@@ -77,11 +77,11 @@ class ReentrenarInstruc(Screen):
             color=(0,0,0,1),
             font_name='Texto'
         )
-        left_instructions.add_widget(instruccion3)
+        left_instructions.add_widget(self.instruccion3)
 
         #ESTO ES PORQUE SE AJUSTA DEMASIADO LA RED AL USUARIO DEBO REVISAR COMO HACER LOS REENTRENOS
-        instruccion4 = Label(
-            text='Más de un reentreno solo está recomendado para usuarios con movilidad limitada',
+        self.instruccion4 = Label(
+            text=self.controlador.get_string('instruccion_re4'),
             font_size='24sp',
             halign='center',
             valign='middle', 
@@ -89,10 +89,10 @@ class ReentrenarInstruc(Screen):
             color=(0,0,0,1),
             font_name='Texto'
         )
-        left_instructions.add_widget(instruccion4)
+        left_instructions.add_widget(self.instruccion4)
 
-        instruccion5 = Label(
-            text='Si nota una pérdida de precisión, se recomienda descartar el reentrenamiento',
+        self.instruccion5 = Label(
+            text=self.controlador.get_string('instruccion_re5'),
             font_size='24sp',
             halign='center',
             valign='middle', 
@@ -100,10 +100,10 @@ class ReentrenarInstruc(Screen):
             color=(0,0,0,1),
             font_name='Texto'
         )
-        left_instructions.add_widget(instruccion5)
+        left_instructions.add_widget(self.instruccion5)
 
         # Botón de Descartar Reentrenamiento
-        self.btn_descartar = ButtonRnd(text=f'Descartar reentrenamientos ({self.controlador.get_numero_entrenamientos()})', size_hint=(0.4, 0.3), pos_hint={'center_x': 0.6}, on_press=self.on_descartar, font_name='Texto')
+        self.btn_descartar = ButtonRnd(text=self.controlador.get_string('descartar_ree'), size_hint=(0.4, 0.3), pos_hint={'center_x': 0.6}, on_press=self.on_descartar, font_name='Texto')
         left_instructions.add_widget(self.btn_descartar)
 
         left_instructions.add_widget(Widget(size_hint_y=0.8))
@@ -117,19 +117,19 @@ class ReentrenarInstruc(Screen):
         right_buttons.add_widget(imagen1)
 
         # Botón de Reentrenar
-        btn_reentrenar = ButtonRnd(text='Reentrenar', size_hint=(0.6, 0.1), pos_hint={'center_x': 0.5}, on_press=self.on_reentrenar, font_name='Texto')
-        right_buttons.add_widget(btn_reentrenar)
+        self.btn_reentrenar = ButtonRnd(text=self.controlador.get_string('reentrenar'), size_hint=(0.6, 0.1), pos_hint={'center_x': 0.5}, on_press=self.on_reentrenar, font_name='Texto')
+        right_buttons.add_widget(self.btn_reentrenar)
         right_buttons.add_widget(Widget(size_hint_y=0.25))
 
         instrucciones_layout.add_widget(right_buttons)
 
     def on_enter(self, *args):
-        self.btn_descartar.text=f'Descartar reentrenamientos ({self.controlador.get_numero_entrenamientos()})'
+        self.btn_descartar.text=self.controlador.get_string('descartar_ree')
+        self.update_idioma()
 
     # Función para el botón de Descartar
     def on_descartar(self, *args):
         self.controlador.descartar_reentrenamientos()
-        self.btn_descartar.text=f'Descartar reentrenamientos ({self.controlador.get_numero_entrenamientos()})'
 
     # Función para el botón de Reentrenar
     def on_reentrenar(self, *args):
@@ -138,3 +138,14 @@ class ReentrenarInstruc(Screen):
     # Función para el botón de Inicio
     def on_inicio(self, *args):
         self.controlador.change_screen('inicio')
+
+    def update_idioma(self):
+        self.btn_descartar.text = self.controlador.get_string('descartar_ree')
+        self.btn_reentrenar.text = self.controlador.get_string('reentrenar')
+        self.btn_inicio.text = self.controlador.get_string('inicio')
+        self.instruccion1.text = self.controlador.get_string('instruccion_re1')
+        self.instruccion2.text = self.controlador.get_string('instruccion_re2')
+        self.instruccion3.text = self.controlador.get_string('instruccion_re3')
+        self.instruccion4.text = self.controlador.get_string('instruccion_re4')
+        self.instruccion5.text = self.controlador.get_string('instruccion_re5')
+        self.titulo.text = self.controlador.get_string('instrucciones')

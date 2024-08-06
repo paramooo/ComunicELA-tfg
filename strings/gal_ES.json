@@ -1,0 +1,87 @@
+{   "_comment1": " ----------- PANTALLA DE INICIO ----------- ",
+    "btn_inicio_calibrar" : "Calibrar parpadeo",
+    "btn_inicio_reentrenar": "Reentrenar",
+    "btn_inicio_tableros": "Taboleiros",
+    "btn_inicioDes_test": "Test",
+    "btn_inicioDes_reco": "Recompilar",
+    "btn_inicioDes_pruebas": "Probas",
+    "btn_inicioDes_seleccionarCam": "Seleccionar cámara",
+    "mensaje_inicio_op_des": "Activou as opcións de desenvolvemento, pulse \"D\" para desactivalas",
+    "mensaje_frame_editado": "Seleccione unha cámara",
+    "cargando_camara": "Cargando cámaras...",
+    "camara" : "Cámara ",
+    "principal" : "principal",
+    "camara_principal" : "Cámara principal",
+    "actualizar_camaras": "Actualizar cámaras",
+    "inicio": "Inicio",
+
+    "_comment2": " ----------- MENSAJES AL USUARIO ----------- ",
+    "mensaje_calibracion_fallida": "Calibración errada, asegúrese de que o usuario está centrado e ben iluminado",
+    "mensaje_error_camara": "Erro da cámara, asegúrese de que está conectada e ben configurada",
+    "mensaje_no_cara": "Non se detecta ningunha cara",
+    "mensaje_no_reentrenamientos": "Non hai reentrenamientos que descartar",
+    "mensaje_descartados": "Descartáronse os reentrenamientos",
+    "mensaje_primero_calibrar": "Primeiro debe calibrar o parpadeo",
+    "mensaje_primero_camara": "Primeiro debe seleccionar unha cámara",
+    "mensaje_error_reproduccion": "Erro ao reproducir o texto",
+
+    "_comment3": " ----------- MENSAJES DEL TUTORIAL ----------- ",
+    "mensaje_tutorial_1": "Benvido a ComunicELA, primeiro deberá seleccionar unha cámara",
+    "mensaje_tutorial_2": "Despois debe calibrar o parpadeo para comenzar a usar a aplicación",
+    "mensaje_tutorial_3": "Posteriormente xa podrá utilizar os taboleiros de comunicación",
+    "mensaje_tutorial_4": "Se non está satisfeito co rendimiento da aplicación, pode reentrenar o modelo para axustalo ás súas necesidades",
+    "no_volver_mostrar": "No volver a mostrar",
+
+
+    "_comment4": " ----------- PANTALLA CALIBRAR ----------- ",
+    "mensaje_calibracion_1": "Coloque a cámara á altura dos ollos do usuario e a 50/60cm\n\n Debe situar o círculo dentro do punto central da cara",
+    "mensaje_calibracion_2": "Mentres o usuario mira ao punto amarelo, presione continuar",
+    "mensaje_calibracion_3": "Mentres o usuario manten os ollos pechados\n\n volva a presionar o botón de Continuar",
+    "mensaje_calibracion_4": "Calibración completada, pulse Continuar para volver ao menú principal",
+    "continuar": "Continuar",
+
+    "_comment5": " ----------- PANTALLA REENTRENAR INSTRUCCIONES ----------- ",
+    "instrucciones": "INSTRUCCIONES",
+    "instruccion_re1": "O reentrenamiento personaliza o software ao usuario actual",
+    "instruccion_re2": "O usuario debe seguir o punto vermello coa mirada ata completar o proceso",
+    "instruccion_re3": "Se cambia o usuario, débese descartar o reentrenamiento previo",
+    "instruccion_re4": "Máis dun reentreno pode sobreaxustar o modelo, e non mellorar o rendemento",
+    "instruccion_re5": "Se nota unha perda de precisión, recoméndase descartar o reentrenamiento",
+    "descartar_ree" : "Descartar reentrenamientos",
+    "reentrenar": "Reentrenar",
+
+    "_comment6": " ----------- PANTALLA REENTRENAR ----------- ",
+    "reentrenamiento_completado": "Reentrenamiento completado",
+    "error_recop_ree": "Erro ao recompilar datos para o reentrenamiento, volva tentalo",
+    "reentrenando": "Reentrenando...",
+    "optimizando": "Optimizando...",
+
+
+    "_comment7": " ----------- PANTALLA TABLEROS INSTRUCCIONES ----------- ",
+    "instruccion_tab1":"O cursor moverase onde dirixa a súa mirada",
+    "instruccion_tab2":"Manteña o cursor sobre unha casa para bloqueala",
+    "instruccion_tab3":"Unha vez bloqueada, parpadee para confirmar",
+    "instruccion_tab4":"Toque o cadro de texto para reproducilo",
+    "instruccion_tab5":"Active o modo descanso pechando os ollos 3 segundos",
+    "comenzar_con_pic": "Comezar con pictogramas",
+    "comenzar_con_texto": "Comezar con texto",
+
+
+    "_comment100": " ----------- PopUp ----------- ",
+    "comenzar": "Comezar",
+    "atras": "Atrás",
+    "saltar": "Saltar", 
+
+    "_comment8": " ----------- PANTALLA TABLEROS ----------- ",
+    "borrar": "Borrar",
+    "borrar_todo": "Borrar todo",
+    "reproducir": "Reproducir",
+    "alarma": "Alarma",
+    "mensaje_descanso": "Modo descanso, manteña os ollos pechados 3 segundos para desbloquear"
+
+
+
+
+
+
+}   

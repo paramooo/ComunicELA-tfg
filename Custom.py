@@ -64,6 +64,23 @@ class CustomSpinner(HoverBehavior, Spinner):
 class CasillaTablero(Button):
     pass
 
+# class CasillaTableroPicto(ButtonBehavior, BoxLayout):
+#     source = StringProperty('')
+#     text = StringProperty('')
+
+#     def __init__(self, **kwargs):
+#         super(CasillaTableroPicto, self).__init__(**kwargs)
+#         self.orientation = 'vertical'
+#         self.label = Label(text = self.text, size_hint_y=None, height=40, halign='center', valign='middle', font_name='Texto', font_size=32, color=(0, 0, 0, 1))
+#         #Comprobar la existencia de la imagen
+#         if not os.path.isfile(self.source):
+#             self.source = './tableros/pictogramas/NOFOTO.png'
+
+#         self.image = AsyncImage(source=self.source, allow_stretch=False, keep_ratio=True)
+#         self.add_widget(self.image)
+#         self.add_widget(Widget(size_hint_y=0.2))
+#         self.add_widget(self.label)
+#         self.add_widget(Widget(size_hint_y=0.03))
 class CasillaTableroPicto(ButtonBehavior, BoxLayout):
     source = StringProperty('')
     text = StringProperty('')
