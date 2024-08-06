@@ -31,7 +31,7 @@ import google.generativeai as genai
 class Modelo:
     def __init__(self):
         # Para el sonido del click
-        pygame.mixer.init()
+        pygame.mixer.init(buffer=4096)
 
         # Se inicializa el detector
         self.detector = Detector()
@@ -40,9 +40,11 @@ class Modelo:
         self.desarrollador = False
 
         # Iniciacion de gemini
-        GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-        genai.configure(api_key=GOOGLE_API_KEY)
-        self.model_gemini = genai.GenerativeModel('gemini-1.5-flash')
+        api_key = os.getenv('GOOGLE_API_KEY')
+        self.modelo_gemini = None
+        if api_key is not None:
+            genai.configure(api_key=api_key)
+            self.modelo_gemini = genai.GenerativeModel('gemini-1.5-flash')
         
         # Cargar el archivo de idioma correspondiente
         with open(f"./strings/{self.get_idioma()}.json", "r", encoding='utf-8') as f:
@@ -798,19 +800,21 @@ class Modelo:
 
     def get_frase_bien(self):
         frase = self.frase.lower()
-        #LLamada a api de gemini  
-        prompt = "Recibo una frase con palabras en infinitivo y el idioma en el que está escrita(Español o gallego). Tu tarea es transformar la frase para que las palabras estén en la forma correcta y coherente entre sí siendo coherente con el idioma. Devuelve SOLAMENTE la frase corregida.\nEjemplo:\nEntrada: YO QUERER COMER CARNE\nRespuesta: Yo quiero comer carne\n\nFrase: " + frase + "\nIdioma: " + self.get_idioma()
-        response = self.model_gemini.generate_content(prompt)
-        return response.text
+        if self.modelo_gemini is not None:
+            prompt = "Recibo una frase con palabras en infinitivo y el idioma en el que está escrita(Español o gallego). Tu tarea es transformar la frase para que las palabras estén en la forma correcta y coherente entre sí siendo coherente con el idioma. Devuelve SOLAMENTE la frase corregida.\nEjemplo:\nEntrada: YO QUERER COMER CARNE\nRespuesta: Yo quiero comer carne\n\nFrase: " + frase + "\nIdioma: " + self.get_idioma()
+            try:
+                frase = self.modelo_gemini.generate_content(prompt).text
+            except:
+                pass
+        return frase
         
 
     def reproducir_texto(self):
         #Empezar un hulo separado:
         def reproducir_texto_hilo():
             try:
-                print("Corrigiendo frase")
-                tts = gTTS(text=self.get_frase_bien(), lang='es')    
-                print("Reproduciendo frase")
+                frase = self.get_frase_bien()
+                tts = gTTS(text=frase, lang='es')    
                 fp = BytesIO()
                 tts.write_to_fp(fp)
                 fp.seek(0)

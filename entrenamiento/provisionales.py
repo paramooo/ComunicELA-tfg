@@ -456,7 +456,6 @@ def crear_tensores_database():
 
 # Haz el main
 if __name__ == '__main__':
-    pruebas_palm()
     #------------ PARA GRAFICAS DE LOS DATOS SUAVIZADOS ----------------
     #mostrar_graficas_suavizado_datos()
 
