@@ -26,21 +26,23 @@ import pyttsx3
 import time
 import locale
 import openpyxl
-
+import google.generativeai as genai
 
 class Modelo:
     def __init__(self):
         # Para el sonido del click
         pygame.mixer.init()
 
-        self.engine = pyttsx3.init()
-        voices = self.engine.getProperty('voices')
-        self.engine.setProperty('voice', voices[1].id)  
         # Se inicializa el detector
         self.detector = Detector()
         self.camara = Camara()
         self.camara_act = None
         self.desarrollador = False
+
+        # Iniciacion de gemini
+        GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+        genai.configure(api_key=GOOGLE_API_KEY)
+        self.model_gemini = genai.GenerativeModel('gemini-1.5-flash')
         
         # Cargar el archivo de idioma correspondiente
         with open(f"./strings/{self.get_idioma()}.json", "r", encoding='utf-8') as f:
@@ -796,15 +798,19 @@ class Modelo:
 
     def get_frase_bien(self):
         frase = self.frase.lower()
-        #LLamada a api de GEMINI / LLAMA 
-        pass
-
+        #LLamada a api de gemini  
+        prompt = "Recibo una frase con palabras en infinitivo y el idioma en el que está escrita(Español o gallego). Tu tarea es transformar la frase para que las palabras estén en la forma correcta y coherente entre sí siendo coherente con el idioma. Devuelve SOLAMENTE la frase corregida.\nEjemplo:\nEntrada: YO QUERER COMER CARNE\nRespuesta: Yo quiero comer carne\n\nFrase: " + frase + "\nIdioma: " + self.get_idioma()
+        response = self.model_gemini.generate_content(prompt)
+        return response.text
+        
 
     def reproducir_texto(self):
         #Empezar un hulo separado:
         def reproducir_texto_hilo():
             try:
-                tts = gTTS(text=self.frase.lower(), lang='es')    
+                print("Corrigiendo frase")
+                tts = gTTS(text=self.get_frase_bien(), lang='es')    
+                print("Reproduciendo frase")
                 fp = BytesIO()
                 tts.write_to_fp(fp)
                 fp.seek(0)
@@ -812,7 +818,6 @@ class Modelo:
                 pygame.mixer.music.play()
 
             except:
-                self.mensaje(self.get_string("mensaje_error_reproduccion")) 
                 pass
 
         #Se crea un hilo para reproducir el texto
