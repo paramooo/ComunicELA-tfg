@@ -17,12 +17,16 @@ import shutil
 from tqdm import tqdm
 from PIL import Image
 from torchvision.transforms import ToTensor
-
+import inspect
 #Importamos el detector
 sys_copy = sys.path.copy()
 sys.path.append('./')
 from Detector import Detector
 sys.path = sys_copy
+
+# Distancia euclídea
+def euclidean_loss(y_true, y_pred):
+    return torch.sqrt(torch.sum((y_pred - y_true) ** 2, dim=-1)).mean()
 
 # Funcion para cargar los datos de entrenamiento
 def cargar_datos():
@@ -310,32 +314,24 @@ def ponderar_graficas2():
 
 
 
-def optimizar_ponderacion():
+def optimizar_ponderacion(modelo, dataset, ann):
     # Cargar el modelo y los datos
-    model = torch.load('./entrenamiento/modelos/modelo_ann_1_11.pth')
-    input, output = cargar_datos()
-    input = Conjuntos.conjunto_1(input)
+    dataloader = DataLoader(dataset, batch_size=10000)
 
-    # Limpiar los datos con el ojo cerrado
-    index = np.where(input[:, -2] < input[:, -1])
-    input = np.delete(input, index, axis=0)
-    output = np.delete(output, index, axis=0)
+    num_args = len(inspect.signature(modelo.forward).parameters)
 
-    # Pasar los datos y el modelo a la GPU
-    input = torch.tensor(input).float().to('cuda')
-    output = torch.tensor(output).float().to('cuda')
-    model = model.to('cuda')
+    modelo = modelo.to('cuda')
 
     def objective(trial):
         # Definir los límites de las esquinas y el desplazamiento
-        limiteAbajoIzqX = trial.suggest_float('limiteAbajoIzqX', 0.00, 0.25)
-        limiteAbajoIzqY = trial.suggest_float('limiteAbajoIzqY', 0.00, 0.25)
-        limiteAbajoDerX = trial.suggest_float('limiteAbajoDerX', 0.75, 1.00)
-        limiteAbajoDerY = trial.suggest_float('limiteAbajoDerY', 0.00, 0.25)
-        limiteArribaIzqX = trial.suggest_float('limiteArribaIzqX', 0.00, 0.25)
-        limiteArribaIzqY = trial.suggest_float('limiteArribaIzqY', 0.75, 1.00)
-        limiteArribaDerX = trial.suggest_float('limiteArribaDerX', 0.75, 1.00)
-        limiteArribaDerY = trial.suggest_float('limiteArribaDerY', 0.75, 1.00)
+        limiteAbajoIzqX = trial.suggest_float('limiteAbajoIzqX', 0.00, 0.10)
+        limiteAbajoIzqY = trial.suggest_float('limiteAbajoIzqY', 0.00, 0.10)
+        limiteAbajoDerX = trial.suggest_float('limiteAbajoDerX', 0.90, 1.00)
+        limiteAbajoDerY = trial.suggest_float('limiteAbajoDerY', 0.00, 0.10)
+        limiteArribaIzqX = trial.suggest_float('limiteArribaIzqX', 0.00, 0.10)
+        limiteArribaIzqY = trial.suggest_float('limiteArribaIzqY', 0.90, 1.00)
+        limiteArribaDerX = trial.suggest_float('limiteArribaDerX', 0.90, 1.00)
+        limiteArribaDerY = trial.suggest_float('limiteArribaDerY', 0.90, 1.00)
         DesplazamientoX = trial.suggest_float('DesplazamientoX', 0.45, 0.55)
         DesplazamientoY = trial.suggest_float('DesplazamientoY', 0.45, 0.55)
 
@@ -346,23 +342,57 @@ def optimizar_ponderacion():
         Desplazamiento = [DesplazamientoX, DesplazamientoY]
 
         # Calcular las predicciones del modelo
-        predicciones = model(input).cpu().detach().numpy()  # Mover las predicciones a la CPU
+        modelo.eval()
+        predicciones_totales = []
+        posiciones_totales = []
+        for data in dataloader:
+            if num_args == 2:
+                predicciones = modelo(data[0][0], data[0][1])
+                posiciones = data[-1]
+        
+            elif ann:
+                predicciones = modelo(data[0])
+                posiciones = data[-1]
+            else:
+                predicciones = modelo(data[1])
+                posiciones = data[-1]
 
-        for i, prediccion in enumerate(predicciones):
-            predicciones[i] = ponderar(prediccion, limiteAbajoIzq, limiteAbajoDer, limiteArribaIzq, limiteArribaDer, Desplazamiento)
+            predicciones_totales.extend(predicciones.cpu().detach().numpy())
+            posiciones_totales.extend(posiciones.cpu().detach().numpy())
+
+        for i, prediccion in enumerate(predicciones_totales):
+            predicciones_totales[i] = ponderar(prediccion, limiteAbajoIzq, limiteAbajoDer, limiteArribaIzq, limiteArribaDer, Desplazamiento)
 
         # Convertir de nuevo a tensor de PyTorch
-        predicciones = torch.tensor(predicciones).float().to('cuda')
+        predicciones_totales = torch.tensor(predicciones_totales).float().to('cuda')
+        posiciones_totales = torch.tensor(posiciones_totales).float().to('cuda')
 
         # Calcular el error
-        error = mse_loss(output, predicciones).item()
+        error = mse_loss(posiciones_totales, predicciones_totales).item()
 
         return error
 
+    
     study = optuna.create_study(direction='minimize')
     study.optimize(objective, n_trials=100)  # Puedes ajustar el número de pruebas según tus necesidades
 
+    error_antes = 0
+    for data in dataloader:
+        if num_args == 2:
+            predicciones = modelo(data[0][0], data[0][1])
+            posiciones = data[-1]
+    
+        elif ann:
+            predicciones = modelo(data[0])
+            posiciones = data[-1]
+        else:
+            predicciones = modelo(data[1])
+            posiciones = data[-1]
+        error_antes += mse_loss(posiciones, predicciones).item()
+    
+    print('Error antes de optimizar:', error_antes/len(dataloader))
     print('Los mejores parámetros son:', study.best_params)
+    print('El error después de optimizar es:', study.best_value)
 
 
 def imprimir_estructura_modelo(model):
@@ -377,16 +407,10 @@ def comparar_modelos_1_aprox(models_conjs):
         conjunto = model_conj[1]
 
         # Cargar los datos
-        DatasetText1 = DatasetEntero('./entrenamiento/datos/txts/input0.txt', './entrenamiento/datos/txts/output0.txt', 21, conjunto=conjunto, imagenes=False)
-        DatasetText2 = DatasetEntero('./entrenamiento/datos/txts/input1.txt', './entrenamiento/datos/txts/output1.txt', 21, conjunto=conjunto, imagenes=False)
-
-        #Unir los datasets
-        input = np.concatenate((DatasetText1.txt_input_data, DatasetText2.txt_input_data))
-        output = np.concatenate((DatasetText1.txt_output_data, DatasetText2.txt_output_data))
-        dataset = torch.utils.data.TensorDataset(torch.tensor(input).float(), torch.tensor(output).float())
+        dataset = DatasetEntero('./entrenamiento/datos/frames/byn/15-15-15', './entrenamiento/datos/txts/texto_solo/input.txt', './entrenamiento/datos/txts/texto_solo/output.txt', conjunto=conjunto)
 
         #Crear el dataloader
-        data_loader = DataLoader(dataset, batch_size=5000, shuffle=True)
+        data_loader = DataLoader(dataset, batch_size=1000, shuffle=True, num_workers=2, pin_memory=True)
 
         #Evaluar el modelo
         model.eval()
@@ -394,7 +418,7 @@ def comparar_modelos_1_aprox(models_conjs):
         error = 0
         for inputs, outputs in data_loader:
             outputs_m = model(inputs)
-            error += mse_loss(outputs_m, outputs)
+            error += euclidean_loss(outputs_m, outputs)
 
         error /= len(data_loader)
         print(f'Error del modelo {i}: {error}')
@@ -420,6 +444,108 @@ def crear_tensores_database():
     # Guardamos todas las imágenes en un solo archivo tensor
     torch.save(images, os.path.join(img_dir_destino, 'imagenes.pt'))
 
+
+
+#Probar el tts de microsoft
+def graficas_precision_modelos(modelo, dataset, ann):
+    
+    # Cargar los datos
+    dataloader = DataLoader(dataset, batch_size=10000, shuffle=True)
+
+    num_args = len(inspect.signature(modelo.forward).parameters)
+
+    modelo = modelo.to('cuda')
+
+    # Evaluar el modelo
+    miradas_t = []
+    posiciones_t = []
+    modelo.eval()
+    for data in dataloader:
+        if num_args == 2:
+            miradas = modelo(data[0][0], data[0][1])
+            posiciones = data[-1]
+    
+        elif ann:
+            miradas = modelo(data[0])
+            posiciones = data[-1]
+        else:
+            miradas = modelo(data[1])
+            posiciones = data[-1]
+
+        
+        miradas = miradas.cpu().detach().numpy()    
+        posiciones = posiciones.cpu().detach().numpy()
+
+        miradas_t.extend(miradas)
+        posiciones_t.extend(posiciones)
+
+    # Crear la gráfica
+    grafica_calor(posiciones_t, miradas_t, 0.05, 0.40)
+
+
+
+
+
+
+def grafica_flechas(posiciones_t, miradas_t, lower_limit, upper_limit):
+    # Crear la gráfica
+    fig, ax = plt.subplots()
+    cmap = mcolors.LinearSegmentedColormap.from_list("mycmap", ["green", "yellow", "orange", "red"])
+
+    for mirada, ponderada in zip(miradas_t, posiciones_t):
+
+        longitud_normalized = (np.sqrt((ponderada - mirada)**2) - lower_limit) / (upper_limit - lower_limit)
+
+        # Dibujar la flecha
+        color = cmap(longitud_normalized)
+        ax.arrow(mirada[0], mirada[1], ponderada[0] - mirada[0], ponderada[1] - mirada[1], color=color)
+
+    # Crear una barra de colores
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=lower_limit, vmax=upper_limit))
+    fig.colorbar(sm, ax=ax)
+
+    plt.show()
+
+def grafica_calor(posiciones_t, miradas_t, lower_limit, upper_limit):
+    # Inicializar una matriz 2D para los errores
+    filas, columnas = 45, 80
+    errores = np.zeros((filas, columnas))
+    contador = np.zeros((filas, columnas))    
+
+    for mirada, posicion in zip(miradas_t, posiciones_t):
+        mirada = np.clip(mirada, 0, 1)
+        
+        # Calcular el error euclidiano normalizado
+        error_euc = np.sqrt((posicion - mirada)**2).mean()
+        
+        # Convertir la posición a un índice en el rango
+        index = [int(posicion[1]*filas), int(posicion[0]*columnas)]
+
+        # Asignar el error a la posición correspondiente en la matriz de errores
+        errores[index[0], index[1]] += error_euc
+        contador[index[0], index[1]] += 1
+
+    for i in range(filas):
+        for j in range(columnas):
+            if contador[i, j] != 0:
+                errores[i, j] /= contador[i, j]
+            else:
+                errores[i, j] = np.inf  # Set the error to infinity for positions with a count of 0
+
+
+    # Aplicar el filtro gaussiano a los errores, ignorando los valores infinitos
+    indices_inf = np.isinf(errores)
+    errores[indices_inf] = np.nan
+
+    # Crear el mapa de calor
+    cmap = mcolors.LinearSegmentedColormap.from_list("mycmap", ["green", "yellow", "orange", "red"])
+    plt.imshow(errores, cmap=cmap, interpolation='nearest', vmin=lower_limit, vmax=upper_limit, origin='lower')
+    
+    # Add a colorbar
+    plt.colorbar()  
+    plt.xticks([0, columnas], [0, 1])
+    plt.yticks([0, filas], [0, 1])
+    plt.show()
 
 # ----------------------------       COMPROBAR NEURONAS MUERTAS      -------------------------------------
 
@@ -482,7 +608,9 @@ if __name__ == '__main__':
     #ponderar_graficas2()
 
     #Para optimizar la ponderacion hay que ajustar las cosas dentro de la funcion con el modelo a probar etc
-    #optimizar_ponderacion()
+    # modelo = torch.load('./entrenamiento/modelos/aprox1_9.pt')
+    # dataset = DatasetEntero('./entrenamiento/datos/frames/byn/15-15-15', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', conjunto=1)
+    # optimizar_ponderacion(modelo, dataset, ann=True)
 
     #------------ PARA VERIFICAR LA ESTRUCTURA DE UN MODELO GUARDADO ----------------
     # model = torch.load('./entrenamiento/modelos/modelo_ajustado.pth')
@@ -496,7 +624,7 @@ if __name__ == '__main__':
     #model1 = torch.load('./entrenamiento/modelos/modelo_ann_1_11_inpt0.pth')
     #model2 = torch.load('./entrenamiento/modelos/modelo_ann_1_11_inpt1.pth')
     # model3 = torch.load('./entrenamiento/modelos/modelo_ajustado.pth')
-    # models_conjs  = [(model1, 1), (model2, 1), (model3, 2)]
+    # models_conjs  = [(model3, 2)]
     # comparar_modelos_1_aprox(models_conjs)
 
     #------------ PARA LIMPIAR LOS INDICES DE LA BASE DE DATOS ----------------
@@ -511,6 +639,16 @@ if __name__ == '__main__':
     #------------ PARA CREAR TENSORES DE LAS BASES DE DATOS ----------------
     #crear_tensores_database()
 
+    #------------ PARA MAPA DE CALOR DE PRECISIÓN DEL MODELO ----------------
+    # conjunto = 1
+    # modelo = torch.load('./entrenamiento/modelos/aprox1_9.pt')
+    # dataset = DatasetEntero('./entrenamiento/datos/frames/byn/15-15-15', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', conjunto=conjunto)
+    #dataset_textosolo = DatasetEntero('./entrenamiento/datos/frames/byn/15-15-15', './entrenamiento/datos/txts/texto_solo/input.txt', './entrenamiento/datos/txts/texto_solo/output.txt', conjunto=conjunto)
+    # #Concatenar los dos datasets
+    #dataset_entero = torch.utils.data.ConcatDataset([dataset, dataset_textosolo])
+    # graficas_precision_modelos(modelo,  dataset, ann=True)
+   
+    
 
 
     pass

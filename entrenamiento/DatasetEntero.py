@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 
 class DatasetEntero(Dataset):
-    def __init__(self, img_dir, txt_input_file, txt_output_file, sigma, transform=None, conjunto=None, imagenes=False):
+    def __init__(self, img_dir, txt_input_file, txt_output_file, sigma = 21, conjunto=1, imagenes=False):
         self.img_dir = img_dir
         self.imagenes = imagenes
 
@@ -19,9 +19,17 @@ class DatasetEntero(Dataset):
         self.sigma = sigma
         self.conjunto = conjunto
 
-        # Suavizar los datos de entrada de texto
-        for i in range(self.txt_input_data.shape[1]):
-            self.txt_input_data[:, i] = gaussian_filter1d(self.txt_input_data[:, i], self.sigma)
+        # Obtener las personas únicas
+        unique_persons = np.unique(self.personas)
+
+        # Para cada persona única
+        for person in unique_persons:
+            indices = np.where(self.personas == person)[0]
+            # Para cada columna en los datos
+            for i in range(self.txt_input_data.shape[1]):
+                # Suavizar los datos para esta persona y esta columna
+                self.txt_input_data[indices, i] = gaussian_filter1d(self.txt_input_data[indices, i], sigma)
+
 
         # Borrar los datos con el ojo cerrado
         indices = np.where(self.txt_input_data[-2]<self.txt_input_data[-1])[0]
@@ -48,10 +56,10 @@ class DatasetEntero(Dataset):
         # Mover los datos a la GPU
         self.txt_input_data = torch.tensor(self.txt_input_data, dtype=torch.float32).to('cuda')
         self.txt_output_data = torch.tensor(self.txt_output_data, dtype=torch.float32).to('cuda')
-        print("Datos pasados a gpu")
+        # print("Datos pasados a gpu")
 
     def __len__(self):
-        return len(self.file_names)
+        return len(self.txt_input_data)
 
     def __getitem__(self, idx):
         # Cogemos los inputs y outputs

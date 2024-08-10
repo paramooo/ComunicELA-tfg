@@ -24,62 +24,65 @@ class ANNs:
         return self.crear_ann(39, [50])
 
     def crear_ann_1_2(self):
-        return self.crear_ann(39, [50, 100])
+        return self.crear_ann(39, [90])
 
     def crear_ann_1_3(self):
-        return self.crear_ann(39, [300, 400, 500, 400])
+        return self.crear_ann(39, [50, 100])
 
     def crear_ann_1_4(self):
-        return self.crear_ann(39, [100, 300, 400, 500, 100])
+        return self.crear_ann(39, [300, 400, 500, 400])
 
     def crear_ann_1_5(self):
-        return self.crear_ann(39, [90])
+        return self.crear_ann(39, [100, 300, 400, 500, 100])
 
-    # Hasta aqui -----
+    # Al ser el mejor el modelo 3, probamos estructuras semejantes
 
     def crear_ann_1_6(self):
-        return self.crear_ann(39, [90])
+        return self.crear_ann(39, [70, 100])
 
     def crear_ann_1_7(self):
-        return self.crear_ann(39, [20, 20])
+        return self.crear_ann(39, [100, 200])
 
     def crear_ann_1_8(self):
-        return self.crear_ann(39, [90, 90])
+        return self.crear_ann(39, [100, 100, 100])
 
     def crear_ann_1_9(self):
-        return self.crear_ann(39, [20, 50, 20])
+        return self.crear_ann(39, [80, 100, 80])
 
     def crear_ann_1_10(self):
-        return self.crear_ann(39, [90, 50])
-
-    def crear_ann_1_11(self):
         return self.crear_ann(39, [150])
 
-    def crear_ann_1_12(self):
-        return self.crear_ann(39, [300])
-
-    def crear_ann_1_13(self):
-        return self.crear_ann(39, [150, 150])
 
 
-    # La mejor aproximacion es la del modelo 11
-    # Ahora probamos con diferentes conjuntos de datos normalizados de cierta manera (limitando la orientacion de la cabeza, etc)
-    def crear_ann_2_11(self):
-        return self.crear_ann(23, [150])
+
+    # La mejor aproximacion es la del modelo 9 ya que ha sido el mejor de todos
+    def crear_ann_2_9(self):
+        return self.crear_ann(23, [80, 100, 80])
 
 
     # Como los resultados han empeorado, mantenemos las caracteristicas del conjunto1 pero recortando a 0.3-0.7 los ultimos (por probar)
-    def crear_ann_3_11(self):
-        return self.crear_ann(39, [150])
+    def crear_ann_3_9(self):
+        return self.crear_ann(39, [80, 100, 80])
 
 
     # Como la mejor es la 3_7 pues probamos ahora con el conjunto 4
-    def crear_ann_4_11(self):
-        return self.crear_ann(37, [150])
+    def crear_ann_4_9(self):
+        return self.crear_ann(37, [80, 100, 80])
+    
+    def crear_ann_9_sinsigmoid(self):
+        model = nn.Sequential()
+        model.add_module("dense_in", nn.Linear(39, 80))
+        model.add_module("relu_in", nn.ReLU())
+        model.add_module("dense1", nn.Linear(80, 100))
+        model.add_module("relu1", nn.ReLU())
+        model.add_module("dense_out", nn.Linear(100, 2))
+        return model
 
 
 
-    # ---------------------------- ANNS PARA LA FUSIONNET ----------------------------
 
-    def crear_ann_fusion_1(self):
-        pass
+
+    #ANNS PARA LA FUSION NET
+    def crear_ann_f_1(self):
+            return self.crear_ann(39, [80, 100], salidas=80)
+    

@@ -34,22 +34,23 @@ def aproximacion2(i, model, carpeta, dataset):
 
 
 #Modelo
-models = {#"20-35-55":[CNNs().crear_cnn_1, CNNs().crear_cnn_2, CNNs().crear_cnn_3, CNNs().crear_cnn_4, CNNs().crear_cnn_5_3],
-           "20-35-55":[CNNs().crear_cnn_2_3]
-           #"15-35-15":[CNNs().crear_cnn_5_2]
+models = {
+          #"20-35-55":[CNNs().crear_cnn_2_1, CNNs().crear_cnn_2, CNNs().crear_cnn_3, CNNs().crear_cnn_4],
+          "15-15-15":[CNNs().crear_cnn_3_4],
+          "15-35-15":[CNNs().crear_cnn_4_3, CNNs().crear_cnn_4_4]
           }
             
 
 datasets = {
-            #"15-15-15":DatasetEntero('./entrenamiento/datos/frames/byn/15-15-15', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', 21, conjunto=1, imagenes=True),
-            #"15-35-15":DatasetEntero('./entrenamiento/datos/frames/byn/15-35-15', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', 21, conjunto=1, imagenes=True)}
-            "20-35-55":DatasetEntero('./entrenamiento/datos/frames/byn/20-35-55', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', 21, conjunto=1, imagenes=True)}
+            "15-15-15":DatasetEntero('./entrenamiento/datos/frames/byn/15-15-15', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', 21, conjunto=1, imagenes=True),
+            "15-35-15":DatasetEntero('./entrenamiento/datos/frames/byn/15-35-15', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', 21, conjunto=1, imagenes=True)}
+            #"20-35-55":DatasetEntero('./entrenamiento/datos/frames/byn/20-35-55', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', 21, conjunto=1, imagenes=True)}
 
 
 
 
 if __name__ == '__main__':
-    contador = 0
+    contador = 2
     for (carpeta, modelos) in models.items():
         for model in modelos:
             contador += 1

@@ -1,6 +1,6 @@
 from Detector import Detector
 from Camara import Camara
-import pygame
+from pygame import mixer
 import random
 import numpy as np
 import os
@@ -9,36 +9,29 @@ from Mensajes import Mensajes
 from entrenamiento.Conjuntos import Conjuntos
 import cv2
 import torch
-from gtts import gTTS
-from io import BytesIO
-import pandas as pd
 import threading
 import math
 from torch import nn
 import torch.optim as optim
 from kivy.clock import Clock
 import json
-import copy
 from PIL import Image, ImageDraw, ImageFont
 from torch.nn.functional import mse_loss
 import optuna
-import pyttsx3
-import time
-import locale
 import openpyxl
 import google.generativeai as genai
+import win32com.client
 
 class Modelo:
     def __init__(self):
         # Para el sonido del click
-        pygame.mixer.init(buffer=4096)
+        mixer.init(buffer=4096)
 
         # Se inicializa el detector
         self.detector = Detector()
         self.camara = Camara()
         self.camara_act = None
         self.desarrollador = False
-
         # Iniciacion de gemini
         api_key = os.getenv('GOOGLE_API_KEY')
         self.modelo_gemini = None
@@ -52,7 +45,8 @@ class Modelo:
 
         # Variables para el modelo de test
         self.conjunto = 1
-        self.modelo_org = './entrenamiento/modelos/modelo_ann_1_11_inpt0.pth'
+        self.modelo_org = './entrenamiento/modelos/aprox1_9.pt'
+        self.postprocs = False
         # self.conjunto = 2
         # self.modelo_org = './entrenamiento/modelos/modelo_ajustado.pth'
         
@@ -69,7 +63,7 @@ class Modelo:
         self.contador_p = 0
         self.suma_frames = 4 #Numero de frames que tiene que estar cerrado el ojo para que se considere un parpadeo
         self.calibrado = False
-        self.sonido_click = pygame.mixer.Sound('./sonidos/click.wav')
+        self.sonido_click = mixer.Sound('./sonidos/click.wav')
 
 
         # Variables para la recopilacion de datos 
@@ -98,8 +92,8 @@ class Modelo:
         self.tablero = None
         self.bloqueado = False
         self.contador_pb = 0
-        self.sonido_alarma = pygame.mixer.Sound('./sonidos/alarm.wav')
-        self.sonido_lock = pygame.mixer.Sound('./sonidos/lock.wav')
+        self.sonido_alarma = mixer.Sound('./sonidos/alarm.wav')
+        self.sonido_lock = mixer.Sound('./sonidos/lock.wav')
         self.pictogramas = False
         
         #variables para las pruebas de la aplicacion
@@ -636,8 +630,11 @@ class Modelo:
         # Se desempaqueta la posición de la mirada
         mirada = mirada.data.numpy()[0]
 
+        print(mirada)
+
         # Postprocesar la posición de la mirada
-        mirada = self.postprocesar(mirada)
+        if self.postprocs:
+            mirada = self.postprocesar(mirada)
 
         return mirada, click
 
@@ -812,17 +809,7 @@ class Modelo:
     def reproducir_texto(self):
         #Empezar un hulo separado:
         def reproducir_texto_hilo():
-            try:
-                frase = self.get_frase_bien()
-                tts = gTTS(text=frase, lang='es')    
-                fp = BytesIO()
-                tts.write_to_fp(fp)
-                fp.seek(0)
-                pygame.mixer.music.load(fp)
-                pygame.mixer.music.play()
-
-            except:
-                pass
+            self.text_to_speech = win32com.client.Dispatch("SAPI.SpVoice").Speak(self.get_frase_bien())
 
         #Se crea un hilo para reproducir el texto
         self.tarea_hilo(lambda: reproducir_texto_hilo())
