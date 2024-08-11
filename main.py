@@ -1,7 +1,7 @@
 from kivy.app import App
-from Modelo import Modelo
-from Vista import Vista
-from Controlador import Controlador
+from ModelViewController.Modelo import Modelo
+from ModelViewController.Vista import Vista
+from ModelViewController.Controlador import Controlador
 from kivy.core.window import Window
 from kivy.core.text import LabelBase
 Window.fullscreen = 'auto'
@@ -12,8 +12,8 @@ class MyApp(App):
     def build(self):
         self.title = 'ComunicELA'  
         self.icon = './imagenes/logo.png'  
-        LabelBase.register(name='Titulo', fn_regular='./kivy/Orbitron-Regular.ttf')
-        LabelBase.register(name='Texto', fn_regular='./kivy/FrancoisOne-Regular.ttf')
+        LabelBase.register(name='Titulo', fn_regular='./KivyCustom/fuentes/Orbitron-Regular.ttf')
+        LabelBase.register(name='Texto', fn_regular='./KivyCustom/fuentes/FrancoisOne-Regular.ttf')
 
         self.modelo = Modelo()
         vista = Vista()

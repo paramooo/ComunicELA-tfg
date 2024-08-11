@@ -1,6 +1,6 @@
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
-from Custom import ButtonRnd
+from KivyCustom.Custom import ButtonRnd
 from kivy.clock import Clock
 from kivy.graphics.texture import Texture
 from kivy.uix.modalview import ModalView

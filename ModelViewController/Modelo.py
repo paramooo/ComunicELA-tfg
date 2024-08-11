@@ -1,16 +1,14 @@
-from Detector import Detector
-from Camara import Camara
+from Servicios.Detector import Detector
+from Componentes.Camara import Camara
 from pygame import mixer
 import random
 import numpy as np
 import os
 from kivy.app import App
-from Mensajes import Mensajes
-from entrenamiento.Conjuntos import Conjuntos
+from KivyCustom.Mensajes import Mensajes
 import cv2
 import torch
 import threading
-import multiprocessing
 import math
 from torch import nn
 import torch.optim as optim
@@ -48,7 +46,7 @@ class Modelo:
         self.text_to_speech =  win32com.client.Dispatch("SAPI.SpVoice")
 
         #Cargamos el config con la camara, corrector, idioma y voz
-        with open('config.json', 'r') as f:
+        with open('./ajustes/config.json', 'r') as f:
             config = json.load(f)
             if config["camara"] in self.camaras:
                 self.iniciar_camara(config["camara"])
@@ -69,12 +67,9 @@ class Modelo:
             self.strings = json.load(f)
 
         # Variables para el modelo de test
-        self.conjunto = 1
         self.modelo_org = './entrenamiento/modelos/aprox1_9.pt'
         self.postprocs = True
-        # self.conjunto = 2
-        # self.modelo_org = './entrenamiento/modelos/modelo_ajustado.pth'
-        
+
         self.modelo = torch.load(self.modelo_org)
 
         # Variables de control para el tamaño de la fuente de los textos
@@ -155,11 +150,10 @@ class Modelo:
         self.numero_entrenamientos = 0
 
         #Variables para la optimizacion
+        self.optimizar = True #Variable para acivar o desactivar el optimizador al acabar el reentreno
         self.optimizando = False
         self.progreso_opt = 0
-        self.optimizar = False #Variable para acivar o desactivar el optimizador al acabar el reentreno
         self.trials_opt = 70
-
 
     #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
     def reiniciar_datos_r(self):
@@ -175,35 +169,56 @@ class Modelo:
     def reiniciar_datos_reent(self):
         self.recopilarRe = False
         self.salto_bajo_re, self.salto_alto_re = 100, 180
-        self.velocidad_re = 35
+        self.velocidad_re = 40
         self.numero_epochs = 20
         self.porcentaje_reent = 0
         
+    #Funciones para el procesado de datos antes del modelo
+    def datos_as_array(self, datos):
+        distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, _ = datos
+        datos_transformados = np.expand_dims(np.concatenate([distancias_izq, distancias_der, [or_x], [or_y], [or_z], coord_cab, [ear], [umbral_ear]]), axis=0)
+        return datos_transformados
 
+    def conjunto_1(self, data):
+        """
+        Entradas: 39 -> TODOS LOS DATOS (NORMALIZAR MIN MAX DISTANCIAS)
+        [0-15] Distancias entre los puntos de referencia ojo derecho min max
+        [16-31] Distancias entre los puntos de referencia ojo izquierdo min max
+        [32-34] Coordenadas de la orientación de la cara
+        [35-36] Coordenadas del centro de la cara
+        [37-38] EAR y umbral EAR 
+        """
+        # Normalizar cada valor de los primeros 16 de cada fila entre ellos mismos PARA NORMALIZAR EL OJO DERECHO
+        data[:, :16] = (data[:, :16] - np.min(data[:, :16], axis=1, keepdims=True)) / (np.max(data[:, :16], axis=1, keepdims=True) - np.min(data[:, :16], axis=1, keepdims=True))
+
+        # Normalizar cada valor de los segundos 16 de cada fila entre ellos mismos PARA NORMALIZAR EL OJO IZQUIERDO
+        data[:, 16:32] = (data[:, 16:32] - np.min(data[:, 16:32], axis=1, keepdims=True)) / (np.max(data[:, 16:32], axis=1, keepdims=True) - np.min(data[:, 16:32], axis=1, keepdims=True))
+
+        return data
 
     def get_string(self, clave):
         return self.strings[clave]
 
     # Cargamos la configuracion del tutorial
     def get_show_tutorial(self):    
-        with open('./config.json', 'r') as f:
+        with open('./ajustes/config.json', 'r') as f:
             config = json.load(f)
             return config["mostrar_tutorial"]
 
         
     def set_show_tutorial(self, valor):
-        with open('config.json', 'r') as f:
+        with open('./ajustes/config.json', 'r') as f:
             config = json.load(f)
         config["mostrar_tutorial"] = valor
-        with open('config.json', 'w') as f:
+        with open('./ajustes/config.json', 'w') as f:
             json.dump(config, f)
 
     def cambiar_idioma(self):
         idioma = "gal_ES" if self.get_idioma() == "es_ES" else "es_ES"
-        with open('config.json', 'r') as f:
+        with open('./ajustes/config.json', 'r') as f:
             config = json.load(f)
         config["idioma"] = idioma
-        with open('config.json', 'w') as f:
+        with open('./ajustes/config.json', 'w') as f:
             json.dump(config, f)
 
         #Actualizar el idioma de los strings
@@ -216,7 +231,7 @@ class Modelo:
 
     def get_idioma(self):
         try:
-            with open('./config.json', 'r') as f:
+            with open('./ajustes/config.json', 'r') as f:
                 config = json.load(f)
                 return config["idioma"]
         except FileNotFoundError:
@@ -251,10 +266,10 @@ class Modelo:
         if estado is not None:
             self.corrector_frases = not self.corrector_frases
             estado = self.corrector_frases
-            with open('config.json', 'r') as f:
+            with open('./ajustes/config.json', 'r') as f:
                 config = json.load(f)
             config["corrector_frases"] = self.corrector_frases
-            with open('config.json', 'w') as f:
+            with open('./ajustes/config.json', 'w') as f:
                 json.dump(config, f)
         return estado
 
@@ -309,10 +324,10 @@ class Modelo:
                 self.iniciar_camara(camara)
             self.camara_act = camara
             #giardar en el config
-            with open('config.json', 'r') as f:
+            with open('./ajustes/config.json', 'r') as f:
                 config = json.load(f)
             config["camara"] = camara
-            with open('config.json', 'w') as f:
+            with open('./ajustes/config.json', 'w') as f:
                 json.dump(config, f)
 
     def get_index_actual(self):
@@ -329,7 +344,7 @@ class Modelo:
             frame_pil = Image.fromarray(self.mask_rgb)
 
             # Seleccionar la fuente y el tamaño
-            font = ImageFont.truetype("./kivy/FrancoisOne-Regular.ttf", 30)
+            font = ImageFont.truetype("./KivyCustom/fuentes/FrancoisOne-Regular.ttf", 30)
 
             # Calcular el ancho del texto
             text = self.get_string('mensaje_frame_editado')
@@ -425,10 +440,10 @@ class Modelo:
             if voz.GetDescription() == voz_description:
                 self.text_to_speech.Voice = voz
                 #Apuntar la voz en el config
-                with open('config.json', 'r') as f:
+                with open('./ajustes/config.json', 'r') as f:
                     config = json.load(f)
                 config["voz"] = voz_description
-                with open('config.json', 'w') as f:
+                with open('./ajustes/config.json', 'w') as f:
                     json.dump(config, f)
                 break
 
@@ -703,10 +718,8 @@ class Modelo:
         click = self.get_parpadeo(ear)
 
         # Se transforman los datos a un conjunto
-        datos_array = Conjuntos.datos_as_array(datos)
-        normalizar_funcion = getattr(Conjuntos, f'conjunto_{self.conjunto}')
-        datos_array = normalizar_funcion(datos_array)
-
+        datos_array = self.datos_as_array(datos)
+        datos_array = self.conjunto_1(datos_array)
 
         # Normalizacion para la ResNet
         #----------------------------------
@@ -999,8 +1012,7 @@ class Modelo:
         self.output = np.delete(self.output, index, axis=0)
 
         # Se obtiene el conjunto 
-        normalizar_funcion = getattr(Conjuntos, f'conjunto_{self.conjunto}')
-        input_conj = normalizar_funcion(self.input)
+        input_conj = self.conjunto_1(self.input)
 
         # Se convierten a tensores
         input_train = torch.from_numpy(input_conj).float()
@@ -1051,8 +1063,8 @@ class Modelo:
             #Calcular la perdida en las esquinas
             input_esq_sin = self.input[indices]
             output_esq_sin = self.output[indices]
-            input_conj_esq_sin = normalizar_funcion(input_esq_sin)
-            input_conj_esq_sin_tensor = torch.from_numpy(input_conj_esq_sin).float()
+            input_conj_esq_sin = np.array(self.conjunto_1(input_esq_sin))
+            input_conj_esq_sin_tensor = torch.tensor(input_conj_esq_sin).float()
             train_predictions_esq_sin = self.modelo(input_conj_esq_sin_tensor)
             train_predictions_esq_sin_tensor = torch.tensor(train_predictions_esq_sin).float()
             output_esq_sin_tensor = torch.tensor(output_esq_sin).float()
@@ -1061,7 +1073,7 @@ class Modelo:
             print("Error en las esquinas optimizadas: ", error_esquinas)
 
             # Calcular la perdida en toda la pantalla
-            input_conj = normalizar_funcion(self.input)
+            input_conj = self.conjunto_1(self.input)
             input_conj_tensor = torch.from_numpy(input_conj).float()
             train_predictions = self.modelo(input_conj_tensor).detach().numpy()
             train_predictions_ponderadas = []
@@ -1113,8 +1125,7 @@ class Modelo:
         output_opt = self.output[indices]
 
         # Se obtiene el conjunto y los tensores
-        normalizar_funcion = getattr(Conjuntos, f'conjunto_{self.conjunto}')
-        input_conj_opt = normalizar_funcion(input_opt)
+        input_conj_opt = self.conjunto_1(input_opt)
         input_conj_opt = torch.from_numpy(input_conj_opt).float()
 
         def objective(trial):

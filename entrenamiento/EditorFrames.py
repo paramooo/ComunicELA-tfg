@@ -9,7 +9,7 @@ import numpy as np
 #Importamos el detector
 sys_copy = sys.path.copy()
 sys.path.append('./')
-from Detector import Detector
+from Servicios.Detector import Detector
 sys.path = sys_copy
 
 

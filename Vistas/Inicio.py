@@ -3,7 +3,7 @@ from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.switch import Switch
-from Custom import ButtonRnd, CustomSpinner
+from KivyCustom.Custom import ButtonRnd, CustomSpinner
 from kivy.clock import Clock
 from kivy.graphics.texture import Texture
 from kivy.uix.modalview import ModalView
@@ -14,8 +14,8 @@ from kivy.graphics import Color, Rectangle
 from kivy.core.window import Window
 from kivy.uix.widget import Widget
 from kivy.uix.checkbox import CheckBox
-from PopUp import CustPopup
-from PopUpAjustes import PopUpAjustes
+from KivyCustom.PopUp import CustPopup
+from KivyCustom.PopUpAjustes import PopUpAjustes
 
 
 class Inicio(Screen):

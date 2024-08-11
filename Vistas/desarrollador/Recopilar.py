@@ -1,15 +1,15 @@
 import random
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
-from Custom import ButtonRnd
+from KivyCustom.Custom import ButtonRnd
 from kivy.uix.label import Label
 from kivy.graphics import Color, Ellipse
 from kivy.graphics import InstructionGroup
 from kivy.clock import Clock
 from kivy.uix.image import Image
 from kivy.graphics.texture import Texture
-from Custom import CustomSpinner
-from PopUp import CustPopup
+from KivyCustom.Custom import CustomSpinner
+from KivyCustom.PopUp import CustPopup
 
 class Recopilar(Screen):
     def __init__(self, controlador, **kwargs):

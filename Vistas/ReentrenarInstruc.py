@@ -4,7 +4,7 @@ from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
-from Custom import ButtonRnd
+from KivyCustom.Custom import ButtonRnd
 from kivy.core.image import Image as CoreImage
 
 

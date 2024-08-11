@@ -2,12 +2,12 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from Custom import ButtonRnd, CustomTextInput
+from KivyCustom.Custom import ButtonRnd, CustomTextInput
 from kivy.core.window import Window
 from kivy.uix.boxlayout import BoxLayout
 from kivy.clock import Clock
 from kivy.graphics import Color, Line
-from Tablero import Tablero, TableroPicto
+from KivyCustom.Tablero import Tablero, TableroPicto
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.image import Image
 from kivy.uix.widget import Widget

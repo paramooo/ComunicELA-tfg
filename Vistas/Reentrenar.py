@@ -1,5 +1,5 @@
 from kivy.uix.screenmanager import Screen
-from Custom import ButtonRnd
+from KivyCustom.Custom import ButtonRnd
 from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
@@ -8,7 +8,7 @@ from kivy.graphics import InstructionGroup
 from kivy.clock import Clock
 from kivy.uix.widget import Widget
 from kivy.graphics import RoundedRectangle
-from PopUp import CustPopup
+from KivyCustom.PopUp import CustPopup
 
 class Reentrenar(Screen):
     def __init__(self, controlador, **kwargs):

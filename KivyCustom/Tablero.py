@@ -1,6 +1,6 @@
 from kivy.uix.gridlayout import GridLayout
-from Custom import CasillaTablero
-from Custom import CasillaTableroPicto
+from KivyCustom.Custom import CasillaTablero
+from KivyCustom.Custom import CasillaTableroPicto
 
 class Tablero(GridLayout):
     def __init__(self, palabras, controlador, **kwargs):

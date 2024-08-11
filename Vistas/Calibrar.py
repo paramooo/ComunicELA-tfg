@@ -1,6 +1,6 @@
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
-from Custom import ButtonRnd
+from KivyCustom.Custom import ButtonRnd
 from kivy.uix.screenmanager import Screen
 from kivy.graphics import Color, Ellipse
 from kivy.graphics import InstructionGroup

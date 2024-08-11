@@ -4,8 +4,8 @@ from kivy.uix.label import Label
 from kivy.graphics import Color, Rectangle
 from kivy.uix.widget import Widget
 from kivy.uix.checkbox import CheckBox
-from Custom import ButtonRnd
-from PopUp import CustPopup
+from KivyCustom.Custom import ButtonRnd
+from KivyCustom.PopUp import CustPopup
 from kivy.graphics import Line
 
 class PopUpAjustes(ModalView):

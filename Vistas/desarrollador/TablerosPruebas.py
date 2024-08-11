@@ -2,17 +2,17 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from Custom import ButtonRnd
+from KivyCustom.Custom import ButtonRnd
 from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.graphics import Color, Line
-from Tablero import Tablero, TableroPicto
+from KivyCustom.Tablero import Tablero, TableroPicto
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.image import Image
 from kivy.graphics import Rectangle
-from PopUp import CustPopup
-from Tableros import PantallaBloqueada
+from KivyCustom.PopUp import CustPopup
+from Vistas.Tableros import PantallaBloqueada
 import csv
 
 

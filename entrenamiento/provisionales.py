@@ -1,5 +1,4 @@
 #Funciones provisionales para la creacion de la memoria del proyecto
-import google.api_core
 import numpy as np
 import matplotlib.pyplot as plt
 from Conjuntos import *
@@ -22,7 +21,7 @@ import inspect
 #Importamos el detector
 sys_copy = sys.path.copy()
 sys.path.append('./')
-from Detector import Detector
+from Servicios.Detector import Detector
 sys.path = sys_copy
 
 # Distancia euclídea

@@ -1,13 +1,13 @@
 from kivy.uix.screenmanager import ScreenManager
-from Inicio import Inicio
-from Calibrar import Calibrar
-from Test import Test
-from Tableros import Tableros
-from Recopilar import Recopilar
-from Reentrenar import Reentrenar
-from TablerosInstruc import TablerosInstruc
-from TablerosPruebas import TablerosPruebas
-from ReentrenarInstruc import ReentrenarInstruc
+from Vistas.Inicio import Inicio
+from Vistas.Calibrar import Calibrar
+from Vistas.desarrollador.Test import Test
+from Vistas.Tableros import Tableros
+from Vistas.desarrollador.Recopilar import Recopilar
+from Vistas.Reentrenar import Reentrenar
+from Vistas.TablerosInstruc import TablerosInstruc
+from Vistas.desarrollador.TablerosPruebas import TablerosPruebas
+from Vistas.ReentrenarInstruc import ReentrenarInstruc
 
 
 class Vista:

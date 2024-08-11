@@ -2,7 +2,7 @@ from kivy.clock import Clock
 from kivy.graphics import Color, Ellipse
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import Screen
-from Custom import ButtonRnd
+from KivyCustom.Custom import ButtonRnd
 from kivy.uix.label import Label
 from kivy.graphics import InstructionGroup
 import numpy as np

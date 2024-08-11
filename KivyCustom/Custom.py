@@ -13,7 +13,7 @@ from kivy.uix.widget import Widget
 from kivy.core.window import Window
 from kivy.uix.textinput import TextInput
 
-Builder.load_file('kivy/custom.kv')
+Builder.load_file('./kivyCustom/custom.kv')
 class HoverBehavior(object):
     """Hover behavior.
     :Events:
@@ -88,7 +88,7 @@ class CasillaTableroPicto(ButtonBehavior, BoxLayout):
         self.label = Label(text = self.text, size_hint_y=None, height=40, halign='center', valign='middle', font_name='Texto', font_size=32, color=(0, 0, 0, 1))
         #Comprobar la existencia de la imagen
         if not os.path.isfile(self.source):
-            self.source = './tableros/pictogramas/NOFOTO.png'
+            self.source = './imagenes/NOFOTO.png'
 
         self.image = AsyncImage(source=self.source, allow_stretch=False, keep_ratio=True)
         self.add_widget(self.image)
