@@ -1,4 +1,5 @@
 #Funciones provisionales para la creacion de la memoria del proyecto
+import google.api_core
 import numpy as np
 import matplotlib.pyplot as plt
 from Conjuntos import *
@@ -577,7 +578,22 @@ def grafica_calor(posiciones_t, miradas_t, lower_limit, upper_limit):
 
 # Funcion para renombrar archivos frame añadiendole al nombre original la persona a la que pertenece sabiendo los rangos de las personas
 
-
+def probar_gemini():
+    import google.generativeai as genai
+    import google
+    api_key = os.getenv('GOOGLE_API_KEY')
+    modelo_gemini = None
+    if api_key is not None:
+        genai.configure(api_key=api_key)
+        modelo_gemini = genai.GenerativeModel('gemini-1.5-flash')
+    frase = "YO QUERER BEBER"
+    prompt = "Recibo una frase con palabras en infinitivo y el idioma en el que está escrita(Español o gallego). Tu tarea es transformar la frase para que las palabras estén en la forma correcta y coherente entre sí siendo coherente con el idioma. Devuelve SOLAMENTE la frase corregida.\nEjemplo:\nEntrada: YO QUERER COMER CARNE\nRespuesta: Yo quiero comer carne\n\nFrase: " + frase + "\nIdioma: es" 
+                #Comprobar que hay conexion a internet sino ya nada!!!!!!!!!!!!!!!!!!!!!!!!!!
+    try:
+        frase = modelo_gemini.generate_content(prompt, request_options={'timeout':5, 'retry':google.api_core.retry.Retry(initial=1, multiplier=2, maximum=1, timeout=5)}, generation_config={'temperature': 0.1}).text
+    except google.api_core.exceptions.RetryError as e:
+        pass
+    print(frase)
 # ---------------------------------------------------------------------------------------------------------
 
 # Haz el main
@@ -649,6 +665,6 @@ if __name__ == '__main__':
     # graficas_precision_modelos(modelo,  dataset, ann=True)
    
     
-
+    probar_gemini()
 
     pass

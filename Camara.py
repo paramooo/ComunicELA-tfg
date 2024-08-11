@@ -9,9 +9,10 @@ class Camara:
         self.cap = None
         self.thread = None
 
-    def obtener_camaras(self):
-        if self.camara_activa():
-            self.stop()
+    def obtener_camaras(self, stop=True):
+        if stop:
+            if self.camara_activa():
+                self.stop()
         camaras = []
         for i in range(10):
             cap = cv2.VideoCapture(i)

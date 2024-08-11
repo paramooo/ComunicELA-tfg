@@ -15,6 +15,7 @@ from kivy.core.window import Window
 from kivy.uix.widget import Widget
 from kivy.uix.checkbox import CheckBox
 from PopUp import CustPopup
+from PopUpAjustes import PopUpAjustes
 
 
 class Inicio(Screen):
@@ -51,15 +52,34 @@ class Inicio(Screen):
         # Parte izquierda con los botones y el titulo
         self.Izquierda = BoxLayout(orientation='vertical', size_hint=(0.5, 1), spacing=20)
 
+
+
+        #Botones
         # Menu de seleccion de camara
         self.camera_spinner = CustomSpinner(
             text=self.controlador.get_string('cargando_camara'),
             values=[],
-            size_hint=(0.6, 0.1),
+            #size_hint=(0.6, 0.1),
             pos_hint={'center_x': 0.5},
             font_name='Texto', 
-            font_size=self.controlador.get_font_txts())
-
+            font_size=20)
+        
+        # Menu de seleccion de camara
+        self.voz_spinner = CustomSpinner(
+            text=self.controlador.get_string('cargando_voces'),
+            values=[],
+            #size_hint=(0.6, 0.1),
+            pos_hint={'center_x': 0.5},
+            font_name='Texto', 
+            font_size=20)
+        
+        estado = self.controlador.get_estado_corrector(mensajes = False)
+        if estado == None:
+            textoboton = (self.controlador.get_string('nodisp') if estado else self.controlador.get_string('nodisp'))
+        else:
+            textoboton = (self.controlador.get_string('activado') if estado else self.controlador.get_string('desactivado'))
+        self.boton_gemini = ButtonRnd(text=textoboton, size_hint=(0.6, 1), on_press=lambda x: self.on_corrector(), font_name='Texto', font_size=self.controlador.get_font_txts(), pos_hint={'center_x': 0.5})
+        
         self.btn_cal = ButtonRnd(text=self.controlador.get_string('btn_inicio_calibrar'), size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen_cam('calibrar'), font_name='Texto', font_size='35sp')
 
         self.btn_tst = ButtonRnd(text=self.controlador.get_string('btn_inicioDes_test'), size_hint=(1, 0.2), on_press=lambda x: self.controlador.change_screen('test'), font_name='Texto', font_size='35sp')
@@ -75,6 +95,8 @@ class Inicio(Screen):
         self.txt_des = Label(text=self.controlador.get_string('mensaje_inicio_op_des'), halign='center', size_hint=(1, 0.1), font_size='20sp')
         
         self.camera_spinner.bind(text=self.seleccionar_camara)
+        self.voz_spinner.bind(text=self.gestionar_spinner_voces)
+
         espacio_blanco2 = BoxLayout(size_hint=(1, 0.05))
 
         # Parte derecha con el texto y la imagen
@@ -82,18 +104,23 @@ class Inicio(Screen):
        
         self.image_box = Image(size_hint=(0.7, 0.7), pos_hint={'center_x': 0.5}, allow_stretch=True, keep_ratio=True)
 
+        self.popajustes = PopUpAjustes(self.camera_spinner, self.voz_spinner, self.boton_gemini, self.controlador)
+        self.boton_popajustes = ButtonRnd(text=self.controlador.get_string('ajustes'), size_hint=(0.6, 0.1), on_press=lambda x: self.popajustes.open(), font_name='Texto', font_size=self.controlador.get_font_txts(), pos_hint={'center_x': 0.5})
+
         # Montamos la estructura
         self.Izquierda.add_widget(self.btn_cal)
         self.Izquierda.add_widget(self.btn_ree)
         self.Izquierda.add_widget(self.btn_tab)
         self.Izquierda.add_widget(espacio_blanco2)
 
-        Derecha.add_widget(Widget(size_hint_y=0.05))    
+        Derecha.add_widget(Widget(size_hint_y=0.01))    
         Derecha.add_widget(self.image_box)
-        Derecha.add_widget(Widget(size_hint_y=0.05))    
-        Derecha.add_widget(self.camera_spinner)  
-        Derecha.add_widget(Widget(size_hint_y=0.3))    
 
+        Derecha.add_widget(Widget(size_hint_y=0.04))  
+        Derecha.add_widget(self.boton_popajustes)  
+        Derecha.add_widget(Widget(size_hint_y=0.12))
+
+        
         caja.add_widget(self.Izquierda)
         caja.add_widget(Derecha)
         idioma.add_widget(Widget(size_hint_y=0.1))
@@ -119,7 +146,6 @@ class Inicio(Screen):
         ]
 
 
-
     def show_tutorial(self, *args):
         if self.tutorial_buttons:
             button, message = self.tutorial_buttons.pop(0)
@@ -133,6 +159,16 @@ class Inicio(Screen):
             # Muestra el popup con el mensaje
             show_switch = len(self.tutorial_buttons) == 0
             CustPopup(message, self.show_tutorial, pos, self.controlador, show_switch=show_switch).open()
+
+    def on_corrector(self):
+        estado = self.controlador.cambiar_estado_corrector()
+        if estado is None:        
+            textoboton =(self.controlador.get_string('nodisp'))
+        else:
+            textoboton = (self.controlador.get_string('activado') if estado else self.controlador.get_string('desactivado'))
+        self.boton_gemini.text = textoboton
+
+
 
     def _keyboard_closed(self):
         if self._keyboard is not None:
@@ -161,7 +197,8 @@ class Inicio(Screen):
     def on_enter(self, *args):
         # Menu de seleccion de camara una vez dentro para asi poder actualizar las camaras
         if self.primera:
-            self.controlador.obtener_camaras()
+            self.controlador.obtener_camaras(stop = False)
+            self.get_voces()          
             self.primera = False
     
         # Schedule the update of the image box every 1/30 seconds
@@ -175,16 +212,38 @@ class Inicio(Screen):
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
 
-    def seleccionar_camara(self, _, text):
+    def seleccionar_camara(self, _, text, primera = False):
         if text.startswith(self.controlador.get_string('camara')):
             camara = text.split(' ')[1]
             if camara == self.controlador.get_string('principal'):
                 camara = 0
+            #AQUI AL ACTUALIZAR EL NOMBRE A LA CAMARA DEL CONFIG SE VUELVE A PONER AUNQ YA ESTA ACTIVA
             self.controlador.seleccionar_camara(int(camara))
         elif text == self.controlador.get_string('actualizar_camaras'):
+            self.controlador.seleccionar_camara(None)
             self.controlador.obtener_camaras()
         elif text == self.controlador.get_string('btn_inicioDes_seleccionarCam') or text == self.controlador.get_string('cargando_camara'):
             pass
+
+    def gestionar_spinner_voces(self, spinner, text):
+        if text == self.controlador.get_string('actualizar_voces'):
+            self.get_voces()
+        elif text != self.controlador.get_string('btn_inicioDes_seleccionarVoz'):
+            self.seleccionar_voz(spinner, text)
+    
+    def get_voces(self):
+        self.voz_spinner.text = self.controlador.get_string('cargando_voces')
+        self.voz_spinner.values = self.controlador.get_voces()
+        voz = self.controlador.get_voz_seleccionada()
+        if voz is not None:
+                self.voz_spinner.text = voz
+        else:
+             self.voz_spinner.text = self.controlador.get_string('btn_inicioDes_seleccionarVoz')
+
+
+    def seleccionar_voz(self, _, text):
+        self.controlador.seleccionar_voz(text)
+        self.voz_spinner.text = text
         
         
     def update_image_box(self, dt):
@@ -213,3 +272,21 @@ class Inicio(Screen):
         self.btn_cal.text = self.controlador.get_string('btn_inicio_calibrar')
         self.btn_ree.text = self.controlador.get_string('btn_inicio_reentrenar')
         self.btn_tab.text = self.controlador.get_string('btn_inicio_tableros')
+        self.btn_pruebas.text = self.controlador.get_string('btn_inicioDes_pruebas')
+        self.txt_des.text = self.controlador.get_string('mensaje_inicio_op_des')
+        self.btn_rec.text = self.controlador.get_string('btn_inicioDes_reco')
+        self.btn_tst.text = self.controlador.get_string('btn_inicioDes_test')
+        estado = self.controlador.get_estado_corrector()
+        if estado == None:
+            textoboton =(self.controlador.get_string('nodisp'))
+        else:
+            textoboton = (self.controlador.get_string('activado') if estado else self.controlador.get_string('desactivado'))
+        
+        # Cambiar el texto del popup de ajustes
+        self.boton_gemini.text = textoboton
+        self.boton_popajustes.text = self.controlador.get_string('ajustes')
+        self.popajustes.close_button.text = self.controlador.get_string('cerrar')
+        self.popajustes.label_select_camera.text = self.controlador.get_string('seleccion_camara')
+        self.popajustes.label_select_voz.text = self.controlador.get_string('seleccion_voz')
+        self.popajustes.label_gemini.text = self.controlador.get_string('conjugar')
+        self.popajustes.label_titulo.text = self.controlador.get_string('ajustes')

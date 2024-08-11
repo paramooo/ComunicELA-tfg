@@ -2,13 +2,12 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from Custom import ButtonRnd
+from Custom import ButtonRnd, CustomTextInput
 from kivy.core.window import Window
 from kivy.uix.boxlayout import BoxLayout
 from kivy.clock import Clock
 from kivy.graphics import Color, Line
 from Tablero import Tablero, TableroPicto
-from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.image import Image
 from kivy.uix.widget import Widget
@@ -29,6 +28,7 @@ class PantallaBloqueada(BoxLayout):
     def _update_rect(self, instance, value):
         self.rect.pos = instance.pos
         self.rect.size = instance.size
+
 
 class Tableros(Screen):
     def __init__(self, controlador, **kwargs):
@@ -55,51 +55,57 @@ class Tableros(Screen):
 
                 
         # Añade un espacio en blanco 
-        espacio_blanco = BoxLayout(size_hint=(1, .05))
+        espacio_blanco = BoxLayout(size_hint=(1, .03))
 
         # Layout de los botones
-        layout_botones = BoxLayout(orientation='horizontal', size_hint=(1, .15), spacing=10)
+        layout_botones = BoxLayout(orientation='horizontal', size_hint=(1, .17), spacing=10)
         self.layout_vertical = BoxLayout(orientation='vertical', size_hint=(1, 0.2))
         self.layout_vertical.add_widget(espacio_blanco)
         self.layout_vertical.add_widget(layout_botones)
         self.layout_principal.add_widget(self.layout_vertical)
 
         # El boton de inicio
-        self.btn_inicio = ButtonRnd(text=self.controlador.get_string("inicio"), size_hint=(.12, 1), on_press= self.on_inicio, font_name='Texto')
+        self.btn_inicio = ButtonRnd(text=self.controlador.get_string("inicio"), size_hint=(.15, 1), on_press= self.on_inicio, font_name='Texto')
         layout_botones.add_widget(self.btn_inicio)
 
         # Espacio para texto
         scroll = ScrollView(size_hint=(.4, 1), scroll_type=['bars', 'content'], bar_width=10)
-        self.label = TextInput(
+        self.label = CustomTextInput(
             text=self.controlador.get_frase(),
             # Limita el ancho del texto al ancho del widget
-            size_hint_y=None,  # Esto permitirá que el TextInput se expanda a su tamaño natural
+            #size_hint_y=None,  # Esto permitirá que el TextInput se expanda a su tamaño natural
             height=Window.height * 0.2,  # Altura inicial del TextInput
             halign='left',  
             font_name='Texto', 
             font_size=40,
-            background_color=(0.9, 0.9, 0.9, 0.8),
+            background_color=(0.7, 0.7, 0.7, 1),
             foreground_color=(0, 0, 0, 1),
+            readonly=True,
+            cursor_blink=False,  # Deshabilita el parpadeo del cursor
+            cursor_width=0,  # Establece el ancho del cursor a 0
+            focus=False
         )
+
         self.label.bind(on_text=self.on_text)  # Añade un evento para cuando el texto cambie
+        self.label.bind(on_touch_down = self.on_label_touch_down)
         scroll.add_widget(self.label)
         layout_botones.add_widget(scroll)
 
 
         # El boton para borrar una palabra
-        self.btn_borrar_palabra = ButtonRnd(text=self.controlador.get_string("borrar"), size_hint=(.12, 1), on_press=self.on_borrar_palabra, font_name='Texto')
+        self.btn_borrar_palabra = ButtonRnd(text=self.controlador.get_string("borrar"), size_hint=(.15, 1), on_press=self.on_borrar_palabra, font_name='Texto')
         layout_botones.add_widget(self.btn_borrar_palabra)
 
         # El boton para borrar todo el texto
-        self.btn_borrar_todo = ButtonRnd(text=self.controlador.get_string("borrar_todo"), size_hint=(.12, 1), on_press=self.on_borrar_todo, font_name='Texto')
+        self.btn_borrar_todo = ButtonRnd(text=self.controlador.get_string("borrar_todo"), size_hint=(.15, 1), on_press=self.on_borrar_todo, font_name='Texto')
         layout_botones.add_widget(self.btn_borrar_todo)
 
-        # El boton para reproducir el texto
+        # # El boton para reproducir el texto
         self.btn_reproducir = ButtonRnd(text=self.controlador.get_string("reproducir"), size_hint=(.12, 1), on_press=self.on_reproducir, font_name='Texto')
-        layout_botones.add_widget(self.btn_reproducir)
+        # layout_botones.add_widget(self.btn_reproducir)        
 
         # El boton de alarma
-        self.btn_alarma = ButtonRnd(text=self.controlador.get_string("alarma"), size_hint=(.12, 1), on_press=self.on_alarma, font_name='Texto')
+        self.btn_alarma = ButtonRnd(text=self.controlador.get_string("alarma"), size_hint=(.15, 1), on_press=self.on_alarma, font_name='Texto')
         layout_botones.add_widget(self.btn_alarma)
 
         # Variables para emular el movimiento y clic
@@ -135,6 +141,8 @@ class Tableros(Screen):
         self.controlador.change_screen('inicio')
         Clock.unschedule(self.update)
 
+    def on_label_touch_down(self, instance, touch):
+        self.on_reproducir(instance)
 
         
     # Funciones de los botones
@@ -161,7 +169,6 @@ class Tableros(Screen):
             self.tablero = Tablero(palabras, self.controlador, size_hint=(1, 0.8))
         self.layout_principal.add_widget(self.tablero, index=1)
         self.layout_principal.do_layout()
-
 
 
     # Actualiza la posición de la mirada
@@ -225,7 +232,7 @@ class Tableros(Screen):
 
 
     def emular_movimiento_y_clic(self, x, y, click):        
-        if y > 0.15:
+        if y > 0.17:
             casilla_ancho = 1 / self.tablero.cols
             casilla_alto = 0.8 / self.tablero.rows  # Quita el 0.2 inferior
 
@@ -242,16 +249,16 @@ class Tableros(Screen):
             indice_casilla = casilla_y * self.tablero.cols + casilla_x
         
         else: #Botones
-            if x < 0.12:
-                indice_casilla = self.tablero.cols * self.tablero.rows
-            elif x > 0.52 and x < 0.64:
-                indice_casilla = self.tablero.cols * self.tablero.rows + 1
-            elif x >= 0.64 and x < 0.76:
-                indice_casilla = self.tablero.cols * self.tablero.rows + 2
-            elif x >= 0.88:
-                indice_casilla = self.tablero.cols * self.tablero.rows + 4
-            else: # Asi al clickar sobre el texto tambien reproduce el audio
-                indice_casilla = self.tablero.cols * self.tablero.rows + 3
+            if x < 0.15:
+                indice_casilla = self.tablero.cols * self.tablero.rows #Boton inicio
+            elif x > 0.55 and x < 0.70:
+                indice_casilla = self.tablero.cols * self.tablero.rows + 1 #Boton borrar palabra
+            elif x >= 0.70 and x < 0.85:
+                indice_casilla = self.tablero.cols * self.tablero.rows + 2 #Boton borrar todo
+            elif x >= 0.85:
+                indice_casilla = self.tablero.cols * self.tablero.rows + 4 #Boton alarma
+            else:
+                indice_casilla = self.tablero.cols * self.tablero.rows + 3 #Barra de texto
 
 
 
@@ -270,8 +277,12 @@ class Tableros(Screen):
         for i, btn in enumerate(self.tablero.casillas + self.botones):
             if i == self.casilla_bloqueada:
                 btn.state = 'down'
+                if self.casilla_bloqueada == self.tablero.cols * self.tablero.rows + 3:
+                    self.label.background_color = (0.3, 0.3, 0.3, 1)
             else:
                 btn.state = 'normal'
+                if i == self.tablero.cols * self.tablero.rows + 3:
+                    self.label.background_color = (0.7, 0.7, 0.7, 1)
 
         # Si se hace click, se activa la casilla bloqueada
         if click and self.casilla_bloqueada is not None:

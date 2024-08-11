@@ -47,7 +47,10 @@
     background_color: (0, 0, 0, 0) 
     color_down: 0.3, 0.3, 0.3, 1
     color: (0, 0, 0, 1)  # Texto negro
-    font_size: 25
+    font_size: 20
+    size_hint_x: 1
+    height: root.height
+    size_hint_y: None
     canvas.before:
         Color:
             rgba: self.color_down if self.state == 'down' else (0.7, 0.7, 0.7, 1)  

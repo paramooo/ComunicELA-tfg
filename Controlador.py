@@ -82,30 +82,77 @@ class Controlador:
     def get_frame(self):
         return self.modelo.get_frame()
     
-    def obtener_camaras(self):
-        self.modelo.camara_act = None
+    def get_frame_editado(self):
+        return self.modelo.get_frame_editado()
+    
+    # ---------------------------------------------------------------------------------
+    # FUNCIONES PARA EL SPINNER DE CÁMARAS
+    # ---------------------------------------------------------------------------------
+    def obtener_camaras(self, stop=True):
         self.vista.inicio.camera_spinner.text = self.get_string('cargando_camara')
-        threading.Thread(target=self._obtener_camaras_aux).start()
+        threading.Thread(target=self._obtener_camaras_aux, args=[stop]).start()
+    
 
-    def _obtener_camaras_aux(self):
-        camaras = self.modelo.obtener_camaras()
+    def _obtener_camaras_aux(self, stop=True):
+        camaras = self.modelo.obtener_camaras(stop = stop)
+        print(camaras, stop)
         # Programamos la actualización de la interfaz de usuario en el hilo principal
         Clock.schedule_once(lambda dt: self._actualizar_spinner(camaras))
 
     def _actualizar_spinner(self, camaras):
         self.vista.inicio.camera_spinner.values = [self.get_string('camara_principal') if i == 0 else self.get_string('camara') + str(i) for i in camaras] + [self.get_string('actualizar_camaras')]
-        self.vista.inicio.camera_spinner.text = self.get_string('btn_inicioDes_seleccionarCam')
-
+        if self.modelo.camara_act is not None:
+            self.vista.inicio.camera_spinner.text = self.get_string('camara') + (str(self.modelo.camara_act) if self.modelo.camara_act != 0 else 'principal')
+        else:
+            self.vista.inicio.camera_spinner.text = self.get_string('btn_inicioDes_seleccionarCam')
 
     def seleccionar_camara(self, camara):
         self.modelo.seleccionar_camara(camara)
-
-    def get_frame_editado(self):
-        return self.modelo.get_frame_editado()
     
     def get_camara_seleccionada(self):
         return self.modelo.get_index_actual()
     
+    # def set_camara_seleccionada(self, camara):
+    #     self.modelo.sele(camara)
+    
+
+#---------------------------------------------------------------------------------
+# FUNCIONES PARA EL SPINNER DE VOCES
+#---------------------------------------------------------------------------------
+
+    def get_voces(self):    
+        voces = self.modelo.get_voces()
+        voces.append(self.get_string('actualizar_voces'))
+        return voces
+    
+    def get_voz_seleccionada(self):
+        return self.modelo.get_voz_seleccionada()
+    
+    def seleccionar_voz(self, voz_description):
+        self.modelo.seleccionar_voz(voz_description)
+
+
+#---------------------------------------------------------------------------------
+# FUNCIONES PARA EL CORRECTOR DE GEMINI
+#---------------------------------------------------------------------------------
+    def cambiar_estado_corrector(self):
+        return self.modelo.cambiar_estado_corrector()
+
+    def get_estado_corrector(self, mensajes=True):
+        return self.modelo.get_corrector_frases(mensajes)
+
+    def internet_available(self):
+        return self.modelo.internet_available()
+    
+    def api_configurada(self):
+        return self.modelo.api_bien_configurada()
+
+
+
+
+
+
+
 
 # FUNCIONES PARA EL MENU DE CALIBRACION DEL PARPADEO    
     def obtener_estado_cal(self):

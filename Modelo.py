@@ -10,6 +10,7 @@ from entrenamiento.Conjuntos import Conjuntos
 import cv2
 import torch
 import threading
+import multiprocessing
 import math
 from torch import nn
 import torch.optim as optim
@@ -19,8 +20,10 @@ from PIL import Image, ImageDraw, ImageFont
 from torch.nn.functional import mse_loss
 import optuna
 import openpyxl
+import google
 import google.generativeai as genai
 import win32com.client
+import socket
 
 class Modelo:
     def __init__(self):
@@ -32,13 +35,35 @@ class Modelo:
         self.camara = Camara()
         self.camara_act = None
         self.desarrollador = False
+        self.camaras = self.obtener_camaras()
+
         # Iniciacion de gemini
         api_key = os.getenv('GOOGLE_API_KEY')
         self.modelo_gemini = None
         if api_key is not None:
             genai.configure(api_key=api_key)
             self.modelo_gemini = genai.GenerativeModel('gemini-1.5-flash')
-        
+            
+        # Inicializar el sintetizador de voz
+        self.text_to_speech =  win32com.client.Dispatch("SAPI.SpVoice")
+
+        #Cargamos el config con la camara, corrector, idioma y voz
+        with open('config.json', 'r') as f:
+            config = json.load(f)
+            if config["camara"] in self.camaras:
+                self.iniciar_camara(config["camara"])
+                self.camara_act = config["camara"]
+            else:
+                self.camara_act = None
+            self.corrector_frases = config["corrector_frases"]
+            #Si no es la primera vez que se abre
+            voz_description = config["voz"]
+            if voz_description != None:
+                for voz in self.text_to_speech.GetVoices():
+                    if voz.GetDescription() == voz_description:
+                        self.text_to_speech.Voice = voz
+                        break
+
         # Cargar el archivo de idioma correspondiente
         with open(f"./strings/{self.get_idioma()}.json", "r", encoding='utf-8') as f:
             self.strings = json.load(f)
@@ -46,7 +71,7 @@ class Modelo:
         # Variables para el modelo de test
         self.conjunto = 1
         self.modelo_org = './entrenamiento/modelos/aprox1_9.pt'
-        self.postprocs = False
+        self.postprocs = True
         # self.conjunto = 2
         # self.modelo_org = './entrenamiento/modelos/modelo_ajustado.pth'
         
@@ -78,11 +103,11 @@ class Modelo:
         self.escanear = False
 
         # Variables para suavizar la mirada en el test
-        self.historial = []     # Suaviza la mirada con la mediana esto baja el ruido
-        self.historial2 = []    # Suaviza las medianas asi el puntero se mueve suave
-        self.cantidad_suavizado = 18
-        self.cantidad_suavizado2 = 5
-        self.hist_max = 90
+        self.historial = []     
+        self.historial2 = []
+        self.cantidad_suavizado = 18    # Suaviza la mirada con la mediana esto baja el ruido
+        self.cantidad_suavizado2 = 5    # Suaviza las medianas asi el puntero se mueve suave
+        self.hist_max = 60
         #self.retroceso_click = 0
 
         # Variables para uso de los tableros
@@ -161,15 +186,15 @@ class Modelo:
 
     # Cargamos la configuracion del tutorial
     def get_show_tutorial(self):    
-        try:
-            with open('./config.json', 'r') as f:
-                config = json.load(f)
-                return config["mostrar_tutorial"]
-        except FileNotFoundError:
-            return True  # Por defecto, mostrar el tutorial
+        with open('./config.json', 'r') as f:
+            config = json.load(f)
+            return config["mostrar_tutorial"]
+
         
     def set_show_tutorial(self, valor):
-        config = {"mostrar_tutorial": valor}
+        with open('config.json', 'r') as f:
+            config = json.load(f)
+        config["mostrar_tutorial"] = valor
         with open('config.json', 'w') as f:
             json.dump(config, f)
 
@@ -207,6 +232,34 @@ class Modelo:
     def get_idioma_imagen(self):
         return f'./imagenes/idiomas/{self.get_idioma()}.png'
     
+
+
+    def get_corrector_frases(self, mensajes = True):
+        if self.modelo_gemini == None:
+            if mensajes:
+                self.mensaje(self.get_string('mensaje_api'))
+            return None
+        elif self.internet_available() == False:
+            if mensajes:
+                self.mensaje(self.get_string('mensaje_internet'))
+            return None
+        else:
+            return self.corrector_frases
+    
+    def cambiar_estado_corrector(self):
+        estado = self.get_corrector_frases()
+        if estado is not None:
+            self.corrector_frases = not self.corrector_frases
+            estado = self.corrector_frases
+            with open('config.json', 'r') as f:
+                config = json.load(f)
+            config["corrector_frases"] = self.corrector_frases
+            with open('config.json', 'w') as f:
+                json.dump(config, f)
+        return estado
+
+    def api_bien_configurada(self):
+        return self.modelo_gemini is not None
     
     
 # ---------------------------   FUNCIONES DE CONTROL GENERAL    -------------------------------
@@ -245,17 +298,28 @@ class Modelo:
     def get_frame(self):
         return self.camara.get_frame()
     
-    def obtener_camaras(self):
-        return self.camara.obtener_camaras()
+    def obtener_camaras(self, stop = True):
+        return self.camara.obtener_camaras(stop)
     
     def seleccionar_camara(self, camara):
-        if self.camara_activa():
-            self.detener_camara()
-        self.iniciar_camara(camara)
-        self.camara_act = camara
+        if self.camara_act != camara:
+            if self.camara_activa():
+                self.detener_camara()
+            if camara is not None:
+                self.iniciar_camara(camara)
+            self.camara_act = camara
+            #giardar en el config
+            with open('config.json', 'r') as f:
+                config = json.load(f)
+            config["camara"] = camara
+            with open('config.json', 'w') as f:
+                json.dump(config, f)
 
     def get_index_actual(self):
         return self.camara_act
+    
+    # def set_index_actual(self, index):
+    #     self.camara_act = index
 
 
     def get_frame_editado(self):
@@ -343,6 +407,36 @@ class Modelo:
 
         return frame
 
+
+
+
+# --------------------------- FUNCIONES PARA EL CONTROL DE LAS VOCES -------------------------
+#-------------------------------------------------------------------------------------------
+
+    def get_voces(self):
+        voces = self.text_to_speech.GetVoices()
+        voces_description = []
+        for i in range(len(voces)):
+            voces_description.append(voces[i].GetDescription())
+        return voces_description
+
+    def seleccionar_voz(self, voz_description):
+        for voz in self.text_to_speech.GetVoices():
+            if voz.GetDescription() == voz_description:
+                self.text_to_speech.Voice = voz
+                #Apuntar la voz en el config
+                with open('config.json', 'r') as f:
+                    config = json.load(f)
+                config["voz"] = voz_description
+                with open('config.json', 'w') as f:
+                    json.dump(config, f)
+                break
+
+    def get_voz_seleccionada(self):
+        return self.text_to_speech.Voice.GetDescription()
+
+
+    
 # ---------------------------   FUNCIONES CONTROL DEL MENU DE CALIBRACION -------------------------------
 #------------------------------------------------------------------------------------------
                 
@@ -630,7 +724,7 @@ class Modelo:
         # Se desempaqueta la posición de la mirada
         mirada = mirada.data.numpy()[0]
 
-        print(mirada)
+        #(mirada)
 
         # Postprocesar la posición de la mirada
         if self.postprocs:
@@ -789,30 +883,71 @@ class Modelo:
     def borrar_palabra(self):
         self.frase = ' '.join(self.frase.rstrip().split(' ')[:-1]) + ' '
         self.contador_borrar += 1
+        # Verificar si la frase contiene solo espacios
+        if self.frase.strip() == '':
+            self.frase = ''
 
     def borrar_todo(self):
         numero_palabras = len(self.frase.split(' '))
         self.contador_borrar += numero_palabras
         self.frase = ''
 
+
+
+    def internet_available(self):
+        try:
+            socket.create_connection(("8.8.8.8", 53))
+            return True
+        except OSError:
+            return False
+
+
     def get_frase_bien(self):
-        frase = self.frase.lower()
+        frase = self.frase
+        frase_mod = None
+
         if self.modelo_gemini is not None:
-            prompt = "Recibo una frase con palabras en infinitivo y el idioma en el que está escrita(Español o gallego). Tu tarea es transformar la frase para que las palabras estén en la forma correcta y coherente entre sí siendo coherente con el idioma. Devuelve SOLAMENTE la frase corregida.\nEjemplo:\nEntrada: YO QUERER COMER CARNE\nRespuesta: Yo quiero comer carne\n\nFrase: " + frase + "\nIdioma: " + self.get_idioma()
-            try:
-                frase = self.modelo_gemini.generate_content(prompt).text
-            except:
+            prompt = ("Recibes una frase con palabras en infinitivo y el idioma en el que está escrita(Español o Gallego)." +
+                    "Tu tarea es conjugar la frase para que las palabras estén en la forma correcta y coherente entre sí siendo coherente también con el idioma.\n" +
+                    "No se permiten signos de puntuación, solo palabras y el simbolo de interrogación(esto solamente en caso de que se añada en el input).\n"+
+                    "Devuelve SOLAMENTE la frase conjugada en la forma más previsible posible que crees que signifique lo que quiera decir.\n"+
+                    "Si la frase tiene solamente una palabra, puedes agregar un determinante si es necesario.\n"+
+                    "Ejemlo 1 (es): Entrada: TÚ COMER CARNE?\nRespuesta: ¿Tú comes carne?"+
+                    "Ejemlo 2 (es): Entrada: YO QUERER COMER CARNE\nRespuesta: Yo quiero comer carne"+
+                    "Ejemlo 3 (gal): Entrada: EU NECESITAR VER DOUTOR\nRespuesta: Eu necesito ver ao doutor"+
+                    "Ejmplo 4 (gal): Entrada: EU QUERER TI MOITO\nRespuesta: Eu querote moito"+
+                    "\n\nFrase: " + frase + "\nIdioma: " + self.get_idioma())
+            if self.internet_available():
+                try:
+                    frase_mod = self.modelo_gemini.generate_content(prompt, request_options={'timeout': 5, 'retry': google.api_core.retry.Retry(initial=1, multiplier=2, maximum=1, timeout=5)}, generation_config={'temperature': 0.1})
+                except google.api_core.exceptions.RetryError as e:
+                    pass
+            else:
                 pass
-        return frase
-        
+
+            try:
+                return frase_mod.text
+            except ValueError:
+                return frase
+        else:
+            return frase
+
 
     def reproducir_texto(self):
         #Empezar un hulo separado:
         def reproducir_texto_hilo():
-            self.text_to_speech = win32com.client.Dispatch("SAPI.SpVoice").Speak(self.get_frase_bien())
+            if self.corrector_frases:
+                self.frase = self.get_frase_bien().upper()
+            if self.text_to_speech is not None:
+                self.text_to_speech.Speak(self.frase)
+            else:
+                self.mensaje(self.get_string("mensaje_error_sintesis"))
 
         #Se crea un hilo para reproducir el texto
-        self.tarea_hilo(lambda: reproducir_texto_hilo())
+        if self.frase != '':
+            self.tarea_hilo(lambda: reproducir_texto_hilo())
+        else :
+            self.mensaje(self.get_string("mensaje_frase_vacia"))
 
     def get_bloqueado(self):
         return self.bloqueado
