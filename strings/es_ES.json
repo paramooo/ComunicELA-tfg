@@ -22,10 +22,11 @@
     "nodisp": "No disponible",
     "conjugar":"Conjugar frases automáticamente: ",
     "cerrar": "Cerrar",
+    "tutorial": "Tutorial",
     "ajustes": "Configuración cámara y voz",
     "seleccion_camara" : "Seleccione una cámara",
     "seleccion_voz" : "Seleccione una voz",
-    "info_gemini": "Para poder conjugar las frases automáticamente, siga las instrucciones de la documentación para configurar la API de Google Gemini y asegúrese de tener conexión a internet.",
+    "info_gemini": "Para poder conjugar las frases automáticamente, asegúrese de tener conexión a internet y siga las instrucciones de la documentación para configurar la API de Google Gemini.",
 
 
     "_comment2": " ----------- MENSAJES AL USUARIO ----------- ",

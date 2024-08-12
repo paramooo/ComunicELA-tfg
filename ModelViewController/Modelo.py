@@ -68,7 +68,7 @@ class Modelo:
             self.strings = json.load(f)
 
         # Variables para el modelo de test
-        self.modelo_org = './entrenamiento/modelos/aprox1_9.pt'
+        self.modelo_org = './Componentes/modelo_ajustado.pt'
         self.postprocs = True
 
         self.modelo = torch.load(self.modelo_org)
@@ -121,19 +121,19 @@ class Modelo:
         self.cronometro_pruebas = 0 #Variable para el cronometro de las pruebas
         self.contador_borrar = 0
 
-        # Ponderar la mirada del ajustado
-        # self.limiteAbajoIzq_org = [0.10,0.07]
-        # self.limiteAbajoDer_org = [0.87,0.09]
-        # self.limiteArribaIzq_org = [0.03,0.81]
-        # self.limiteArribaDer_org = [0.93,0.89]
-        # self.Desplazamiento_org = [0.5,0.5]
-
-        #SIN PONDERAR 
-        self.limiteAbajoIzq_org = [0,0]
-        self.limiteAbajoDer_org = [1,0]
-        self.limiteArribaIzq_org = [0,1]
-        self.limiteArribaDer_org = [1,1]
+        #Ponderar la mirada del ajustado
+        self.limiteAbajoIzq_org = [0.10,0.07]
+        self.limiteAbajoDer_org = [0.87,0.09]
+        self.limiteArribaIzq_org = [0.03,0.81]
+        self.limiteArribaDer_org = [0.93,0.89]
         self.Desplazamiento_org = [0.5,0.5]
+
+        # #SIN PONDERAR 
+        # self.limiteAbajoIzq_org = [0,0]
+        # self.limiteAbajoDer_org = [1,0]
+        # self.limiteArribaIzq_org = [0,1]
+        # self.limiteArribaDer_org = [1,1]
+        # self.Desplazamiento_org = [0.5,0.5]
 
         # Variables para la ponderacion
         self.limiteAbajoIzq = self.limiteAbajoIzq_org

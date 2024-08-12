@@ -161,4 +161,8 @@ cython_debug/
 
 .vscode/
 
-entrenamiento/datos/frames/
+entrenamiento/datos/
+entrenamiento/desarrollo/
+pruebas/
+Dockerfile
+Makefile

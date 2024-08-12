@@ -104,7 +104,7 @@ class Inicio(Screen):
        
         self.image_box = Image(size_hint=(0.7, 0.7), pos_hint={'center_x': 0.5} )
 
-        self.popajustes = PopUpAjustes(self.camera_spinner, self.voz_spinner, self.boton_gemini, self.controlador)
+        self.popajustes = PopUpAjustes(self.camera_spinner, self.voz_spinner, self.boton_gemini, self.show_tutorial, self.controlador)
         self.boton_popajustes = ButtonRnd(text=self.controlador.get_string('ajustes'), size_hint=(0.6, 0.1), on_press=lambda x: self.popajustes.open(), font_name='Texto', font_size=self.controlador.get_font_txts(), pos_hint={'center_x': 0.5})
 
         # Montamos la estructura
@@ -144,11 +144,12 @@ class Inicio(Screen):
             (self.btn_tab, self.controlador.get_string('mensaje_tutorial_3')),
             (self.btn_ree, self.controlador.get_string('mensaje_tutorial_4')),
         ]
+        self.indice_tut = 0
 
 
     def show_tutorial(self, *args):
-        if self.tutorial_buttons:
-            button, message = self.tutorial_buttons.pop(0)
+        if self.indice_tut < len(self.tutorial_buttons):
+            button, message = self.tutorial_buttons[self.indice_tut]
             
             # Calcula la posición normalizada
             if button == self.camera_spinner:
@@ -157,8 +158,12 @@ class Inicio(Screen):
                 pos = (button.center_x / Window.width) + 0.4, button.center_y / Window.height
             
             # Muestra el popup con el mensaje
-            show_switch = len(self.tutorial_buttons) == 0
+            show_switch = self.indice_tut == len(self.tutorial_buttons) - 1
             CustPopup(message, self.show_tutorial, pos, self.controlador, show_switch=show_switch).open()
+            self.indice_tut += 1
+
+        else:
+            self.indice_tut = 0
 
     def on_corrector(self):
         estado = self.controlador.cambiar_estado_corrector()
@@ -200,24 +205,23 @@ class Inicio(Screen):
             self.controlador.obtener_camaras(stop = False)
             self.get_voces()          
             self.primera = False
-    
+            if self.controlador.get_show_tutorial():
+                Clock.schedule_once(self.show_tutorial, 1)
+
         # Schedule the update of the image box every 1/30 seconds
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)
 
         # Llamar al método show_tutorial después de que la vista inicial se haya completado
-        if self.controlador.get_show_tutorial():
-            Clock.schedule_once(self.show_tutorial, 1)
-        
+
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
 
-    def seleccionar_camara(self, _, text, primera = False):
+    def seleccionar_camara(self, _, text):
         if text.startswith(self.controlador.get_string('camara')):
             camara = text.split(' ')[1]
             if camara == self.controlador.get_string('principal'):
                 camara = 0
-            #AQUI AL ACTUALIZAR EL NOMBRE A LA CAMARA DEL CONFIG SE VUELVE A PONER AUNQ YA ESTA ACTIVA
             self.controlador.seleccionar_camara(int(camara))
         elif text == self.controlador.get_string('actualizar_camaras'):
             self.controlador.seleccionar_camara(None)
@@ -290,3 +294,4 @@ class Inicio(Screen):
         self.popajustes.label_select_voz.text = self.controlador.get_string('seleccion_voz')
         self.popajustes.label_gemini.text = self.controlador.get_string('conjugar')
         self.popajustes.label_titulo.text = self.controlador.get_string('ajustes')
+        self.popajustes.tutorial_button.text = self.controlador.get_string('tutorial')

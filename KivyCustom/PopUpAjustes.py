@@ -9,9 +9,10 @@ from KivyCustom.PopUp import CustPopup
 from kivy.graphics import Line
 
 class PopUpAjustes(ModalView):
-    def __init__(self, camera_spinner, voz_spinner, boton_gemini, controlador, **kwargs):
+    def __init__(self, camera_spinner, voz_spinner, boton_gemini,show_tutorial, controlador, **kwargs):
         super(PopUpAjustes, self).__init__(**kwargs)
         self.controlador = controlador
+        self.show_tutorial = show_tutorial
         self.size_hint = (0.5, 0.5)  # Tamaño del popup
 
         # Crea un layout con un fondo semi-transparente
@@ -63,8 +64,14 @@ class PopUpAjustes(ModalView):
         layout.add_widget(Widget(size_hint=(1, 0.1)))
 
         # Añade un botón para cerrar el popup
-        self.close_button = ButtonRnd(text=self.controlador.get_string('cerrar'), size_hint=(0.15, 0.1), on_release=self.dismiss, font_name='Texto', font_size='18sp', pos_hint={'center_x': 0.9})
-        layout.add_widget(self.close_button)
+        self.fondo_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.1))
+        self.close_button = ButtonRnd(text=self.controlador.get_string('cerrar'), size_hint=(0.15, 1), on_release=self.dismiss, font_name='Texto', font_size='18sp', pos_hint={'center_x': 0.9})
+        self.tutorial_button = ButtonRnd(text=self.controlador.get_string('tutorial'), size_hint=(0.15, 1), on_release=self.on_tutorial, font_name='Texto', font_size='18sp', pos_hint={'center_x': 0.1})
+        self.fondo_layout.add_widget(self.tutorial_button)
+        self.fondo_layout.add_widget(Widget(size_hint=(0.7, 1)))
+        self.fondo_layout.add_widget(self.close_button)
+
+        layout.add_widget(self.fondo_layout)        
 
         self.add_widget(layout)
 
@@ -75,3 +82,7 @@ class PopUpAjustes(ModalView):
 
     def on_info(self, instance):
         CustPopup(self.controlador.get_string('info_gemini'), func_continuar=self.on_dismiss, pos = (0.5, 0.5), controlador=self.controlador).open()
+
+    def on_tutorial(self, instance):
+        self.dismiss()
+        self.show_tutorial()
