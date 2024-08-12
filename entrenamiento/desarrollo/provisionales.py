@@ -20,7 +20,7 @@ from torchvision.transforms import ToTensor
 import inspect
 #Importamos el detector
 sys_copy = sys.path.copy()
-sys.path.append('./')
+sys.path.append('././')
 from Servicios.Detector import Detector
 sys.path = sys_copy
 
@@ -577,22 +577,35 @@ def grafica_calor(posiciones_t, miradas_t, lower_limit, upper_limit):
 
 # Funcion para renombrar archivos frame añadiendole al nombre original la persona a la que pertenece sabiendo los rangos de las personas
 
-def probar_gemini():
-    import google.generativeai as genai
-    import google
-    api_key = os.getenv('GOOGLE_API_KEY')
-    modelo_gemini = None
-    if api_key is not None:
-        genai.configure(api_key=api_key)
-        modelo_gemini = genai.GenerativeModel('gemini-1.5-flash')
-    frase = "YO QUERER BEBER"
-    prompt = "Recibo una frase con palabras en infinitivo y el idioma en el que está escrita(Español o gallego). Tu tarea es transformar la frase para que las palabras estén en la forma correcta y coherente entre sí siendo coherente con el idioma. Devuelve SOLAMENTE la frase corregida.\nEjemplo:\nEntrada: YO QUERER COMER CARNE\nRespuesta: Yo quiero comer carne\n\nFrase: " + frase + "\nIdioma: es" 
-                #Comprobar que hay conexion a internet sino ya nada!!!!!!!!!!!!!!!!!!!!!!!!!!
-    try:
-        frase = modelo_gemini.generate_content(prompt, request_options={'timeout':5, 'retry':google.api_core.retry.Retry(initial=1, multiplier=2, maximum=1, timeout=5)}, generation_config={'temperature': 0.1}).text
-    except google.api_core.exceptions.RetryError as e:
-        pass
-    print(frase)
+
+
+def media_resnet():
+    import re
+    # cargar el txt
+    #Las lienas son asi pero no estan formateadasp or espacios bien y hay vacias:Fold: 10, Ejecucion: 4, ErrorMSEActual: 0.011374102312732826 EucLoss: 0.13270647248083894 Epochs:37 EpochModelo: 6
+    with open('./entrenamiento/resnet34.txt', 'r') as f:
+        errormse = []
+        eucloss = []
+        for line in f:
+            if line.strip():  # Ignorar líneas vacías
+                # Usar una expresión regular para extraer el valor de ErrorMSEActual
+                match = re.search(r'ErrorMSEActual: ([0-9.]+)', line)
+                if match:
+                    errormse.append(float(match.group(1)))
+                    print("mse",float(match.group(1)))
+                
+                # Usar una expresión regular para extraer el valor de EucLoss
+                match = re.search(r'EucLoss: ([0-9.]+)', line)
+                if match:
+                    eucloss.append(float(match.group(1)))
+                    print("euc",float(match.group(1)))
+    # Calcular la media
+    print('Error MSE:', np.mean(errormse))
+    print('Error Euclidean Loss:', np.mean(eucloss))
+    print('Std MSE:', np.std(errormse))
+    print('Std Euclidean Loss:', np.std(eucloss))
+    print('len:', len(errormse))
+    
 # ---------------------------------------------------------------------------------------------------------
 
 # Haz el main
@@ -664,6 +677,5 @@ if __name__ == '__main__':
     # graficas_precision_modelos(modelo,  dataset, ann=True)
    
     
-    probar_gemini()
-
+    media_resnet()
     pass

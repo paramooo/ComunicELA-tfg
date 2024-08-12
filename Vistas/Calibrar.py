@@ -17,7 +17,7 @@ class Calibrar(Screen):
         self.controlador = controlador
 
         # Crear una imagen de fondo
-        self.fondo = Image(source=self.controlador.get_fondo2(), allow_stretch=True, keep_ratio=False)
+        self.fondo = Image(source=self.controlador.get_fondo2()  )
         self.add_widget(self.fondo)
 
         # Textos de calibración

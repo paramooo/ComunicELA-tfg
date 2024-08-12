@@ -24,7 +24,7 @@ class TablerosPruebas(Screen):
         
 
         # Crea una imagen de fondo
-        self.fondo = Image(source=self.controlador.get_fondo(), allow_stretch=True, keep_ratio=False)
+        self.fondo = Image(source=self.controlador.get_fondo()  )
         self.add_widget(self.fondo)
 
         # Layout principal

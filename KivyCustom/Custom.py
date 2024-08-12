@@ -90,7 +90,7 @@ class CasillaTableroPicto(ButtonBehavior, BoxLayout):
         if not os.path.isfile(self.source):
             self.source = './imagenes/NOFOTO.png'
 
-        self.image = AsyncImage(source=self.source, allow_stretch=False, keep_ratio=True)
+        self.image = AsyncImage(source=self.source )
         self.add_widget(self.image)
         self.add_widget(Widget(size_hint_y=0.2))
         self.add_widget(self.label)

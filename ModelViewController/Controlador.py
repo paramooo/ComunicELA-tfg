@@ -95,7 +95,6 @@ class Controlador:
 
     def _obtener_camaras_aux(self, stop=True):
         camaras = self.modelo.obtener_camaras(stop = stop)
-        print(camaras, stop)
         # Programamos la actualización de la interfaz de usuario en el hilo principal
         Clock.schedule_once(lambda dt: self._actualizar_spinner(camaras))
 

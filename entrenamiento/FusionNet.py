@@ -53,4 +53,22 @@ class FusionNet3(FusionNet):
             nn.Linear(80, 2),
             nn.Sigmoid()
        )
-    
+
+
+
+class FusionNet2CNN(FusionNet):
+    def __init__(self):
+        super(FusionNet2CNN, self).__init__(ANNs().crear_ann_f_1(), CNNs().crear_cnn_f_3_2())
+        self.cnn2 = CNNs().crear_cnn_f_3_1()
+        self.fusion_layer = nn.Sequential(
+            nn.Linear(23200, 2),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x_ann, x_cnn, x_cnn2):
+        out_ann = self.ann(x_ann)
+        out_cnn = self.cnn(x_cnn)
+        out_cnn2 = self.cnn2(x_cnn2)
+        fusion = torch.cat((out_ann, out_cnn, out_cnn2), dim=1)
+        out = self.fusion_layer(fusion)
+        return out

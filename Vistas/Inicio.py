@@ -25,7 +25,7 @@ class Inicio(Screen):
         self.primera = True
 
         # Crea una imagen de fondo
-        self.fondo = Image(source=self.controlador.get_fondo() , allow_stretch=True, keep_ratio=False)
+        self.fondo = Image(source=self.controlador.get_fondo()   )
         self.add_widget(self.fondo)
         
         # Alineamos horizontalmente para separar en dos
@@ -102,7 +102,7 @@ class Inicio(Screen):
         # Parte derecha con el texto y la imagen
         Derecha = BoxLayout(orientation='vertical', size_hint=(0.5, 1), spacing=10)
        
-        self.image_box = Image(size_hint=(0.7, 0.7), pos_hint={'center_x': 0.5}, allow_stretch=True, keep_ratio=True)
+        self.image_box = Image(size_hint=(0.7, 0.7), pos_hint={'center_x': 0.5} )
 
         self.popajustes = PopUpAjustes(self.camera_spinner, self.voz_spinner, self.boton_gemini, self.controlador)
         self.boton_popajustes = ButtonRnd(text=self.controlador.get_string('ajustes'), size_hint=(0.6, 0.1), on_press=lambda x: self.popajustes.open(), font_name='Texto', font_size=self.controlador.get_font_txts(), pos_hint={'center_x': 0.5})

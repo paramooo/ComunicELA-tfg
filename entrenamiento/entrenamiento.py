@@ -92,6 +92,8 @@ def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, l
     def calculate_loss(data, model, loss_function, num_args, ann):
         if num_args == 2:
             predictions = model(data[0], data[1])
+        elif num_args == 3:
+            predictions = model(data[0], data[1], data[2])
         elif ann:
             predictions = model(data[0])
         else:

@@ -1,4 +1,5 @@
 from Servicios.Detector import Detector
+from Servicios.EditorFrames import EditorFrames
 from Componentes.Camara import Camara
 from pygame import mixer
 import random
@@ -714,22 +715,16 @@ class Modelo:
             return None
 
         # Se desempaquetan los datos del ear para el click
-        _, _, _, _, _, ear, _, _, _ = datos
+        _, _, _, _, _, ear, _, _, frame_entero = datos
         click = self.get_parpadeo(ear)
 
         # Se transforman los datos a un conjunto
         datos_array = self.datos_as_array(datos)
         datos_array = self.conjunto_1(datos_array)
-
-        # Normalizacion para la ResNet
-        #----------------------------------
-        # datos_array = np.reshape(datos_array, (-1, 1, 23))
-        # datos_array = np.repeat(datos_array[:, :, np.newaxis], 3, axis=1)
-        # self.modelo.eval()
-        #----------------------------------
-
-
         datos_array = torch.from_numpy(datos_array).float()
+
+
+        #Se edita el frame
 
         # Se predice la posición de la mirada
         mirada = self.modelo(datos_array)

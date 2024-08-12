@@ -1,11 +1,15 @@
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 from kivy.app import App
 from ModelViewController.Modelo import Modelo
 from ModelViewController.Vista import Vista
 from ModelViewController.Controlador import Controlador
 from kivy.core.window import Window
 from kivy.core.text import LabelBase
-Window.fullscreen = 'auto'
 from kivy.config import Config
+
+Window.fullscreen = 'auto'
+
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
 class MyApp(App):

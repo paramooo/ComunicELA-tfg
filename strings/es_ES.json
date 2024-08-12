@@ -25,7 +25,7 @@
     "ajustes": "Configuración cámara y voz",
     "seleccion_camara" : "Seleccione una cámara",
     "seleccion_voz" : "Seleccione una voz",
-    "info_gemini": "Para poder conjugar las frases automáticamente, siga las instrucciones de la documentación para configurar la API de Google Gemini",
+    "info_gemini": "Para poder conjugar las frases automáticamente, siga las instrucciones de la documentación para configurar la API de Google Gemini y asegúrese de tener conexión a internet.",
 
 
     "_comment2": " ----------- MENSAJES AL USUARIO ----------- ",
@@ -48,7 +48,7 @@
     "mensaje_tutorial_1": "Bienvenido a ComunicELA, primero deberá seleccionar una cámara y una voz",
     "mensaje_tutorial_2": "Después debe calibrar el parpadeo para comenzar a usar la aplicación",
     "mensaje_tutorial_3": "Posteriormente ya podrá utilizar los tableros de comunicación",
-    "mensaje_tutorial_4": "Si no está satisfecho con el rendimiento de la aplicación, puede reentrenar el modelo para ajustarlo a sus necesidades",
+    "mensaje_tutorial_4": "Si no está satisfecho con el rendimiento de la aplicación, puede reentrenar el modelo para ajustarlo a su perfil.",
     "no_volver_mostrar": "No volver a mostrar",
 
 
