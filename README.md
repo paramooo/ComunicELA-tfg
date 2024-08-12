@@ -72,7 +72,7 @@ Este software es un proyecto de fin de grado aún en desarrollo. Debido a esto, 
 ### Backend:
 No terminado al completo, el modelo que utiliza actualmente para la predicción de la mirada tiene una desviación de aproximadamente un 20% del punto a donde realmente el usuario esta mirando.
 
-Cabe destacar que ya se han hecho avances en este aspecto llegando a un 8'3% de precisión pero debido a que la investigación sigue aún en desarrollo, no se han implementado estas mejoras.
+Cabe destacar que ya se han hecho avances en este aspecto llegando a precisiones mucho mas bajas pero debido a que la investigación sigue aún en desarrollo, no se han implementado estas mejoras.
 
 El desarrollo de los modelos de redes neuronales están en la carpeta /entrenamiento, aunque como ya se ha comentado, esto es una versión preeliminar que aún continua en desarrollo.
 
