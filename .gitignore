@@ -166,3 +166,5 @@ entrenamiento/desarrollo/
 pruebas/
 Dockerfile
 Makefile
+.dockerignore
+.gitignore
