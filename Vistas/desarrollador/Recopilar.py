@@ -14,12 +14,10 @@ from KivyCustom.PopUp import CustPopup
 class Recopilar(Screen):
     def __init__(self, controlador, **kwargs):
         super(Recopilar, self).__init__(**kwargs)
-        self.fichero = "0"
         self.controlador = controlador
         self.background_color = (0, 0, 0, 1) 
-
         self.escaneado = False
-        self.textos = ["Seleccione un fichero para guardar los datos y presione Recopilar para empezar",
+        self.textos = ["Presione Recopilar para empezar",
                         "¡¡¡Gracias!!!, presiona Inicio para volver o Recopilar para volver a recopilar datos"]
 
         # Crea una imagen de fondo
@@ -45,15 +43,6 @@ class Recopilar(Screen):
         # El boton de continuar
         self.btn_recopilar = ButtonRnd(text='Recopilar', size_hint=(.2, .1), pos_hint={'right': 1, 'top': 0}, on_press= self.on_recopilar, font_name='Texto')
         self.layout.add_widget(self.btn_recopilar)
-
-        # Menu de seleccion de fichero
-        self.camera_spinner = CustomSpinner(
-        text='Seleccione fichero',
-        values=["0","1","2"],
-        size_hint=(0.2, 0.1),
-        pos_hint={'right': 1, 'top': 0.1},
-        )
-        self.layout.add_widget(self.camera_spinner)
 
         self.add_widget(self.layout)
         self.lanzado = False
@@ -89,11 +78,6 @@ class Recopilar(Screen):
 
     # Funcion para el boton recopilar, pone recopilar a true e inicia la cuanta atras
     def on_recopilar(self, *args):
-        # Obtiene el fichero seleccionado
-        self.fichero = self.camera_spinner.text
-        if self.fichero == 'Seleccione fichero':
-            self.controlador.mensaje('Seleccione un fichero')
-            return
         self.image_box.opacity = 0  # Hide the image box
         self.btn_recopilar.disabled = True
 
@@ -139,7 +123,7 @@ class Recopilar(Screen):
             self.texto_explicativo.text = self.textos[0]
 
     def guardar_datos(self, *args):
-        self.controlador.guardar_final(self.fichero)
+        self.controlador.guardar_final()
         self.escaneado = False
         self.lanzado = False
     

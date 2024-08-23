@@ -1,6 +1,6 @@
 from Servicios.Detector import Detector
 from Servicios.EditorFrames import EditorFrames
-from Componentes.Camara import Camara
+from Adapter.Camara import Camara
 from pygame import mixer
 import random
 import numpy as np
@@ -68,7 +68,7 @@ class Modelo:
             self.strings = json.load(f)
 
         # Variables para el modelo de test
-        self.modelo_org = './Componentes/modelo_ajustado.pt'
+        self.modelo_org = './Componentes/aprox1_9.pt'
         self.postprocs = True
 
         self.modelo = torch.load(self.modelo_org)
@@ -363,8 +363,11 @@ class Modelo:
         color = (255, 255, 255)  
         
         # Coger los puntos
-        coord_central = self.detector.get_punto_central(frame)
-        puntos_or = self.detector.get_puntos_or(frame)
+        coord_central = None
+        puntos_or = None
+        datos = self.detector.obtener_coordenadas_indices(frame)
+        if datos is not None:
+            _, _, _, _, coord_central, puntos_or = datos
 
         # Ahora puedes usar mask_rgb en lugar de self.mask
 
@@ -416,8 +419,8 @@ class Modelo:
         # Colorear los puntos de la cara
         if puntos_or is not None:
             for punto in puntos_or:
-                x = round(frame.shape[1]*punto[0])
-                y = round(frame.shape[0]*punto[1])
+                x = punto[0]
+                y = punto[1]
                 frame[y - 1:y + 1, x - 1:x + 1, :] = color
 
 
@@ -594,23 +597,23 @@ class Modelo:
         self.input_frames.append(frame)
 
 
-    def guardar_final(self, fichero):
-        def guardar_aux(fichero):
+    def guardar_final(self):
+        def guardar_aux():
             # Determinar el número de líneas existentes en el archivo
-            with open(f'./entrenamiento/datos/txts/input{fichero}.txt', 'r') as f:
+            with open(f'./entrenamiento/datos/txts/input.txt', 'r') as f:
                 num_lineas = sum(1 for _ in f)+1
 
             # Guardar los datos en los archivos
-            with open(f'./entrenamiento/datos/txts/input{fichero}.txt', 'a') as f:
+            with open(f'./entrenamiento/datos/txts/input.txt', 'a') as f:
                 for i, linea in enumerate(self.input):
                     # Convertir el elemento a cadena si es una lista o tupla
                     if isinstance(linea, (list, tuple, np.ndarray)):
                         linea = ', '.join(map(str, linea))
                     f.write(str(linea) + '\n')
-                    cv2.imwrite(f'./entrenamiento/datos/frames/{fichero}/frame_{num_lineas}.jpg', self.input_frames[i])
+                    cv2.imwrite(f'./entrenamiento/datos/frames/frame_{num_lineas}.jpg', self.input_frames[i])
                     num_lineas += 1
 
-            with open(f'./entrenamiento/datos/txts/output{fichero}.txt', 'a') as f:
+            with open(f'./entrenamiento/datos/txts/output.txt', 'a') as f:
                 for linea in self.output:
                     # Convertir el elemento a cadena si es una lista o tupla
                     if isinstance(linea, (list, tuple, np.ndarray)):
@@ -623,7 +626,7 @@ class Modelo:
             self.input_frames = []
 
             print('Datos guardados correctamente')
-        self.tarea_hilo(lambda: guardar_aux(fichero))
+        self.tarea_hilo(lambda: guardar_aux())
 
     
     def descartar_datos(self):

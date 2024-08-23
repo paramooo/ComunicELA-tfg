@@ -10,7 +10,7 @@ def aproximacion1(i, model, conjunto):  # Crear un dataframe
   df = pd.DataFrame(columns=['Modelo', 'Mean EMC Val', 'Std EMC Val', 'Mean EUC Loss', 'Std EUC Loss'])
 
   #Crear un Dataset
-  dataset = DatasetEntero('./entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', 21, conjunto=conjunto)
+  dataset = DatasetEntero('./entrenamiento/datos/frames/byn/15-15-15', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', 21, conjunto=conjunto)
 
   #Crear un DataLoader
   total_dataloader = DataLoader(dataset, batch_size=10000, num_workers=2, pin_memory=True)

@@ -8,8 +8,8 @@ class Detector:
         # Primero las pupilas y despues el resto, asi el EAR siempre se calcula bien
         self.indices_ojo_izq = [473, 362, 398, 384, 385, 386, 387, 388, 466, 263, 249, 390, 373, 374, 380, 381, 382]  
         self.indices_ojo_der = [468, 33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154, 153, 145, 144, 163, 7]
-        self.indices_ear_izq = [33, 160, 158, 133, 153, 144]
-        self.indices_ear_der = [362, 385, 387, 263, 373, 380]
+        self.indices_ear_der = [133, 158, 160, 33, 144, 153]
+        self.indices_ear_izq = [362, 385, 387, 263, 373, 380]
         self.incide_central = [8]
         self.indices_orientacion = [4, 152, 263, 33, 287, 57]
 
@@ -116,23 +116,23 @@ class Detector:
     def get_orientacion_cabeza(self, coord_o, size):
         #Los puntos de referencia de la cabeza
         image_points = np.array([
-            coord_o[0],     # Nose tip
-            coord_o[1],     # Chin
-            coord_o[2],     # Left eye left corner
-            coord_o[3],     # Right eye right corner
-            coord_o[4],     # Left Mouth corner
-            coord_o[5]      # Right mouth corner
+            coord_o[0],     # Nariz
+            coord_o[1],     # menton
+            coord_o[2],     # ojo izquierdo
+            coord_o[3],     # ojo derecho
+            coord_o[4],     # esquina de la boca izquierda
+            coord_o[5]      # esquina de la boca derecha
         ], dtype="double")  
 
 
         # Los puntos en 3D
         model_points = np.array([
-            (0.0, 0.0, 0.0),       # Nose tip
-            (0, -63.6, -12.5),     # Chin
-            (-43.3, 32.7, -26),    # Left eye left corner
-            (43.3, 32.7, -26),     # Right eye right corner
-            (-28.9, -28.9, -24.1), # Left Mouth corner
-            (28.9, -28.9, -24.1)   # Right mouth corner
+            (0.0, 0.0, 0.0),       # nariz
+            (0, -63.6, -12.5),     # Menton
+            (-43.3, 32.7, -26),    # ojo izquierdo
+            (43.3, 32.7, -26),     # ojo derecho
+            (-28.9, -28.9, -24.1), # esquina de la boca izquierda
+            (28.9, -28.9, -24.1)   # esquina de la boca derecha
         ])
         
         # Camara
@@ -143,21 +143,16 @@ class Detector:
             [0, focal_length, center[1]],
             [0, 0, 1]], dtype = "double"
         )
-        dist_coeffs = np.zeros((4,1)) # Se da por hecho que no hay distortion
-
+        dist_coeffs = np.zeros((4,1)) # Se da por hecho que no hay 
         # Estimamos la pose de la cabeza
         (_, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
 
         # Convertimos el vector de rotación a ángulos de Euler para obtener la orientación de la cabeza
         (rot_mat, _) = cv2.Rodrigues(rotation_vector)
-        pose_mat = cv2.hconcat((rot_mat, translation_vector))
-        (_, _, _, _, _, _, euler_angles) = cv2.decomposeProjectionMatrix(pose_mat)
-
-        # Normalizamos los ángulos de Euler al rango [0, 1]
-        euler_angles_normalized = (euler_angles / 90) + 0.5
+        (_, _, _, _, _, _, euler_angles) = cv2.decomposeProjectionMatrix(cv2.hconcat((rot_mat, translation_vector)))
         
         # Nos aseguramos de que los ángulos normalizados estén en el rango [0, 1]
-        euler_angles_normalized = np.clip(euler_angles_normalized, 0, 1)
+        euler_angles_normalized = np.clip((euler_angles / 90) + 0.5, 0, 1)
 
         #Calculamos la horientacion en el eje y aqui:
         euler_angles_normalized[2,0] = self.calcular_eje_y(coord_o[2], coord_o[3])
@@ -165,32 +160,3 @@ class Detector:
         # Devolvemos los ángulos de Euler normalizados para la orientación de la cabeza
         return euler_angles_normalized[0, 0], euler_angles_normalized[1, 0], euler_angles_normalized[2, 0]
 
-
-# Funcion para obtener el punto central de la cara(entremedio de las cejas)
-    def get_punto_central(self, frame):
-        if frame is None:
-            return None
-        resultados = self.deteccion_cara.process(frame)  
-        coordenadas_central = None
-        if resultados.multi_face_landmarks is not None:
-            for puntos_de_referencia_cara in resultados.multi_face_landmarks:
-                for indice in self.incide_central:
-                    x = puntos_de_referencia_cara.landmark[indice].x
-                    y = puntos_de_referencia_cara.landmark[indice].y
-                    coordenadas_central = (x, y)
-            return coordenadas_central
-        return None
-    
-    def get_puntos_or(self, frame):
-        if frame is None:
-            return None
-        resultados = self.deteccion_cara.process(frame)  
-        coordenadas_orientacion = []
-        if resultados.multi_face_landmarks is not None:
-            for puntos_de_referencia_cara in resultados.multi_face_landmarks:
-                for indice in self.indices_orientacion:
-                    x = puntos_de_referencia_cara.landmark[indice].x
-                    y = puntos_de_referencia_cara.landmark[indice].y
-                    coordenadas_orientacion.append((x, y))
-            return coordenadas_orientacion
-        return None

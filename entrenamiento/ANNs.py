@@ -86,3 +86,8 @@ class ANNs:
     def crear_ann_f_1(self):
             return self.crear_ann(39, [80, 100], salidas=80)
     
+    def crear_ann_f_2(self):
+            return self.crear_ann(39, [80, 100], salidas=25)
+    
+    def crear_ann_f_3(self):
+            return self.crear_ann(39, [80, 100], salidas=5)

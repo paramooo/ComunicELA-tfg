@@ -1,9 +1,9 @@
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 from kivy.app import App
-from ModelViewController.Modelo import Modelo
-from ModelViewController.Vista import Vista
-from ModelViewController.Controlador import Controlador
+from ModelViewPresenter.Modelo import Modelo
+from ModelViewPresenter.Vista import Vista
+from ModelViewPresenter.Presenter import Presenter
 from kivy.core.window import Window
 from kivy.core.text import LabelBase
 from kivy.config import Config
@@ -21,7 +21,7 @@ class MyApp(App):
 
         self.modelo = Modelo()
         vista = Vista()
-        controlador = Controlador(self.modelo, vista)
+        controlador = Presenter(self.modelo, vista)
         vista.set_controlador(controlador)
         vista.crear_pantallas()
 

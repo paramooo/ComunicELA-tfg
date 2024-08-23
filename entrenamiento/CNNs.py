@@ -178,38 +178,10 @@ class CNNs:
   def crear_cnn_f_2(self):
           ancho, alto = (200, 50)
           return self.crear_cnn_3_aux(ancho, alto, salidas=50)
-
-
-#--------------------------------------------------CUARTAS OBSERVACIONES--------------------------------------------
-
-#fusionnet con dos cnns y una ann
-#Cogemos la f1 que es la que mejor se comporta (AUN SIN PROBAR ) y la fusionamos con la f1 de la ANN que es la mejor 
-# y con una de la cara completa con mucho maxpool para ver si se comporta mejor y pilla bien la orientacion de la cabeza
-
-  def crear_cnn_f_3_1(self):
-      ancho, alto = (210,120)
-      model = nn.Sequential()
-      model.add_module('pool1', nn.MaxPool2d(kernel_size=2, stride=2))
-      ancho, alto = self.dividir(ancho, alto)
-      model.add_module('conv1', nn.Conv2d(1, 4, kernel_size=3, stride=1, padding=1))
-      model.add_module('relu1', nn.ReLU())
-      model.add_module('pool2', nn.MaxPool2d(kernel_size=2, stride=2))
-      ancho, alto = self.dividir(ancho, alto)
-      model.add_module('conv2', nn.Conv2d(4, 8, kernel_size=3, stride=1, padding=1))
-      model.add_module('relu2', nn.ReLU())
-      model.add_module('pool3', nn.MaxPool2d(kernel_size=2, stride=2))
-      ancho, alto = self.dividir(ancho, alto)
-      model.add_module('flatten', nn.Flatten()) #3120
-      return model
   
-  def crear_cnn_f_3_2(self):
-      ancho, alto = (210,120)
-      model = nn.Sequential()
-      model.add_module('pool1', nn.MaxPool2d(kernel_size=2, stride=2))
-      ancho, alto = self.dividir(ancho, alto)
-      model.add_module('conv1', nn.Conv2d(1, 8, kernel_size=3, stride=1, padding=1))
-      model.add_module('relu1', nn.ReLU())
-      model.add_module('pool1', nn.MaxPool2d(kernel_size=2, stride=2))
-      ancho, alto = self.dividir(ancho, alto)
-      model.add_module('flatten', nn.Flatten()) #12480
-      return model
+  def crear_cnn_f_3(self):
+          ancho, alto = (200, 50)
+          return self.crear_cnn_3_aux(ancho, alto, salidas=15)
+  
+
+

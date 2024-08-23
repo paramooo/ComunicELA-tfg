@@ -1,7 +1,7 @@
 from kivy.clock import Clock
 import threading
 
-class Controlador:
+class Presenter:
     def __init__(self, modelo, vista):
         self.modelo = modelo
         self.vista = vista
@@ -12,7 +12,7 @@ class Controlador:
 
     #Condicionante para ver si esta calibrado
     def change_screen_r(self, screen_name):
-        if self.modelo.calibrado:
+        if self.modelo.camara_activa() and self.modelo.calibrado:
             self.change_screen(screen_name)
         else:
             self.mensaje(self.get_string('mensaje_primero_calibrar'))
@@ -160,8 +160,6 @@ class Controlador:
     def cambiar_estado_calibracion(self, numero=None):#MOVER ESTO AL MODELO
         return self.modelo.cambiar_estado_calibracion(numero)
     
-    def get_punto_central(self, frame):
-        return self.modelo.get_punto_central(frame)
     
 
 # ---------------------------- FUNCIONES PARA EL MODO DE TEST/TABLEROS -------------------------
@@ -245,8 +243,8 @@ class Controlador:
     def descartar_datos(self):
         self.modelo.descartar_datos()
 
-    def guardar_final(self, fichero):
-        self.modelo.guardar_final(fichero)
+    def guardar_final(self):
+        self.modelo.guardar_final()
 
 
 # ---------------------------- FUNCIONES PARA EL MODO DE REENTRENAMIENTO -------------------------

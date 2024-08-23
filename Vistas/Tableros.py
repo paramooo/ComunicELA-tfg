@@ -7,7 +7,7 @@ from kivy.core.window import Window
 from kivy.uix.boxlayout import BoxLayout
 from kivy.clock import Clock
 from kivy.graphics import Color, Line
-from KivyCustom.Tablero import Tablero, TableroPicto
+from KivyCustom.Tablero import Tablero
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.image import Image
 from kivy.uix.widget import Widget
@@ -46,11 +46,7 @@ class Tableros(Screen):
         self.add_widget(self.layout_principal)
         
         # Tablero
-        if self.controlador.get_pictogramas():
-            self.tablero = TableroPicto(self.controlador.obtener_tablero(self.controlador.obtener_tablero_inicial()), self.controlador, size_hint=(1, 0.8))
-        else:
-            self.tablero = Tablero(self.controlador.obtener_tablero(self.controlador.obtener_tablero_inicial()), self.controlador, size_hint=(1, 0.8))
-
+        self.tablero = Tablero(self.controlador.obtener_tablero(self.controlador.obtener_tablero_inicial()), self.controlador, size_hint=(1, 0.8), pictos = self.controlador.get_pictogramas())
         self.layout_principal.add_widget(self.tablero)
 
                 
@@ -163,10 +159,7 @@ class Tableros(Screen):
     # Cambia el tablero
     def cambiar_tablero(self, palabras):
         self.layout_principal.remove_widget(self.tablero)
-        if self.controlador.get_pictogramas():
-            self.tablero = TableroPicto(palabras, self.controlador, size_hint=(1, 0.8))
-        else:
-            self.tablero = Tablero(palabras, self.controlador, size_hint=(1, 0.8))
+        self.tablero = Tablero(palabras, self.controlador, size_hint=(1, 0.8), pictos=self.controlador.get_pictogramas())
         self.layout_principal.add_widget(self.tablero, index=1)
         self.layout_principal.do_layout()
 

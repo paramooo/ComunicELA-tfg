@@ -6,7 +6,7 @@ from KivyCustom.Custom import ButtonRnd
 from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.graphics import Color, Line
-from KivyCustom.Tablero import Tablero, TableroPicto
+from KivyCustom.Tablero import Tablero
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.image import Image
@@ -245,10 +245,7 @@ class TablerosPruebas(Screen):
             palabras = []
         if self.tablero:
             self.layout_principal.remove_widget(self.tablero)
-        if self.controlador.get_pictogramas():
-            self.tablero = TableroPicto(palabras, self.controlador, size_hint=(1, 0.8))
-        else:
-            self.tablero = Tablero(palabras, self.controlador, size_hint=(1, 0.8))
+        self.tablero = Tablero(palabras, self.controlador, size_hint=(1, 0.8), pictos=self.controlador.get_pictogramas())
         self.layout_principal.add_widget(self.tablero, index=1)
 
     def update(self, dt):

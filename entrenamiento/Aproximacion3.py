@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from DatasetEntero import DatasetEntero
 from torch.utils.data import DataLoader
-from FusionNet import FusionNet1, FusionNet2, FusionNet3, FusionNet2CNN
+from FusionNet import FusionNet1, FusionNet2, FusionNet3, FusionNet4, FusionNet5, FusionNet6, FusionNet7, FusionNet8, FusionNet9, FusionNet10
 
 
 
@@ -34,21 +34,12 @@ def aproximacion3(i, model, dataset):
     df.to_excel(path, index=False)
 
 
-
+#FusionNet1().crear, FusionNet2().crear, FusionNet3().crear, FusionNet4().crear
 if __name__ == "__main__":
-  models_t = {
-     0:  [FusionNet1().crear, FusionNet2().crear, FusionNet3().crear],
-     1: [FusionNet2CNN().crear],
-  }
+  models = [FusionNet10().crear]
 
-  contador = 0
-  for dataset, models in models_t.items():
-    #Escogemos dataset de datos y foto o fotos
-    if dataset == 0: 
-      dataset = DatasetEntero('./entrenamiento/datos/frames/byn/15-15-15', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', imagenes=True, )
-    else: 
-      dataset = DatasetEntero('./entrenamiento/datos/frames/byn/15-15-15', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', imagenes=True, img_dir2='./entrenamiento/datos/frames/byn/20-35-55')
-    
-    for model in models:
-      contador += 1
-      aproximacion3(contador, model, dataset)
+  contador = 9
+  dataset = DatasetEntero('./entrenamiento/datos/frames/byn/15-15-15', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', imagenes=True, )
+  for model in models:
+    contador += 1
+    aproximacion3(contador, model, dataset)
