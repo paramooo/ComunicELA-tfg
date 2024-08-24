@@ -1,5 +1,4 @@
 from Servicios.Detector import Detector
-from Servicios.EditorFrames import EditorFrames
 from Adapter.Camara import Camara
 from pygame import mixer
 import random
@@ -112,7 +111,6 @@ class Modelo:
         self.frase = ""
         self.tablero = None
         self.bloqueado = False
-        self.contador_pb = 0
         self.sonido_alarma = mixer.Sound('./sonidos/alarm.wav')
         self.sonido_lock = mixer.Sound('./sonidos/lock.wav')
         self.pictogramas = False
@@ -504,25 +502,20 @@ class Modelo:
         if ear < self.umbral_ear:
             # Contador para parpadeo
             self.contador_p += 1
-            # Contador para el bloqueo de los tableros
-            self.contador_pb += 1
 
             #Si se mantiene cerrado el ojo durante 60 frames, se bloquea el tablero
-            if self.contador_pb == 60:  
-                self.contador_pb = -1000
+            if self.contador_p == 60:  
                 self.bloqueado = not self.bloqueado
                 self.sonido_lock.play()
             
             #Si se mantiene cerrado el ojo durante suma_frames, se considera un parpadeo
             if self.contador_p == self.suma_frames:
-                self.contador_p = -1000 
                 if not self.bloqueado:
                     self.sonido_click.play()
                 return 1
             return 0
         else:
             self.contador_p = 0
-            self.contador_pb = 0     
             return 0   
     
     def alarma(self):
@@ -926,7 +919,7 @@ class Modelo:
                     "Ejemlo 1 (es): Entrada: TÚ COMER CARNE?\nRespuesta: ¿Tú comes carne?"+
                     "Ejemlo 2 (es): Entrada: YO QUERER COMER CARNE\nRespuesta: Yo quiero comer carne"+
                     "Ejemlo 3 (gal): Entrada: EU NECESITAR VER DOUTOR\nRespuesta: Eu necesito ver ao doutor"+
-                    "Ejmplo 4 (gal): Entrada: EU QUERER TI MOITO\nRespuesta: Eu querote moito"+
+                    "Ejmplo 4 (gal): Entrada: EU QUERER TI MOITO\nRespuesta: Eu quérote moito"+
                     "\n\nFrase: " + frase + "\nIdioma: " + self.get_idioma())
             if self.internet_available():
                 try:

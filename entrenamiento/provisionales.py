@@ -1,15 +1,12 @@
 #Funciones provisionales para la creacion de la memoria del proyecto
 import numpy as np
 import matplotlib.pyplot as plt
-from Conjuntos import *
 from scipy.ndimage import gaussian_filter1d
 import sys
 import matplotlib.colors as mcolors
 import torch
 import optuna
 from torch.nn.functional import mse_loss
-from EditorFrames import EditorFrames
-from DatasetEntero import DatasetEntero
 from torch.utils.data import DataLoader
 import time
 import os
@@ -18,10 +15,15 @@ from tqdm import tqdm
 from PIL import Image
 from torchvision.transforms import ToTensor
 import inspect
+
 #Importamos el detector
 sys_copy = sys.path.copy()
+from EditorFrames import EditorFrames
+from DatasetEntero import DatasetEntero
+from Conjuntos import *
 sys.path.append('././')
 from Servicios.Detector import Detector
+
 sys.path = sys_copy
 
 # Distancia euclídea
@@ -578,34 +580,6 @@ def grafica_calor(posiciones_t, miradas_t, lower_limit, upper_limit):
 # Funcion para renombrar archivos frame añadiendole al nombre original la persona a la que pertenece sabiendo los rangos de las personas
 
 
-
-def media_resnet():
-    import re
-    # cargar el txt
-    #Las lienas son asi pero no estan formateadasp or espacios bien y hay vacias:Fold: 10, Ejecucion: 4, ErrorMSEActual: 0.011374102312732826 EucLoss: 0.13270647248083894 Epochs:37 EpochModelo: 6
-    with open('./entrenamiento/resnet34.txt', 'r') as f:
-        errormse = []
-        eucloss = []
-        for line in f:
-            if line.strip():  # Ignorar líneas vacías
-                # Usar una expresión regular para extraer el valor de ErrorMSEActual
-                match = re.search(r'ErrorMSEActual: ([0-9.]+)', line)
-                if match:
-                    errormse.append(float(match.group(1)))
-                    print("mse",float(match.group(1)))
-                
-                # Usar una expresión regular para extraer el valor de EucLoss
-                match = re.search(r'EucLoss: ([0-9.]+)', line)
-                if match:
-                    eucloss.append(float(match.group(1)))
-                    print("euc",float(match.group(1)))
-    # Calcular la media
-    print('Error MSE:', np.mean(errormse))
-    print('Error Euclidean Loss:', np.mean(eucloss))
-    print('Std MSE:', np.std(errormse))
-    print('Std Euclidean Loss:', np.std(eucloss))
-    print('len:', len(errormse))
-    
 # ---------------------------------------------------------------------------------------------------------
 
 # Haz el main
@@ -677,5 +651,4 @@ if __name__ == '__main__':
     # graficas_precision_modelos(modelo,  dataset, ann=True)
    
     
-    media_resnet()
     pass

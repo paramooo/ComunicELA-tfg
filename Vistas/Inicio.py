@@ -139,17 +139,18 @@ class Inicio(Screen):
         self.add_widget(Principal)
 
         self.tutorial_buttons = [
-            (self.camera_spinner, self.controlador.get_string('mensaje_tutorial_1')),
-            (self.btn_cal, self.controlador.get_string('mensaje_tutorial_2')),
-            (self.btn_tab, self.controlador.get_string('mensaje_tutorial_3')),
-            (self.btn_ree, self.controlador.get_string('mensaje_tutorial_4')),
+            (self.camera_spinner, 'mensaje_tutorial_1'),
+            (self.btn_cal, 'mensaje_tutorial_2'),
+            (self.btn_tab, 'mensaje_tutorial_3'),
+            (self.btn_ree, 'mensaje_tutorial_4'),
         ]
         self.indice_tut = 0
 
 
     def show_tutorial(self, *args):
         if self.indice_tut < len(self.tutorial_buttons):
-            button, message = self.tutorial_buttons[self.indice_tut]
+            button, message_tut = self.tutorial_buttons[self.indice_tut]
+            message = self.controlador.get_string(message_tut)
             
             # Calcula la posición normalizada
             if button == self.camera_spinner:

@@ -8,10 +8,9 @@ import matplotlib.pyplot as plt
 
 
 class DatasetEntero(Dataset):
-    def __init__(self, img_dir, txt_input_file, txt_output_file, sigma = 21, conjunto=1, imagenes=False, img_dir2=None):
+    def __init__(self, img_dir, txt_input_file, txt_output_file, sigma = 21, conjunto=1, imagenes=False):
         self.img_dir = img_dir
         self.imagenes = imagenes
-        self.img_dir2 = img_dir2
 
         # Cargar los datos de texto que no ocupan tanto espacio en el init
         self.txt_input_data = np.loadtxt(txt_input_file, delimiter=',')
@@ -54,16 +53,6 @@ class DatasetEntero(Dataset):
           print("Imagenes cargadas en ram")
           self.imgs = torch.tensor(self.imgs, dtype=torch.float32).to('cuda')
         
-        if self.img_dir2 is not None:
-          img_dir2 = os.path.join(self.img_dir2, 'imagenes.pt')
-          self.imgs2 = torch.load(img_dir2)
-
-          self.imgs2 = torch.stack(self.imgs2)
-          self.imgs2 = np.delete(self.imgs2, indices, axis=0)
-
-          print("Imagenes 2 cargadas en ram")
-          self.imgs2 = torch.tensor(self.imgs2, dtype=torch.float32).to('cuda')
-
         # Mover los datos a la GPU
         self.txt_input_data = torch.tensor(self.txt_input_data, dtype=torch.float32).to('cuda')
         self.txt_output_data = torch.tensor(self.txt_output_data, dtype=torch.float32).to('cuda')
@@ -77,10 +66,7 @@ class DatasetEntero(Dataset):
         txt_input_data = self.txt_input_data[idx]
         txt_output_data = self.txt_output_data[idx]
         if self.imagenes:
-            if self.img_dir2 is not None:
-              return txt_input_data, self.imgs[idx], self.imgs2[idx], txt_output_data
-            else:
-                return txt_input_data, self.imgs[idx], txt_output_data
+            return txt_input_data, self.imgs[idx], txt_output_data
         else:
             return txt_input_data, txt_output_data
 
