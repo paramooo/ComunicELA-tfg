@@ -10,13 +10,13 @@ def aproximacion2(i, model, lr, carpeta = "15-15-15"):
     # Crear un dataframe
     df = pd.DataFrame(columns=['Modelo', 'Mean EMC Val', 'Std EMC Val', 'Mean EUC Loss', 'Std EUC Loss'])
 
-    dataset = DatasetEntero(f'./entrenamiento/datos/frames/byn/{carpeta}', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', 21, conjunto=1, imagenes=True)
+    dataset = DatasetEntero("con_imagenes", img_dir=f'./entrenamiento/datos/frames/byn/{carpeta}')
 
     total_dataloader = DataLoader(dataset, batch_size=100, num_workers=2, pin_memory=True)
 
     print("Empezando con el modelo: ", i, " de la carpeta: ", carpeta)
 
-    _, val_losses, euc_losses = entrenar_con_kfold(model, total_dataloader, epochs=300, lr=lr, ejecuciones_fold=5, graficas=False, ann=False)
+    _, val_losses, euc_losses = entrenar_con_kfold(model, total_dataloader, epochs=250, lr=lr, ejecuciones_fold=5, graficas=True, ann=False)
 
     # Añadir los resultados al DataFrame
     linea = pd.Series({'Modelo': f"{i}-{carpeta}", 'Mean EMC Val': np.mean(val_losses), 'Std EMC Val': np.std(val_losses), 'Mean EUC Loss': np.mean(euc_losses), 'Std EUC Loss': np.std(euc_losses)})
@@ -35,7 +35,7 @@ def aproximacion2(i, model, lr, carpeta = "15-15-15"):
 
 if __name__ == "__main__":
     #Modelo
-    models_t = {{
+    models_t = [{
             "20-35-55":[CNNs().crear_cnn_2_1, CNNs().crear_cnn_2, CNNs().crear_cnn_3, CNNs().crear_cnn_4],
             "15-15-15":[CNNs().crear_cnn_3_3, CNNs().crear_cnn_3_4],
             "15-35-15":[CNNs().crear_cnn_4_3, CNNs().crear_cnn_4_4],
@@ -44,7 +44,7 @@ if __name__ == "__main__":
         {
             "15-15-15":[CNNs().crear_resnet18(), CNNs().crear_resnet34],
             }
-            }
+    ]
 
 
     if __name__ == '__main__':

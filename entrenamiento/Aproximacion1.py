@@ -10,13 +10,13 @@ def aproximacion1(i, model, conjunto):  # Crear un dataframe
   df = pd.DataFrame(columns=['Modelo', 'Mean EMC Val', 'Std EMC Val', 'Mean EUC Loss', 'Std EUC Loss'])
 
   #Crear un Dataset
-  dataset = DatasetEntero('./entrenamiento/datos/frames/byn/15-15-15', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', 21, conjunto=conjunto)
+  dataset = DatasetEntero("texto_solo")
 
   #Crear un DataLoader
-  total_dataloader = DataLoader(dataset, batch_size=10000, num_workers=2, pin_memory=True)
+  total_dataloader = DataLoader(dataset, batch_size=6000, num_workers=2, pin_memory=True)
 
   print("Empezando con el modelo: ", i, " del conjunto: ", conjunto)
-  _, val_losses, euc_losses = entrenar_con_kfold(model, total_dataloader, epochs=300, lr=0.01, ejecuciones_fold=5, ann=True, graficas=False)
+  _, val_losses, euc_losses = entrenar_con_kfold(model, total_dataloader, epochs=250, lr=0.0002, ejecuciones_fold=5, ann=True, graficas=True)
 
   # Añadir los resultados al DataFrame
   linea = pd.Series({'Modelo': f"{i}-{conjunto}", 'Mean EMC Val': np.mean(val_losses), 'Std EMC Val': np.std(val_losses), 'Mean EUC Loss': np.mean(euc_losses), 'Std EUC Loss': np.std(euc_losses)})
@@ -38,6 +38,10 @@ def aproximacion1(i, model, conjunto):  # Crear un dataframe
 
 
 if __name__ == "__main__":
+  modelos_inicial = {
+      1 : [ANNs().crear_ann_1_1, ANNs().crear_ann_1_2, ANNs().crear_ann_1_3, ANNs().crear_ann_1_4, ANNs().crear_ann_1_5],
+  }
+
   modelos = {
       1 : [ANNs().crear_ann_1_1, ANNs().crear_ann_1_2, ANNs().crear_ann_1_3, ANNs().crear_ann_1_4, ANNs().crear_ann_1_5, ANNs().crear_ann_1_6, ANNs().crear_ann_1_7, ANNs().crear_ann_1_8, ANNs().crear_ann_1_9, ANNs().crear_ann_1_10],
       2 : [ANNs().crear_ann_2_9],
@@ -49,4 +53,5 @@ if __name__ == "__main__":
   contador = 0
   for (conj, modelos) in modelos.items():
     for model in modelos:
+      contador += 1
       aproximacion1(contador, model, conj)

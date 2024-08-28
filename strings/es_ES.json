@@ -43,6 +43,7 @@
     "mensaje_error_corrigiendo": "Error corrigiendo la frase, se reproducirá la original",
     "mensaje_internet": "No hay conexión a internet, inténtelo de nuevo",
     "mensaje_api": "Error en la API, revise la configuración y reinicie la aplicación para activar",
+    "mensaje_error_tableros" : "Error al cargar los tableros, revise que el archivo tiene el formato adecuado",
 
 
     "_comment3": " ----------- MENSAJES DEL TUTORIAL ----------- ",

@@ -275,11 +275,13 @@ class Presenter:
 
 # ---------------------------- FUNCIONES PARA EL MODO DE TABLEROS -------------------------
 #------------------------------------------------------------------------------------------
+    def cargar_tableros(self):
+        return self.modelo.cargar_tableros()
+
 #TENGO QUE MOVER ESTO AL MODELO Y DEVOLVER EN LA FUNCION LA PALABRA QUE SE HA AÑADIDO 
     def on_casilla_tab(self, texto_boton):
             if texto_boton.startswith('TAB.'):
-                nombre_tablero = texto_boton[5:]
-                nuevo_tablero = self.modelo.obtener_tablero(nombre_tablero)
+                nuevo_tablero = self.modelo.obtener_tablero(texto_boton)
                 self.modelo.tablero_actual = nuevo_tablero
                 if nuevo_tablero is not None:
                     if self.vista.get_screen() == 'tablerosprueb':

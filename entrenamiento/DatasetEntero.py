@@ -8,16 +8,18 @@ import matplotlib.pyplot as plt
 
 
 class DatasetEntero(Dataset):
-    def __init__(self, img_dir, txt_input_file, txt_output_file, sigma = 21, conjunto=1, imagenes=False):
+    def __init__(self, datos, sigma = 5, conjunto=1, img_dir=None):
         self.img_dir = img_dir
-        self.imagenes = imagenes
+
+        txt_input_file = f'./entrenamiento/datos/txts/{datos}/input.txt'
+        txt_output_file = f'./entrenamiento/datos/txts/{datos}/output.txt'
 
         # Cargar los datos de texto que no ocupan tanto espacio en el init
         self.txt_input_data = np.loadtxt(txt_input_file, delimiter=',')
         self.txt_output_data = np.loadtxt(txt_output_file, delimiter=',')
-        self.personas = np.loadtxt('./entrenamiento/datos/frames/byn/personas.txt')
         self.sigma = sigma
         self.conjunto = conjunto
+        self.personas = self.get_indices_persona()
 
         # Obtener las personas únicas
         unique_persons = np.unique(self.personas)
@@ -26,7 +28,7 @@ class DatasetEntero(Dataset):
         for person in unique_persons:
             indices = np.where(self.personas == person)[0]
             # Para cada columna en los datos
-            for i in range(self.txt_input_data.shape[1]):
+            for i in range(self.txt_input_data.shape[1]-2):
                 # Suavizar los datos para esta persona y esta columna
                 self.txt_input_data[indices, i] = gaussian_filter1d(self.txt_input_data[indices, i], sigma)
 
@@ -43,7 +45,7 @@ class DatasetEntero(Dataset):
             self.txt_input_data = normalizar_funcion(self.txt_input_data)
 
         # Obtener el .pt de las imagenes y borrar las posiciones de indices tambien
-        if self.imagenes:
+        if self.img_dir is not None:
           img_dir = os.path.join(self.img_dir, 'imagenes.pt')
           self.imgs = torch.load(img_dir)
 
@@ -65,11 +67,18 @@ class DatasetEntero(Dataset):
         # Cogemos los inputs y outputs
         txt_input_data = self.txt_input_data[idx]
         txt_output_data = self.txt_output_data[idx]
-        if self.imagenes:
+        if self.img_dir is not None:
             return txt_input_data, self.imgs[idx], txt_output_data
         else:
             return txt_input_data, txt_output_data
 
     def get_indices_persona(self):
-      return self.personas
-
+        personas = []
+        contador = 1
+        for i in range(len(self.txt_output_data)):
+            if i == 0 or self.txt_output_data[i][1] != 0.0 or self.txt_output_data[i-1][1] == 0.0:
+                personas.append(contador)
+            else:
+                contador += 1
+                personas.append(contador)
+        return personas

@@ -11,7 +11,7 @@ def aproximacion3(i, model, dataset):
     # Crear un dataframe
     df = pd.DataFrame(columns=['Modelo', 'Mean EMC Val', 'Std EMC Val', 'Mean EUC Loss', 'Std EUC Loss'])
 
-    total_dataloader = DataLoader(dataset, batch_size=300, num_workers=2, pin_memory=True)
+    total_dataloader = DataLoader(dataset, batch_size=250, num_workers=2, pin_memory=True)
 
     print("Empezando con el modelo: ", i)
 
@@ -36,10 +36,10 @@ def aproximacion3(i, model, dataset):
 
 #FusionNet1().crear, FusionNet2().crear, FusionNet3().crear, FusionNet4().crear
 if __name__ == "__main__":
-  models = [FusionNet10().crear]
+  models = [FusionNet1().crear(), FusionNet2().crear(), FusionNet3().crear(), FusionNet4().crear(), FusionNet5().crear(), FusionNet6().crear(), FusionNet7().crear(), FusionNet8().crear(), FusionNet9().crear(), FusionNet10().crear()]
 
-  contador = 9
-  dataset = DatasetEntero('./entrenamiento/datos/frames/byn/15-15-15', './entrenamiento/datos/txts/input.txt', './entrenamiento/datos/txts/output.txt', imagenes=True, )
+  contador = 0
+  dataset = DatasetEntero("con_imagenes", img_dir='./entrenamiento/datos/frames/byn/15-15-15')
   for model in models:
     contador += 1
     aproximacion3(contador, model, dataset)

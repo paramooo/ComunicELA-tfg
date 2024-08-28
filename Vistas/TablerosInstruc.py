@@ -130,13 +130,16 @@ class TablerosInstruc(Screen):
 
     # Función para el botón de Comenzar
     def on_comenzar(self, *args):
-        self.controlador.set_pictogramas(True)
-        self.controlador.change_screen('tableros')
+        if self.controlador.cargar_tableros():
+            self.controlador.set_pictogramas(True)
+            self.controlador.change_screen('tableros')
+        
 
     # Función para el botón de Comenzar2
     def on_comenzar2(self, *args):
-        self.controlador.set_pictogramas(False)
-        self.controlador.change_screen('tableros')
+        if self.controlador.cargar_tableros():
+            self.controlador.set_pictogramas(False)
+            self.controlador.change_screen('tableros')
 
     def on_pre_enter(self, *args):
         self.actualizar_idioma()

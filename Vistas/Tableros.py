@@ -46,8 +46,8 @@ class Tableros(Screen):
         self.add_widget(self.layout_principal)
         
         # Tablero
-        self.tablero = Tablero(self.controlador.obtener_tablero(self.controlador.obtener_tablero_inicial()), self.controlador, size_hint=(1, 0.8), pictos = self.controlador.get_pictogramas())
-        self.layout_principal.add_widget(self.tablero)
+        # self.tablero = Tablero(self.controlador.obtener_tablero(self.controlador.obtener_tablero_inicial()), self.controlador, size_hint=(1, 0.8), pictos = self.controlador.get_pictogramas())
+        # self.layout_principal.add_widget(self.tablero)
 
                 
         # Añade un espacio en blanco 
@@ -118,7 +118,9 @@ class Tableros(Screen):
 
     # Cambia el tablero antes de entrar para evitar el salto de la vista
     def on_pre_enter(self, *args):
-        self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
+        tab_incial = self.controlador.obtener_tablero_inicial()
+        print(tab_incial)
+        self.cambiar_tablero(self.controlador.obtener_tablero(tab_incial))
         self.label.text = self.controlador.get_frase()
 
 
@@ -133,7 +135,8 @@ class Tableros(Screen):
     def on_inicio(self, instance):
         self.controlador.set_escanear(False)
         self.controlador.borrar_todo()
-        self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
+        tab_incial = self.controlador.obtener_tablero_inicial()
+        self.cambiar_tablero(self.controlador.obtener_tablero(tab_incial))
         self.controlador.change_screen('inicio')
         Clock.unschedule(self.update)
 
@@ -158,7 +161,9 @@ class Tableros(Screen):
 
     # Cambia el tablero
     def cambiar_tablero(self, palabras):
-        self.layout_principal.remove_widget(self.tablero)
+        # Elimina el tablero actual solo si el widget ya esta añadido al layout
+        if hasattr(self, 'tablero'):
+            self.layout_principal.remove_widget(self.tablero)
         self.tablero = Tablero(palabras, self.controlador, size_hint=(1, 0.8), pictos=self.controlador.get_pictogramas())
         self.layout_principal.add_widget(self.tablero, index=1)
         self.layout_principal.do_layout()

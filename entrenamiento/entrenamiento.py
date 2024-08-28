@@ -12,10 +12,10 @@ import inspect
 
 
 # Semilla
-seed = 42
-torch.cuda.manual_seed(seed)
-torch.manual_seed(seed)
-np.random.seed(seed)
+# seed = 42
+# torch.cuda.manual_seed(seed)
+# torch.manual_seed(seed)
+# np.random.seed(seed)
 
 #Activar optimizacion cudnn
 torch.backends.cudnn.benchmark = True
@@ -87,7 +87,7 @@ def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, l
     num_args = len(inspect.signature(model.forward).parameters)
 
     # Ajuste del learning rate
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=20, threshold=0.0001) 
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=20, threshold=0.001) 
 
     def calculate_loss(data, model, loss_function, num_args, ann):
         if num_args == 2:
@@ -172,23 +172,23 @@ def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, l
             break
 
 
-        if graficas:
+        if graficas :
             # Graficar las pérdidas en tiempo real
             ax.clear()
-            ax.plot(np.clip(train_losses, 0, 0.2), label='Train Loss', color='blue')
-            ax.plot(np.clip(val_losses, 0, 0.2), label='Validation Loss', color='orange')
+            ax.plot(np.clip(train_losses[:], 0, 0.2), label='Train Loss', color='blue')
+            ax.plot(np.clip(val_losses[:], 0, 0.2), label='Validation Loss', color='orange')
             #ax.plot(np.clip(euc_losses_val, 0, 0.2), label='Euc Loss Val', color='purple')
             if test_dataloader is not None:
-                ax.plot(np.clip(test_losses, 0, 1), label='Test Loss', color='red')
+                ax.plot(np.clip(test_losses[:], 0, 1), label='Test Loss', color='red')
                 #ax.plot(np.clip(ecu_losses_test, 0, 1), label='Euc Loss Test', color='pink')
             ax.legend()
             plt.draw()
             plt.pause(0.001)
 
-        if test_dataloader is not None:
-            print(f"Epoch: {epoch}, Train Loss: {train_loss_avg}, Val Loss: {val_loss_avg}, Test Loss: {test_loss_avg}, Euc Loss Val: {euc_loss_avg_val}, Euc Loss Test: {euc_loss_avg_test}")
-        else:
-            print(f"Epoch: {epoch}, Train Loss: {train_loss_avg}, Val Loss: {val_loss_avg}, Euc Loss Val: {euc_loss_avg_val}")
+        # if test_dataloader is not None:
+        #     print(f"Epoch: {epoch}, Train Loss: {train_loss_avg}, Val Loss: {val_loss_avg}, Test Loss: {test_loss_avg}, Euc Loss Val: {euc_loss_avg_val}, Euc Loss Test: {euc_loss_avg_test}")
+        # else:
+        #     print(f"Epoch: {epoch}, Train Loss: {train_loss_avg}, Val Loss: {val_loss_avg}, Euc Loss Val: {euc_loss_avg_val}")
     
     indice = val_losses.index(best_val_loss)
 

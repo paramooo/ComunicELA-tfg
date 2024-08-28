@@ -33,7 +33,7 @@ class TablerosPruebas(Screen):
 
         # Tablero
         self.tablero = None
-        self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
+        self.cambiar_tablero(self.controlador.obtener_tablero('TAB. INICIAL'))
 
         # Añade un espacio en blanco
         espacio_blanco = BoxLayout(size_hint=(1, .05))
@@ -122,17 +122,17 @@ class TablerosPruebas(Screen):
         # Pruebas NIVEL INTERMEDIO con pictogramas y en el tablero inicial
         if self.indice_prueba >= 5 and self.indice_prueba < 8:
             self.controlador.set_pictogramas(True)
-            self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
+            self.cambiar_tablero(self.controlador.obtener_tablero('TAB. INICIAL'))
         
         # Pruebas NIVEL AVANZADO con pictogramas y en el tablero inicial
         if self.indice_prueba >= 8 and self.indice_prueba < 10:
             self.controlador.set_pictogramas(True)
-            self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
+            self.cambiar_tablero(self.controlador.obtener_tablero('TAB. INICIAL'))
         
         # Pruebas NIVEL EXPERTO sin pictogramas y en el tablero inicial
         if self.indice_prueba >= 10:
             self.controlador.set_pictogramas(False)
-            self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
+            self.cambiar_tablero(self.controlador.obtener_tablero('TAB. INICIAL'))
 
     # Automatización de las pruebas
     def pruebas_mensajes(self, *args):
@@ -201,7 +201,7 @@ class TablerosPruebas(Screen):
     def on_inicio(self, *args):
         self.controlador.set_escanear(False)
         self.controlador.borrar_todo()
-        self.cambiar_tablero(self.controlador.obtener_tablero('inicial'))
+        self.cambiar_tablero(self.controlador.obtener_tablero('TAB. INICIAL'))
         self.controlador.change_screen('inicio')
         Clock.unschedule(self.update)
         self.indice_prueba = 0

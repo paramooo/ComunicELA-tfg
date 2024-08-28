@@ -22,6 +22,7 @@ import google
 import google.generativeai as genai
 import win32com.client
 import socket
+from scipy.ndimage import gaussian_filter1d
 
 class Modelo:
     def __init__(self):
@@ -67,7 +68,7 @@ class Modelo:
             self.strings = json.load(f)
 
         # Variables para el modelo de test
-        self.modelo_org = './Componentes/aprox1_9.pt'
+        self.modelo_org = './Componentes/aprox1_9Final.pt'
         self.postprocs = True
 
         self.modelo = torch.load(self.modelo_org)
@@ -100,14 +101,14 @@ class Modelo:
         # Variables para suavizar la mirada en el test
         self.historial = []     
         self.historial2 = []
-        self.cantidad_suavizado = 18    # Suaviza la mirada con la mediana esto baja el ruido
+        self.cantidad_suavizado = 30    # Suaviza la mirada con la media esto baja el ruido
         self.cantidad_suavizado2 = 5    # Suaviza las medianas asi el puntero se mueve suave
         self.hist_max = 60
         #self.retroceso_click = 0
 
         # Variables para uso de los tableros
         self.tableros = {}
-        self.cargar_tableros()
+        #self.cargar_tableros()
         self.frase = ""
         self.tablero = None
         self.bloqueado = False
@@ -119,19 +120,19 @@ class Modelo:
         self.cronometro_pruebas = 0 #Variable para el cronometro de las pruebas
         self.contador_borrar = 0
 
-        #Ponderar la mirada del ajustado
-        self.limiteAbajoIzq_org = [0.10,0.07]
-        self.limiteAbajoDer_org = [0.87,0.09]
-        self.limiteArribaIzq_org = [0.03,0.81]
-        self.limiteArribaDer_org = [0.93,0.89]
-        self.Desplazamiento_org = [0.5,0.5]
+        # #Ponderar la mirada del ajustado
+        # self.limiteAbajoIzq_org = [0.10,0.07]
+        # self.limiteAbajoDer_org = [0.87,0.09]
+        # self.limiteArribaIzq_org = [0.03,0.81]
+        # self.limiteArribaDer_org = [0.93,0.89]
+        # self.Desplazamiento_org = [0.5,0.5]
 
         # #SIN PONDERAR 
-        # self.limiteAbajoIzq_org = [0,0]
-        # self.limiteAbajoDer_org = [1,0]
-        # self.limiteArribaIzq_org = [0,1]
-        # self.limiteArribaDer_org = [1,1]
-        # self.Desplazamiento_org = [0.5,0.5]
+        self.limiteAbajoIzq_org = [0.08,0.11]
+        self.limiteAbajoDer_org = [0.88,0.12]
+        self.limiteArribaIzq_org = [0,1]
+        self.limiteArribaDer_org = [1,1]
+        self.Desplazamiento_org = [0.45,0.5]
 
         # Variables para la ponderacion
         self.limiteAbajoIzq = self.limiteAbajoIzq_org
@@ -160,7 +161,7 @@ class Modelo:
         self.contador_r = 5 #Contador para la cuenta atras
         self.pos_r = (0, 0) #Posicion de la pelota roja
         self.salto_bajo, self.salto_alto = 60, 80 #Salto de la pelota roja
-        self.velocidad = 25
+        self.velocidad = 30
         self.direccion = 1 
 
     #Funcion para reiniciar los datos despues de cada reentrenamiento (se aprovecha para inicializarlos tambien)
@@ -168,8 +169,8 @@ class Modelo:
     def reiniciar_datos_reent(self):
         self.recopilarRe = False
         self.salto_bajo_re, self.salto_alto_re = 100, 180
-        self.velocidad_re = 40
-        self.numero_epochs = 20
+        self.velocidad_re = 35
+        self.numero_epochs = 40
         self.porcentaje_reent = 0
         
     #Funciones para el procesado de datos antes del modelo
@@ -224,7 +225,7 @@ class Modelo:
         with open(f"./strings/{idioma}.json", "r", encoding='utf-8') as f:
             self.strings = json.load(f)
         #Actualizar el idioma de los tableros
-        self.cargar_tableros()
+        # self.cargar_tableros()
         
         
 
@@ -568,7 +569,7 @@ class Modelo:
             self.pos_r = (self.pos_r[0], tamano_pantalla[1] - 50)
 
         # Si la pelota toca el borde inferior de la pantalla
-        if self.pos_r[1] < 0:
+        if self.pos_r[1] <= 0 and self.salto_alto < 0:
             # Si viene de el reentrenamiento, se reentrena 
             if self.recopilarRe:
                 self.tarea_hilo(lambda: self.reentrenar())
@@ -843,36 +844,32 @@ class Modelo:
 #--------------------------------FUNCIONES PARA LOS TABLEROS--------------------------------
 #-------------------------------------------------------------------------------------------
 
-    # def cargar_tableros(self):
-    #     idioma = self.get_idioma()
-    #     filename = f'./tableros/{idioma}.xlsx'
-    #     if os.path.isfile(filename):
-    #         xls = pd.ExcelFile(filename)
-    #         for sheet_name in xls.sheet_names:
-    #             df = pd.read_excel(xls, sheet_name=sheet_name, header=None)
-    #             palabras = df.values.tolist()  # Convierte el DataFrame a una lista de listas
-    #             self.tableros[sheet_name] = palabras  # Añade el tablero al diccionario
 
     def cargar_tableros(self):
-        idioma = self.get_idioma()
-        filename = f'./tableros/tableros_{idioma}.xlsx'
-        if os.path.isfile(filename):
-            wb = openpyxl.load_workbook(filename)
-            for sheet_name in wb.sheetnames:
-                ws = wb[sheet_name]
-                palabras_con_imagenes = []
-                for row in ws.iter_rows():
-                    fila = []
-                    for i in range(0, len(row), 2):
-                        imagen_celda = row[i]
-                        palabra_celda = row[i + 1]
-                        fila.append((imagen_celda.value, palabra_celda.value))
-                    palabras_con_imagenes.append(fila)
-                self.tableros[sheet_name] = palabras_con_imagenes
+        try:
+            idioma = self.get_idioma()
+            filename = f'./tableros/tableros_{idioma}.xlsx'
+            if os.path.isfile(filename):
+                wb = openpyxl.load_workbook(filename)
+                for sheet_name in wb.sheetnames:
+                    ws = wb[sheet_name]
+                    palabras_con_imagenes = []
+                    for row in ws.iter_rows():
+                        fila = []
+                        for i in range(0, len(row), 2):
+                            imagen_celda = row[i]
+                            palabra_celda = row[i + 1]
+                            fila.append((imagen_celda.value, palabra_celda.value))
+                        palabras_con_imagenes.append(fila)
+                    self.tableros[sheet_name] = palabras_con_imagenes
 
+            return True
+        except:
+            self.mensaje(self.get_string("mensaje_error_tableros"))
+            return False
 
     def obtener_tablero(self, nombre):
-        return self.tableros.get(nombre.lower())
+        return self.tableros.get(nombre)
     
     def obtener_tablero_inicial(self):
         # Se coge el tablero con indice 0 
@@ -914,7 +911,7 @@ class Modelo:
             prompt = ("Recibes una frase con palabras en infinitivo y el idioma en el que está escrita(Español o Gallego)." +
                     "Tu tarea es conjugar la frase para que las palabras estén en la forma correcta y coherente entre sí siendo coherente también con el idioma.\n" +
                     "No se permiten signos de puntuación, solo palabras y el simbolo de interrogación(esto solamente en caso de que se añada en el input).\n"+
-                    "Devuelve SOLAMENTE la frase conjugada en la forma más previsible posible que crees que signifique lo que quiera decir.\n"+
+                    "Devuelve SOLAMENTE la frase conjugada en la forma más previsible posible que crees que significa lo que quiera decir.\n"+
                     "Si la frase tiene solamente una palabra, puedes agregar un determinante si es necesario.\n"+
                     "Ejemlo 1 (es): Entrada: TÚ COMER CARNE?\nRespuesta: ¿Tú comes carne?"+
                     "Ejemlo 2 (es): Entrada: YO QUERER COMER CARNE\nRespuesta: Yo quiero comer carne"+
@@ -996,22 +993,39 @@ class Modelo:
             self.input = []
             self.output = []
             return
+        
+        personas = []
+        contador = 1
+        for i in range(len(self.output)):
+            if i == 0 or self.output[i][1] != 0.0 or self.output[i-1][1] == 0.0:
+                personas.append(contador)
+            else:
+                contador += 1
+                personas.append(contador)
+
+        unique_persons = np.unique(personas)
+        input = self.input
+
+        for person in unique_persons:
+            indices = np.where(personas == person)[0]
+            for i in range(self.input.shape[1]-2):
+                input[indices, i] = gaussian_filter1d(self.input[indices, i], 5)
 
         # Se eliminan los datos con el ojo cerrado
         index = np.where(self.input[:, -2] < self.input[:, -1])
-        self.input = np.delete(self.input, index, axis=0)
-        self.output = np.delete(self.output, index, axis=0)
+        input = np.delete(self.input, index, axis=0)
+        output = np.delete(self.output, index, axis=0)
 
         # Se obtiene el conjunto 
-        input_conj = self.conjunto_1(self.input)
+        input_conj = self.conjunto_1(input)
 
         # Se convierten a tensores
         input_train = torch.from_numpy(input_conj).float()
-        output_train = torch.from_numpy(self.output).float()
+        output_train = torch.from_numpy(output).float()
 
         # Se reentrena al modelo
         # Definir el optimizador
-        optimizer = optim.Adam(self.modelo.parameters(), lr=0.001)
+        optimizer = optim.Adam(self.modelo.parameters(), lr=0.00001)
 
         train_losses = []
         best_loss = float('inf')
@@ -1024,6 +1038,7 @@ class Modelo:
             self.progreso_opt = 0
 
         #COMPROBAR EL NUMERO DE EPOCHS CREO QUE SON DEMASIADOS FAVORECE AL OVERFITTING
+        print("Precisión antes del reentrenamiento: ", first_loss) 
         for epoch in range(self.numero_epochs+1):
             optimizer.zero_grad()
 
@@ -1046,35 +1061,17 @@ class Modelo:
 
         self.modelo = models[train_losses.index(min(train_losses))]
         
+
+        print("--------PERDIDAS DEL REENTRENAMIENTO----------")
+        print("Perdida final con reentrenamiento: ", min(train_losses))
+        print("Perdida antes del reentrenamiento: ", first_loss)
+
         # Se optimizan las esquinas
         if self.optimizar:
-            print("Optimizando las esquinas")
-            indices, error_esquinas = self.optimizar_esquinas()
+            error_optimizado = self.optimizar_esquinas(input, output)
+            print("Error con optimización: ", error_optimizado)
 
-            #Calcular la perdida en las esquinas
-            input_esq_sin = self.input[indices]
-            output_esq_sin = self.output[indices]
-            input_conj_esq_sin = np.array(self.conjunto_1(input_esq_sin))
-            input_conj_esq_sin_tensor = torch.tensor(input_conj_esq_sin).float()
-            train_predictions_esq_sin = self.modelo(input_conj_esq_sin_tensor)
-            train_predictions_esq_sin_tensor = torch.tensor(train_predictions_esq_sin).float()
-            output_esq_sin_tensor = torch.tensor(output_esq_sin).float()
-            error_esquinas_sin = mse_loss(output_esq_sin_tensor, train_predictions_esq_sin_tensor).item()
-            print("Error en las esquinas sin optimizar: ", error_esquinas_sin)
-            print("Error en las esquinas optimizadas: ", error_esquinas)
 
-            # Calcular la perdida en toda la pantalla
-            input_conj = self.conjunto_1(self.input)
-            input_conj_tensor = torch.from_numpy(input_conj).float()
-            train_predictions = self.modelo(input_conj_tensor).detach().numpy()
-            train_predictions_ponderadas = []
-            for i, prediccion in enumerate(train_predictions):
-                train_predictions_ponderadas.append(self.ponderar(prediccion))
-            train_predictions_ponderadas_tensor = torch.tensor(train_predictions_ponderadas)
-            perdida_final = mse_loss(output_train, train_predictions_ponderadas_tensor).item()
-            print("Perdida final con las esquinas optimizadas: ", perdida_final)
-        print("Perdida final sin las esquinas optimizadas: ", min(train_losses))
-        print("Perdida antes del reentreno a los valores del usuario: ", first_loss)
 
 
 
@@ -1098,23 +1095,7 @@ class Modelo:
         self.Desplazamiento = self.Desplazamiento_org
 
 
-    def optimizar_esquinas(self):
-        #Recoger los indices de los outputs que esten en las zonas (0-0,25;0-0,25), (0,75-1;0-0,25), (0-0,25;0,75-1), (0,75-1;0,75-1)
-        indices = []
-        for i, output in enumerate(self.output):
-            if output[0] < 0.25 and output[1] < 0.25:
-                indices.append(i)
-            elif output[0] > 0.75 and output[1] < 0.25:
-                indices.append(i)
-            elif output[0] < 0.25 and output[1] > 0.75:
-                indices.append(i)
-            elif output[0] > 0.75 and output[1] > 0.75:
-                indices.append(i)
-        
-        # Hacer un nuevo input y output con los indices
-        input_opt = self.input[indices]
-        output_opt = self.output[indices]
-
+    def optimizar_esquinas(self, input_opt, output_opt):
         # Se obtiene el conjunto y los tensores
         input_conj_opt = self.conjunto_1(input_opt)
         input_conj_opt = torch.from_numpy(input_conj_opt).float()
@@ -1155,10 +1136,26 @@ class Modelo:
         
         
         def actualizar_progreso_opt(study, trial):
-            self.progreso_opt = int(((trial.number+1) / self.trials_opt) * 100)
+            progreso = int(((trial.number+1) / self.trials_opt) * 100)
+            if self.progreso_opt < progreso:
+                self.progreso_opt = progreso
 
+
+        initial_params = {
+        'limiteAbajoIzqX': 0.00,
+        'limiteAbajoIzqY': 0.00,
+        'limiteAbajoDerX': 1.00,
+        'limiteAbajoDerY': 0.00,
+        'limiteArribaIzqX': 0.00,
+        'limiteArribaIzqY': 1.00,
+        'limiteArribaDerX': 1.00,
+        'limiteArribaDerY': 1.00,
+        'DesplazamientoX': 0.50,
+        'DesplazamientoY': 0.50
+        }
         study = optuna.create_study(direction='minimize')
-        study.optimize(objective, n_trials=self.trials_opt, callbacks=[actualizar_progreso_opt],show_progress_bar=False)
+        study.enqueue_trial(initial_params)
+        study.optimize(objective, n_trials=self.trials_opt, callbacks=[actualizar_progreso_opt],show_progress_bar=False, n_jobs=3)
 
         # Guardar los resultados
         self.limiteAbajoIzq = [study.best_params['limiteAbajoIzqX'], study.best_params['limiteAbajoIzqY']]
@@ -1169,4 +1166,4 @@ class Modelo:
         
         self.optimizando = False
         self.progreso_opt = 0
-        return indices, study.best_value  
+        return study.best_value  

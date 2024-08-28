@@ -43,6 +43,8 @@
     "mensaje_error_corrigiendo": "Erro corrixindo a frase, reproducirase a orixinal",
     "mensaje_internet": "Non hai conexión a internet, ténteo de novo",
     "mensaje_api": "Erro na API, revise a configuración e reinicie a aplicación para activar",
+    "mensaje_error_tableros" : "Erro na carga dos taboleiros, revise que o archivo ten o formato adecuado",
+
 
     "_comment3": " ----------- MENSAJES DEL TUTORIAL ----------- ",
     "mensaje_tutorial_1": "Benvido a ComunicELA, primeiro deberá seleccionar unha cámara e unha voz",

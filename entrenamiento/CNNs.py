@@ -1,4 +1,6 @@
 import torch.nn as nn
+from torchvision import models
+
 class CNNs:
   def __init__(self):
       pass
@@ -97,13 +99,11 @@ class CNNs:
     ancho, alto = (210,120)
     model = nn.Sequential()
     model.add_module('conv1', nn.Conv2d(1, 8, kernel_size=3, stride=1, padding=1))
-    model.add_module('bn1', nn.BatchNorm2d(8))
     model.add_module('relu1', nn.ReLU())
     model.add_module('pool1', nn.MaxPool2d(kernel_size=2, stride=2))
     ancho, alto = self.dividir(ancho, alto)
     model.add_module('flatten', nn.Flatten())
     model.add_module('fc1', nn.Linear(8*ancho*alto, 100))
-    model.add_module('dropout1', nn.Dropout(p=0.5))
     model.add_module('relu3', nn.ReLU())
     model.add_module('fc2', nn.Linear(100, 2))
     return model
@@ -185,3 +185,18 @@ class CNNs:
   
 
 
+  def crear_resnet(self, indice):
+      if indice == 0:
+        modelo = models.resnet18(pretrained=True)
+      else:
+        modelo = models.resnet34(pretrained=True)
+      modelo.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+      modelo.fc = nn.Sequential(nn.Linear(modelo.fc.in_features, 2))
+      return modelo
+
+  def crear_resnet18(self):
+      return self.crear_resnet(0)
+
+
+  def crear_resnet34(self):
+      return self.crear_resnet(1)
