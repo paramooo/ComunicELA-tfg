@@ -750,12 +750,12 @@ if __name__ == '__main__':
     #ponderar_graficas2()
 
     #Para optimizar la ponderacion hay que ajustar las cosas dentro de la funcion con el modelo a probar etc
-    # modelo = torch.load('./entrenamiento/modelos/aprox1_9.pt')
-    # dataset = DatasetEntero("memoria")
+    # modelo = torch.load('./entrenamiento/modelos/aprox1_9Final.pt')
+    # dataset = DatasetEntero("unidos")
     # optimizar_ponderacion(modelo, dataset, ann=True)
 
     #------------ PARA VERIFICAR LA ESTRUCTURA DE UN MODELO GUARDADO ----------------
-    # model = torch.load('./entrenamiento/modelos/modelo_ajustado.pth')
+    # model = torch.load('./entrenamiento/modelos/aprox1_9Final.pt')
     # imprimir_estructura_modelo(model)
 
 
@@ -782,12 +782,12 @@ if __name__ == '__main__':
     #crear_tensores_database()
 
     #------------ PARA MAPA DE CALOR DE PRECISIÓN DEL MODELO ----------------
-    modelo = torch.load('./entrenamiento/modelos/aprox1_finaal9.pt')
-    dataset = DatasetEntero('memoria')
+    #modelo = torch.load('./entrenamiento/modelos/aprox1_9Final.pt')
+    #dataset = DatasetEntero('memoria')
     #sacar los datso de las personas 14 y 23
     #Coger 1 indice de cada 10 del dataset
     #dataset = torch.utils.data.Subset(dataset, range(0, len(dataset), 10))
-    graficas_precision_modelos(modelo,  dataset, ann=True)
+    #graficas_precision_modelos(modelo,  dataset, ann=True)
    
     # #Para el mapa de calor pero optimizado limiteAbajoIzq, limiteAbajoDer, limiteArribaIzq, limiteArribaDer, Desplazamiento):
     # parametros = [[0.1, 0.3],

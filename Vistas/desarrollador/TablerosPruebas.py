@@ -2,7 +2,7 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from KivyCustom.Custom import ButtonRnd
+from KivyCustom.Custom import ButtonRnd, CustomTextInput
 from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.graphics import Color, Line
@@ -51,34 +51,40 @@ class TablerosPruebas(Screen):
 
         # Espacio para texto
         scroll = ScrollView(size_hint=(.4, 1), scroll_type=['bars', 'content'], bar_width=10)
-        self.label = TextInput(
+        self.label = CustomTextInput(
             text=self.controlador.get_frase(),
-            size_hint_y=None,
-            height=Window.height * 0.2,
-            halign='left',
-            font_name='Texto',
+            # Limita el ancho del texto al ancho del widget
+            #size_hint_y=None,  # Esto permitirá que el TextInput se expanda a su tamaño natural
+            height=Window.height * 0.2,  # Altura inicial del TextInput
+            halign='left',  
+            font_name='Texto', 
             font_size=40,
-            background_color=(0.9, 0.9, 0.9, 0.8),
+            background_color=(0.7, 0.7, 0.7, 1),
             foreground_color=(0, 0, 0, 1),
+            readonly=True,
+            cursor_blink=False,  # Deshabilita el parpadeo del cursor
+            cursor_width=0,  # Establece el ancho del cursor a 0
+            focus=False
         )
         self.label.bind(on_text=self.on_text)
+        self.label.bind(on_touch_down = self.on_label_touch_down)
         scroll.add_widget(self.label)
         layout_botones.add_widget(scroll)
 
         # El botón para borrar una palabra
-        self.btn_borrar_palabra = ButtonRnd(text='Borrar', size_hint=(.12, 1), on_press=self.on_borrar_palabra, font_name='Texto')
+        self.btn_borrar_palabra = ButtonRnd(text='Borrar', size_hint=(.15, 1), on_press=self.on_borrar_palabra, font_name='Texto')
         layout_botones.add_widget(self.btn_borrar_palabra)
 
         # El botón para borrar todo el texto
-        self.btn_borrar_todo = ButtonRnd(text='Borrar todo', size_hint=(.12, 1), on_press=self.on_borrar_todo, font_name='Texto')
+        self.btn_borrar_todo = ButtonRnd(text='Borrar todo', size_hint=(.15, 1), on_press=self.on_borrar_todo, font_name='Texto')
         layout_botones.add_widget(self.btn_borrar_todo)
 
         # El botón para reproducir el texto
-        self.btn_reproducir = ButtonRnd(text='Reproducir', size_hint=(.12, 1), on_press=self.on_reproducir, font_name='Texto')
-        layout_botones.add_widget(self.btn_reproducir)
+        self.btn_reproducir = ButtonRnd(text='Reproducir', size_hint=(.15, 1), on_press=self.on_reproducir, font_name='Texto')
+        #layout_botones.add_widget(self.btn_reproducir)
 
         # El botón de alarma
-        self.btn_alarma = ButtonRnd(text='Alarma', size_hint=(.12, 1), on_press=self.on_alarma, font_name='Texto')
+        self.btn_alarma = ButtonRnd(text='Alarma', size_hint=(.15, 1), on_press=self.on_alarma, font_name='Texto')
         layout_botones.add_widget(self.btn_alarma)
 
         # Variables para emular el movimiento y clic
@@ -103,21 +109,25 @@ class TablerosPruebas(Screen):
 
     # Cambia el tablero antes de entrar para evitar el salto de la vista
     def on_pre_enter(self, *args):
+        self.controlador.cargar_tableros()
         self.controlador.set_pictogramas(False)
         #Las primeras pruebas son dentro del tablero rapido (pruebas de seleccionar una palabra solo)
-        self.cambiar_tablero(self.controlador.obtener_tablero('rápido'))
+        self.cambiar_tablero(self.controlador.obtener_tablero('TAB. RÁPIDO'))
 
     # Función para escanear al entrar
     def on_enter(self, *args):
         self.pruebas_mensajes()
+        
 
+    def on_label_touch_down(self, instance, touch):
+        self.on_reproducir(instance)
 
 
     def establecer_configuracion(self):
         # Pruebas NIVEL BASICO sin pictogramas y en el tablero rapido
         if self.indice_prueba < 5:
             self.controlador.set_pictogramas(False)
-            self.cambiar_tablero(self.controlador.obtener_tablero('rápido'))
+            self.cambiar_tablero(self.controlador.obtener_tablero('TAB. RÁPIDO'))
         
         # Pruebas NIVEL INTERMEDIO con pictogramas y en el tablero inicial
         if self.indice_prueba >= 5 and self.indice_prueba < 8:
@@ -262,7 +272,7 @@ class TablerosPruebas(Screen):
             # Emula el movimiento y clic
             if self.controlador.get_bloqueado():
                 if not hasattr(self, 'pantalla_bloqueada'):
-                    self.pantalla_bloqueada = PantallaBloqueada()
+                    self.pantalla_bloqueada = PantallaBloqueada(self.controlador)
                     self.add_widget(self.pantalla_bloqueada)
             else:
                 if hasattr(self, 'pantalla_bloqueada'):
@@ -305,7 +315,7 @@ class TablerosPruebas(Screen):
 
     def emular_movimiento_y_clic(self, x, y, click):        
         #Si la y es mayor que 0.2, casillas:
-        if y > 0.15:
+        if y > 0.17:
             casilla_ancho = 1 / self.tablero.cols
             casilla_alto = 0.8 / self.tablero.rows  # Quita el 0.2 inferior
 
@@ -319,13 +329,13 @@ class TablerosPruebas(Screen):
             indice_casilla = casilla_y * self.tablero.cols + casilla_x
         
         else: #Botones
-            if x < 0.12:
+            if x < 0.15:
                 indice_casilla = self.tablero.cols * self.tablero.rows
-            elif x > 0.52 and x < 0.64:
+            elif x > 0.55 and x < 0.70:
                 indice_casilla = self.tablero.cols * self.tablero.rows + 1
-            elif x >= 0.64 and x < 0.76:
+            elif x >= 0.70 and x < 0.85:
                 indice_casilla = self.tablero.cols * self.tablero.rows + 2
-            elif x >= 0.88:
+            elif x >= 0.85:
                 indice_casilla = self.tablero.cols * self.tablero.rows + 4
             else: # Asi al clickar sobre el texto tambien reproduce el audio
                 indice_casilla = self.tablero.cols * self.tablero.rows + 3
@@ -352,8 +362,13 @@ class TablerosPruebas(Screen):
         for i, btn in enumerate(self.tablero.casillas + self.botones):
             if i == self.casilla_bloqueada:
                 btn.state = 'down'
+                if self.casilla_bloqueada == self.tablero.cols * self.tablero.rows + 3:
+                    self.label.background_color = (0.3, 0.3, 0.3, 1)
             else:
                 btn.state = 'normal'
+                if i == self.tablero.cols * self.tablero.rows + 3:
+                    self.label.background_color = (0.7, 0.7, 0.7, 1)
+
 
         # Si se hace click, se activa la casilla bloqueada
         if click and self.casilla_bloqueada is not None:
@@ -378,7 +393,7 @@ class TablerosPruebas(Screen):
     # Evalúa la prueba realizada
     def evaluate_test(self):       
         # Guarda los resultados de la prueba en un archivo CSV
-        with open('./pruebas/pruebas.csv', 'a', newline='') as f:
+        with open('./pruebas/pruebas2.csv', 'a', newline='') as f:
             writer = csv.writer(f)
 
             tiempo_total = self.controlador.get_cronometro()

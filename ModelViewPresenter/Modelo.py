@@ -82,7 +82,7 @@ class Modelo:
         self.umbral_ear_bajo = 0.2
         self.umbral_ear_cerrado = 0.2
         self.contador_p = 0
-        self.suma_frames = 4 #Numero de frames que tiene que estar cerrado el ojo para que se considere un parpadeo
+        self.suma_frames = 5 #Numero de frames que tiene que estar cerrado el ojo para que se considere un parpadeo
         self.calibrado = False
         self.sonido_click = mixer.Sound('./sonidos/click.wav')
 
@@ -120,19 +120,12 @@ class Modelo:
         self.cronometro_pruebas = 0 #Variable para el cronometro de las pruebas
         self.contador_borrar = 0
 
-        # #Ponderar la mirada del ajustado
-        # self.limiteAbajoIzq_org = [0.10,0.07]
-        # self.limiteAbajoDer_org = [0.87,0.09]
-        # self.limiteArribaIzq_org = [0.03,0.81]
-        # self.limiteArribaDer_org = [0.93,0.89]
-        # self.Desplazamiento_org = [0.5,0.5]
-
         # #SIN PONDERAR 
-        self.limiteAbajoIzq_org = [0.08,0.11]
-        self.limiteAbajoDer_org = [0.88,0.12]
-        self.limiteArribaIzq_org = [0,1]
-        self.limiteArribaDer_org = [1,1]
-        self.Desplazamiento_org = [0.45,0.5]
+        self.limiteAbajoIzq_org = [0.05,0.05]
+        self.limiteAbajoDer_org = [0.95,0.05]
+        self.limiteArribaIzq_org = [0,0.95]
+        self.limiteArribaDer_org = [0.95,0.95]
+        self.Desplazamiento_org = [0.5,0.5]
 
         # Variables para la ponderacion
         self.limiteAbajoIzq = self.limiteAbajoIzq_org
@@ -712,7 +705,7 @@ class Modelo:
             return None
 
         # Se desempaquetan los datos del ear para el click
-        _, _, _, _, _, ear, _, _, frame_entero = datos
+        _, _, _, _, _, ear, _, _, _ = datos
         click = self.get_parpadeo(ear)
 
         # Se transforman los datos a un conjunto
@@ -1102,16 +1095,16 @@ class Modelo:
 
         def objective(trial):
             # Definir los límites de las esquinas y el desplazamiento
-            limiteAbajoIzqX = trial.suggest_float('limiteAbajoIzqX', 0.00, 0.15)
-            limiteAbajoIzqY = trial.suggest_float('limiteAbajoIzqY', 0.00, 0.15)
-            limiteAbajoDerX = trial.suggest_float('limiteAbajoDerX', 0.85, 1.00)
-            limiteAbajoDerY = trial.suggest_float('limiteAbajoDerY', 0.00, 0.15)
-            limiteArribaIzqX = trial.suggest_float('limiteArribaIzqX', 0.00, 0.15)
-            limiteArribaIzqY = trial.suggest_float('limiteArribaIzqY', 0.85, 1.00)
-            limiteArribaDerX = trial.suggest_float('limiteArribaDerX', 0.85, 1.00)
-            limiteArribaDerY = trial.suggest_float('limiteArribaDerY', 0.85, 1.00)
-            DesplazamientoX = trial.suggest_float('DesplazamientoX', 0.46, 0.54)
-            DesplazamientoY = trial.suggest_float('DesplazamientoY', 0.46, 0.54)
+            limiteAbajoIzqX = trial.suggest_float('limiteAbajoIzqX', self.limiteAbajoIzq_org[0]-0.025, self.limiteAbajoIzq_org[0]+0.025)
+            limiteAbajoIzqY = trial.suggest_float('limiteAbajoIzqY', self.limiteAbajoIzq_org[1]-0.025, self.limiteAbajoIzq_org[1]+0.025)
+            limiteAbajoDerX = trial.suggest_float('limiteAbajoDerX', self.limiteAbajoDer_org[0]-0.025, self.limiteAbajoDer_org[0]+0.025)
+            limiteAbajoDerY = trial.suggest_float('limiteAbajoDerY', self.limiteAbajoDer_org[1]-0.025, self.limiteAbajoDer_org[1]+0.025)
+            limiteArribaIzqX = trial.suggest_float('limiteArribaIzqX', self.limiteArribaIzq_org[0]-0.025, self.limiteArribaIzq_org[0]+0.025)
+            limiteArribaIzqY = trial.suggest_float('limiteArribaIzqY', self.limiteArribaIzq_org[1]-0.025, self.limiteArribaIzq_org[1]+0.025)
+            limiteArribaDerX = trial.suggest_float('limiteArribaDerX', self.limiteArribaDer_org[0]-0.025, self.limiteArribaDer_org[0]+0.025)
+            limiteArribaDerY = trial.suggest_float('limiteArribaDerY', self.limiteArribaDer_org[1]-0.025, self.limiteArribaDer_org[1]+0.025)
+            DesplazamientoX = trial.suggest_float('DesplazamientoX', self.Desplazamiento_org[0]-0.025, self.Desplazamiento_org[0]+0.025)
+            DesplazamientoY = trial.suggest_float('DesplazamientoY', self.Desplazamiento_org[1]-0.025, self.Desplazamiento_org[1]+0.025)
 
             limiteAbajoIzq = [limiteAbajoIzqX, limiteAbajoIzqY]
             limiteAbajoDer = [limiteAbajoDerX, limiteAbajoDerY]
@@ -1142,17 +1135,18 @@ class Modelo:
 
 
         initial_params = {
-        'limiteAbajoIzqX': 0.00,
-        'limiteAbajoIzqY': 0.00,
-        'limiteAbajoDerX': 1.00,
-        'limiteAbajoDerY': 0.00,
-        'limiteArribaIzqX': 0.00,
-        'limiteArribaIzqY': 1.00,
-        'limiteArribaDerX': 1.00,
-        'limiteArribaDerY': 1.00,
-        'DesplazamientoX': 0.50,
-        'DesplazamientoY': 0.50
+        'limiteAbajoIzqX': self.limiteAbajoIzq_org[0],
+        'limiteAbajoIzqY': self.limiteAbajoIzq_org[1],
+        'limiteAbajoDerX': self.limiteAbajoDer_org[0],
+        'limiteAbajoDerY': self.limiteAbajoDer_org[1],
+        'limiteArribaIzqX': self.limiteArribaIzq_org[0],
+        'limiteArribaIzqY': self.limiteArribaIzq_org[1],
+        'limiteArribaDerX': self.limiteArribaDer_org[0],
+        'limiteArribaDerY': self.limiteArribaDer_org[1],
+        'DesplazamientoX': self.Desplazamiento_org[0],
+        'DesplazamientoY': self.Desplazamiento_org[1]
         }
+
         study = optuna.create_study(direction='minimize')
         study.enqueue_trial(initial_params)
         study.optimize(objective, n_trials=self.trials_opt, callbacks=[actualizar_progreso_opt],show_progress_bar=False, n_jobs=3)
