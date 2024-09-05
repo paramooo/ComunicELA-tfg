@@ -1,6 +1,4 @@
 from kivy.uix.screenmanager import Screen
-from kivy.uix.gridlayout import GridLayout
-from kivy.uix.button import Button
 from kivy.uix.label import Label
 from KivyCustom.Custom import ButtonRnd, CustomTextInput
 from kivy.core.window import Window
@@ -10,7 +8,6 @@ from kivy.graphics import Color, Line
 from KivyCustom.Tablero import Tablero
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.image import Image
-from kivy.uix.widget import Widget
 from kivy.graphics import Rectangle
 
 class PantallaBloqueada(BoxLayout):

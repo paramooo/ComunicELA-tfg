@@ -16,7 +16,7 @@ from PIL import Image
 from torchvision.transforms import ToTensor
 import inspect
 from torch.utils.data import DataLoader, SubsetRandomSampler
-
+import pandas as pd
 
 #Importamos el detector
 sys_copy = sys.path.copy()
@@ -715,6 +715,111 @@ def graficas_posicion_orientacion():
     plt.show()
 
 
+def obtener_rango_casilla(indice, filas, columnas):
+    # Calcular el tamaño de cada casilla
+    ancho_casilla = 1 / columnas
+    alto_casilla = 0.8 / filas
+    
+    # Calcular la posición de la casilla
+    fila = filas - 1 - (indice // columnas)
+    columna = indice % columnas
+    
+    # Calcular los rangos de x e y
+    x_min = columna * ancho_casilla
+    x_max = (columna + 1) * ancho_casilla
+    y_min = 0.2 + fila * alto_casilla
+    y_max = 0.2 + (fila + 1) * alto_casilla
+    
+    return [(x_min, x_max), (y_min, y_max)]
+
+
+def evaluar_precision_fila(casilla, puntos):
+    rango = obtener_rango_casilla(casilla, 3, 4)
+    (xmin, xmax), (ymin, ymax) = rango
+    
+    # Calculamos el centro de la casilla
+    centro_x = (xmin + xmax) / 2
+    centro_y = (ymin + ymax) / 2
+    
+    distancias = []
+    for punto in puntos:
+        x, y = punto
+        distancia = np.sqrt((x - centro_x) ** 2 + (y - centro_y) ** 2)
+        distancias.append(distancia)
+    
+    media_distancias = np.mean(distancias)
+    return media_distancias
+
+
+
+
+
+def normalizar_puntos(casilla, puntos):
+    rango = obtener_rango_casilla(casilla, 3, 4)
+    (xmin, xmax), (ymin, ymax) = rango
+    
+    puntos_normalizados = []
+    for punto in puntos:
+        x, y = punto
+        x_norm = (x - xmin) / (xmax - xmin)
+        y_norm = (y - ymin) / (ymax - ymin)
+        puntos_normalizados.append((x_norm, y_norm))
+    
+    return puntos_normalizados
+
+
+
+
+def calcular_precisiones():
+    df = pd.read_excel("./pruebas/analizar.xlsx")
+    precisiones = {}
+    puntos_norm = []
+    puntos_dibujar = []
+    
+    for index, row in df.iterrows():
+        # Obtener los datos
+        casilla = row[2]
+        posiciones = eval(row[3])
+
+        # Calcular la precisión
+        precision = evaluar_precision_fila(casilla, posiciones)        
+        if casilla not in precisiones:
+            precisiones[casilla] = []
+        precisiones[casilla].append(precision)
+
+        # Normalizar los puntos
+        p = normalizar_puntos(casilla, posiciones)
+        puntos_norm.extend(p)
+
+        # Grafica de los puntos unidos por líneas
+        if len(p) > 20:
+            puntos_dibujar.append(p[-20:])
+
+
+    # Imprimir las precisiones
+    for casilla, valores in precisiones.items():
+        media_precision = np.mean(valores)
+        print(f"Precisión índice {casilla}: {media_precision}")
+
+    print(f"Precisión media: {np.mean([np.mean(valores) for valores in precisiones.values()])}")
+
+    # Grafica de dispersión
+    puntos_norm = np.array(puntos_norm)
+    plt.scatter(puntos_norm[:, 0], puntos_norm[:, 1], alpha=0.5)
+    plt.plot([0, 1, 1, 0, 0], [0, 0, 1, 1, 0], 'k-')  
+    plt.show()
+
+    # Hacer la media de los puntos dibujar, cada columna con la suya, y entre las x y entre las ys
+    puntos_dibujar = np.array(puntos_dibujar)
+    media_puntos = np.mean(puntos_dibujar, axis=0)
+
+    #hacer grafico de las y
+    plt.plot(media_puntos[:, 1])
+    plt.show()
+    
+
+
+
 
 # ---------------------------------------------------------------------------------------------------------
 
@@ -812,4 +917,8 @@ if __name__ == '__main__':
     #cuantas epoch se entreno el modelo
     # model = torch.load('./entrenamiento/modelos/9-10000b0005lr.pt')
     # print(model.history)
+
+    #-------------------EVALUAR PRUEBAS---------------------
+    #calcular_precisiones()
+
     pass

@@ -1,33 +1,40 @@
 from Servicios.Detector import Detector
 from Adapter.Camara import Camara
-from pygame import mixer
-import random
-import numpy as np
-import os
+from pygame.mixer import init as mixerInit, Sound as mixerSound
+from random import randint
+from numpy import zeros as np_zeros, zeros_like as np_zeros_like, uint8 as np_uint8, array as np_array, \
+    ndarray as np_ndarray, expand_dims as np_expand_dims, concatenate as np_concatenate, min as np_min, \
+    max as np_max, clip as np_clip, sqrt as np_sqrt, pi as np_pi, median as np_median, mean as np_mean, \
+    polyfit as np_polyfit, poly1d as np_poly1d, sum as np_sum, unique as np_unique, where as np_where, \
+    delete as np_delete, arctan2 as np_arctan2, cos as np_cos, sin as np_sin, pi as np_pi
+from os import getenv
+from os.path import isfile as os_isfile
 from kivy.app import App
 from KivyCustom.Mensajes import Mensajes
-import cv2
-import torch
-import threading
-import math
+from cv2 import imread as cv2_imread, IMREAD_GRAYSCALE as cv2_IMREAD_GRAYSCALE, addWeighted as cv2_addWeighted, \
+    circle as cv2_circle, line as cv2_line, copyMakeBorder as cv2_copyMakeBorder, resize as cv2_resize, \
+    BORDER_REPLICATE as cv2_BORDER_REPLICATE, INTER_AREA as cv2_INTER_AREA, imwrite as cv2_imwrite
+from torch import from_numpy as torch_from_numpy, load as torch_load
+from threading import Thread as threading_Thread
 from torch import nn
 import torch.optim as optim
 from kivy.clock import Clock
-import json
+from json import load as json_load, dump as json_dump
 from PIL import Image, ImageDraw, ImageFont
 from torch.nn.functional import mse_loss
-import optuna
-import openpyxl
-import google
-import google.generativeai as genai
-import win32com.client
-import socket
+from optuna import create_study
+from openpyxl import load_workbook
+from google.api_core.exceptions import RetryError
+from google.api_core.retry import Retry
+from google.generativeai import configure as genai_configure, GenerativeModel as genai_GenerativeModel
+from win32com.client import Dispatch
+from socket import create_connection
 from scipy.ndimage import gaussian_filter1d
 
 class Modelo:
     def __init__(self):
         # Para el sonido del click
-        mixer.init(buffer=4096)
+        mixerInit(buffer=4096)
 
         # Se inicializa el detector
         self.detector = Detector()
@@ -37,18 +44,18 @@ class Modelo:
         self.camaras = self.obtener_camaras()
 
         # Iniciacion de gemini
-        api_key = os.getenv('GOOGLE_API_KEY')
+        api_key = getenv('GOOGLE_API_KEY')
         self.modelo_gemini = None
         if api_key is not None:
-            genai.configure(api_key=api_key)
-            self.modelo_gemini = genai.GenerativeModel('gemini-1.5-flash')
+            genai_configure(api_key=api_key)
+            self.modelo_gemini = genai_GenerativeModel('gemini-1.5-flash')
             
         # Inicializar el sintetizador de voz
-        self.text_to_speech =  win32com.client.Dispatch("SAPI.SpVoice")
+        self.text_to_speech =  Dispatch("SAPI.SpVoice")
 
         #Cargamos el config con la camara, corrector, idioma y voz
         with open('./ajustes/config.json', 'r') as f:
-            config = json.load(f)
+            config = json_load(f)
             if config["camara"] in self.camaras:
                 self.iniciar_camara(config["camara"])
                 self.camara_act = config["camara"]
@@ -65,13 +72,13 @@ class Modelo:
 
         # Cargar el archivo de idioma correspondiente
         with open(f"./strings/{self.get_idioma()}.json", "r", encoding='utf-8') as f:
-            self.strings = json.load(f)
+            self.strings = json_load(f)
 
         # Variables para el modelo de test
         self.modelo_org = './Componentes/aprox1_9Final.pt'
         self.postprocs = True
 
-        self.modelo = torch.load(self.modelo_org)
+        self.modelo = torch_load(self.modelo_org)
 
         # Variables de control para el tamaño de la fuente de los textos
         self.tamaño_fuente_txts = 25
@@ -84,7 +91,7 @@ class Modelo:
         self.contador_p = 0
         self.suma_frames = 5 #Numero de frames que tiene que estar cerrado el ojo para que se considere un parpadeo
         self.calibrado = False
-        self.sonido_click = mixer.Sound('./sonidos/click.wav')
+        self.sonido_click = mixerSound('./sonidos/click.wav')
 
 
         # Variables para la recopilacion de datos 
@@ -112,8 +119,8 @@ class Modelo:
         self.frase = ""
         self.tablero = None
         self.bloqueado = False
-        self.sonido_alarma = mixer.Sound('./sonidos/alarm.wav')
-        self.sonido_lock = mixer.Sound('./sonidos/lock.wav')
+        self.sonido_alarma = mixerSound('./sonidos/alarm.wav')
+        self.sonido_lock = mixerSound('./sonidos/lock.wav')
         self.pictogramas = False
         
         #variables para las pruebas de la aplicacion
@@ -135,8 +142,8 @@ class Modelo:
         self.Desplazamiento = self.Desplazamiento_org
 
         # Aplicar un umbral
-        self.fondo_frame_editado = cv2.imread('./imagenes/fondo_marco_amp.png', cv2.IMREAD_GRAYSCALE)
-        self.mask_rgb = np.zeros((*self.fondo_frame_editado.shape, 3), dtype=np.uint8)
+        self.fondo_frame_editado = cv2_imread('./imagenes/fondo_marco_amp.png', cv2_IMREAD_GRAYSCALE)
+        self.mask_rgb = np_zeros((*self.fondo_frame_editado.shape, 3), dtype=np_uint8)
         self.mask_rgb[self.fondo_frame_editado<50] = [50, 50, 50]
 
         #Variables para el reentrenamiento
@@ -169,7 +176,7 @@ class Modelo:
     #Funciones para el procesado de datos antes del modelo
     def datos_as_array(self, datos):
         distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, _ = datos
-        datos_transformados = np.expand_dims(np.concatenate([distancias_izq, distancias_der, [or_x], [or_y], [or_z], coord_cab, [ear], [umbral_ear]]), axis=0)
+        datos_transformados = np_expand_dims(np_concatenate([distancias_izq, distancias_der, [or_x], [or_y], [or_z], coord_cab, [ear], [umbral_ear]]), axis=0)
         return datos_transformados
 
     def conjunto_1(self, data):
@@ -182,10 +189,10 @@ class Modelo:
         [37-38] EAR y umbral EAR 
         """
         # Normalizar cada valor de los primeros 16 de cada fila entre ellos mismos PARA NORMALIZAR EL OJO DERECHO
-        data[:, :16] = (data[:, :16] - np.min(data[:, :16], axis=1, keepdims=True)) / (np.max(data[:, :16], axis=1, keepdims=True) - np.min(data[:, :16], axis=1, keepdims=True))
+        data[:, :16] = (data[:, :16] - np_min(data[:, :16], axis=1, keepdims=True)) / (np_max(data[:, :16], axis=1, keepdims=True) - np_min(data[:, :16], axis=1, keepdims=True))
 
         # Normalizar cada valor de los segundos 16 de cada fila entre ellos mismos PARA NORMALIZAR EL OJO IZQUIERDO
-        data[:, 16:32] = (data[:, 16:32] - np.min(data[:, 16:32], axis=1, keepdims=True)) / (np.max(data[:, 16:32], axis=1, keepdims=True) - np.min(data[:, 16:32], axis=1, keepdims=True))
+        data[:, 16:32] = (data[:, 16:32] - np_min(data[:, 16:32], axis=1, keepdims=True)) / (np_max(data[:, 16:32], axis=1, keepdims=True) - np_min(data[:, 16:32], axis=1, keepdims=True))
 
         return data
 
@@ -195,28 +202,28 @@ class Modelo:
     # Cargamos la configuracion del tutorial
     def get_show_tutorial(self):    
         with open('./ajustes/config.json', 'r') as f:
-            config = json.load(f)
+            config = json_load(f)
             return config["mostrar_tutorial"]
 
         
     def set_show_tutorial(self, valor):
         with open('./ajustes/config.json', 'r') as f:
-            config = json.load(f)
+            config = json_load(f)
         config["mostrar_tutorial"] = valor
         with open('./ajustes/config.json', 'w') as f:
-            json.dump(config, f)
+            json_dump(config, f)
 
     def cambiar_idioma(self):
         idioma = "gal_ES" if self.get_idioma() == "es_ES" else "es_ES"
         with open('./ajustes/config.json', 'r') as f:
-            config = json.load(f)
+            config = json_load(f)
         config["idioma"] = idioma
         with open('./ajustes/config.json', 'w') as f:
-            json.dump(config, f)
+            json_dump(config, f)
 
         #Actualizar el idioma de los strings
         with open(f"./strings/{idioma}.json", "r", encoding='utf-8') as f:
-            self.strings = json.load(f)
+            self.strings = json_load(f)
         #Actualizar el idioma de los tableros
         # self.cargar_tableros()
         
@@ -225,7 +232,7 @@ class Modelo:
     def get_idioma(self):
         try:
             with open('./ajustes/config.json', 'r') as f:
-                config = json.load(f)
+                config = json_load(f)
                 return config["idioma"]
         except FileNotFoundError:
             return "es_ES"
@@ -260,10 +267,10 @@ class Modelo:
             self.corrector_frases = not self.corrector_frases
             estado = self.corrector_frases
             with open('./ajustes/config.json', 'r') as f:
-                config = json.load(f)
+                config = json_load(f)
             config["corrector_frases"] = self.corrector_frases
             with open('./ajustes/config.json', 'w') as f:
-                json.dump(config, f)
+                json_dump(config, f)
         return estado
 
     def api_bien_configurada(self):
@@ -283,7 +290,7 @@ class Modelo:
 
     def tarea_hilo(self, funcion):
         # Crear un hilo para la tarea
-        hilo = threading.Thread(target=funcion)
+        hilo = threading_Thread(target=funcion)
         hilo.start()
 
     def salir(self):
@@ -318,10 +325,10 @@ class Modelo:
             self.camara_act = camara
             #giardar en el config
             with open('./ajustes/config.json', 'r') as f:
-                config = json.load(f)
+                config = json_load(f)
             config["camara"] = camara
             with open('./ajustes/config.json', 'w') as f:
-                json.dump(config, f)
+                json_dump(config, f)
 
     def get_index_actual(self):
         return self.camara_act
@@ -347,7 +354,7 @@ class Modelo:
             draw.text((180, 430), text, font=font, fill=(255, 255, 255, 0))
 
             # Convertir la imagen de PIL de vuelta a un array de numpy
-            frame = np.array(frame_pil)
+            frame = np_array(frame_pil)
             
             return frame
 
@@ -363,7 +370,7 @@ class Modelo:
 
         # Ahora puedes usar mask_rgb en lugar de self.mask
 
-        frame = cv2.addWeighted(frame, 0.5, self.mask_rgb, 1, 0)
+        frame = cv2_addWeighted(frame, 0.5, self.mask_rgb, 1, 0)
 
         # Crear un circulo en el medio del frame
         r = 10
@@ -382,31 +389,31 @@ class Modelo:
                 color = (255, 255, 255)
 
                 # Calcular el ángulo de la línea desde el centro del círculo hasta el punto central
-                angle = math.atan2(dy, dx)
+                angle = np_arctan2(dy, dx)
 
                 # Calcular las coordenadas del punto en el borde del círculo
-                x_end = frame.shape[1]//2 + r * math.cos(angle)
-                y_end = frame.shape[0]//2 + r * math.sin(angle)
+                x_end = frame.shape[1]//2 + r * np_cos(angle)
+                y_end = frame.shape[0]//2 + r * np_sin(angle)
 
                 # Dibujar la línea principal de la flecha
-                cv2.line(frame, (x, y), (int(x_end), int(y_end)), color, 2)
+                cv2_line(frame, (x, y), (int(x_end), int(y_end)), color, 2)
 
                 # Calcular las coordenadas de los puntos de la punta de la flecha
-                arrow_size = np.clip(np.sqrt(dx**2 + dy**2) / 5, 1, 100)
-                dx_arrow1 = arrow_size * math.cos(angle + np.pi/4)  # Ajusta el ángulo para la primera línea de la punta de la flecha
-                dy_arrow1 = arrow_size * math.sin(angle + np.pi/4)
-                dx_arrow2 = arrow_size * math.cos(angle - np.pi/4)  # Ajusta el ángulo para la segunda línea de la punta de la flecha
-                dy_arrow2 = arrow_size * math.sin(angle - np.pi/4)
+                arrow_size = np_clip(np_sqrt(dx**2 + dy**2) / 5, 1, 100)
+                dx_arrow1 = arrow_size * np_cos(angle + np_pi/4)  # Ajusta el ángulo para la primera línea de la punta de la flecha
+                dy_arrow1 = arrow_size * np_sin(angle + np_pi/4)
+                dx_arrow2 = arrow_size * np_cos(angle - np_pi/4)  # Ajusta el ángulo para la segunda línea de la punta de la flecha
+                dy_arrow2 = arrow_size * np_sin(angle - np_pi/4)
 
                 # Dibujar las líneas de la punta de la flecha
-                cv2.line(frame, (int(x_end), int(y_end)), (int(x_end + dx_arrow1), int(y_end + dy_arrow1)), color, 2)
-                cv2.line(frame, (int(x_end), int(y_end)), (int(x_end + dx_arrow2), int(y_end + dy_arrow2)), color, 2)
+                cv2_line(frame, (int(x_end), int(y_end)), (int(x_end + dx_arrow1), int(y_end + dy_arrow1)), color, 2)
+                cv2_line(frame, (int(x_end), int(y_end)), (int(x_end + dx_arrow2), int(y_end + dy_arrow2)), color, 2)
 
             # Crear un circulo de radio r en el centro
-            cv2.circle(frame, (frame.shape[1]//2, frame.shape[0]//2), r, color, 2)
+            cv2_circle(frame, (frame.shape[1]//2, frame.shape[0]//2), r, color, 2)
 
             # Crear un circulo de radio 10 en el punto central
-            cv2.circle(frame, (round(frame.shape[1]*coord_central[0]), round(frame.shape[0]*coord_central[1])), 5, color, -1)   
+            cv2_circle(frame, (round(frame.shape[1]*coord_central[0]), round(frame.shape[0]*coord_central[1])), 5, color, -1)   
 
         # Colorear los puntos de la cara
         if puntos_or is not None:
@@ -437,10 +444,10 @@ class Modelo:
                 self.text_to_speech.Voice = voz
                 #Apuntar la voz en el config
                 with open('./ajustes/config.json', 'r') as f:
-                    config = json.load(f)
+                    config = json_load(f)
                 config["voz"] = voz_description
                 with open('./ajustes/config.json', 'w') as f:
-                    json.dump(config, f)
+                    json_dump(config, f)
                 break
 
     def get_voz_seleccionada(self):
@@ -552,7 +559,7 @@ class Modelo:
             self.direccion *= -1
 
             # Actualiza la posición y de la pelota con un salto aleatorio
-            salto = random.randint(min(salto_bajo, salto_alto), max(salto_bajo, salto_alto))
+            salto = randint(min(salto_bajo, salto_alto), max(salto_bajo, salto_alto))
             self.pos_r = (self.pos_r[0], self.pos_r[1] + salto)
 
         # Si la pelota toca el borde superior de la pantalla, invierte el salto
@@ -573,7 +580,7 @@ class Modelo:
             datos = self.obtener_datos()
             if datos is not None:                
                 distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, frame = datos
-                self.guardar_datos(distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, self.pos_r/np.array(tamano_pantalla), frame)
+                self.guardar_datos(distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, self.pos_r/np_array(tamano_pantalla), frame)
         return self.pos_r
 
 
@@ -594,16 +601,16 @@ class Modelo:
             with open(f'./entrenamiento/datos/txts/input.txt', 'a') as f:
                 for i, linea in enumerate(self.input):
                     # Convertir el elemento a cadena si es una lista o tupla
-                    if isinstance(linea, (list, tuple, np.ndarray)):
+                    if isinstance(linea, (list, tuple, np_ndarray)):
                         linea = ', '.join(map(str, linea))
                     f.write(str(linea) + '\n')
-                    cv2.imwrite(f'./entrenamiento/datos/frames/frame_{num_lineas}.jpg', self.input_frames[i])
+                    cv2_imwrite(f'./entrenamiento/datos/frames/frame_{num_lineas}.jpg', self.input_frames[i])
                     num_lineas += 1
 
             with open(f'./entrenamiento/datos/txts/output.txt', 'a') as f:
                 for linea in self.output:
                     # Convertir el elemento a cadena si es una lista o tupla
-                    if isinstance(linea, (list, tuple, np.ndarray)):
+                    if isinstance(linea, (list, tuple, np_ndarray)):
                         linea = ', '.join(map(str, linea))
                     f.write(str(linea) + '\n')
 
@@ -681,13 +688,13 @@ class Modelo:
         # Calcular cuántos píxeles se deben agregar a cada lado
         if ratio_act < ratio:
             diff = int((rect_frame.shape[0] * ratio - rect_frame.shape[1]) / 2)
-            rect_frame = cv2.copyMakeBorder(rect_frame, 0, 0, diff, diff, cv2.BORDER_REPLICATE)
+            rect_frame = cv2_copyMakeBorder(rect_frame, 0, 0, diff, diff, cv2_BORDER_REPLICATE)
         elif ratio_act > ratio:
             diff = int((rect_frame.shape[1] / ratio - rect_frame.shape[0]) / 2)
-            rect_frame = cv2.copyMakeBorder(rect_frame, diff, diff, 0, 0, cv2.BORDER_REPLICATE)
+            rect_frame = cv2_copyMakeBorder(rect_frame, diff, diff, 0, 0, cv2_BORDER_REPLICATE)
 
         # Redimensionar a 200x50 manteniendo la relación de aspecto
-        rect_frame = cv2.resize(rect_frame, (200, 50), interpolation = cv2.INTER_AREA)
+        rect_frame = cv2_resize(rect_frame, (200, 50), interpolation = cv2_INTER_AREA)
 
         return rect_frame
 
@@ -711,7 +718,7 @@ class Modelo:
         # Se transforman los datos a un conjunto
         datos_array = self.datos_as_array(datos)
         datos_array = self.conjunto_1(datos_array)
-        datos_array = torch.from_numpy(datos_array).float()
+        datos_array = torch_from_numpy(datos_array).float()
 
 
         #Se edita el frame
@@ -743,13 +750,13 @@ class Modelo:
             self.historial.pop(0)
 
         # Primero con la mediana para eliminar ruido y no perder tanto retraso
-        mirada = np.median(self.historial[-self.cantidad_suavizado:], axis=0)
+        mirada = np_median(self.historial[-self.cantidad_suavizado:], axis=0)
 
         self.historial2.append(mirada)
         if len(self.historial2) > self.hist_max:
             self.historial2.pop(0)
         # Despues con la media de las medianas para suavizar el trazado del puntero
-        mirada = np.mean(self.historial2[-self.cantidad_suavizado2:], axis=0)
+        mirada = np_mean(self.historial2[-self.cantidad_suavizado2:], axis=0)
         
         return mirada
 
@@ -785,20 +792,20 @@ class Modelo:
             FinZonaNoAfectadaY = LimiteAltoY - (LimiteAltoY - (self.Desplazamiento[1] if limiteAbajoDer is None else Desplazamiento[1])) / 2
 
             # Calculamos las x y las y de las Xs
-            Xx = np.array([LimiteBajoX, ComienzoZonaNoAfectadaX, (self.Desplazamiento[0] if limiteAbajoDer is None else Desplazamiento[0]), FinZonaNoAfectadaX, LimiteAltoX])
-            Xy = np.array([0, ComienzoZonaNoAfectadaX, 0.5, FinZonaNoAfectadaX, 1])
-            Yx = np.array([LimiteBajoY, ComienzoZonaNoAfectadaY, (self.Desplazamiento[1] if limiteAbajoDer is None else Desplazamiento[1]), FinZonaNoAfectadaY, LimiteAltoY])
-            Yy = np.array([0, ComienzoZonaNoAfectadaY, 0.5, FinZonaNoAfectadaY, 1])
+            Xx = np_array([LimiteBajoX, ComienzoZonaNoAfectadaX, (self.Desplazamiento[0] if limiteAbajoDer is None else Desplazamiento[0]), FinZonaNoAfectadaX, LimiteAltoX])
+            Xy = np_array([0, ComienzoZonaNoAfectadaX, 0.5, FinZonaNoAfectadaX, 1])
+            Yx = np_array([LimiteBajoY, ComienzoZonaNoAfectadaY, (self.Desplazamiento[1] if limiteAbajoDer is None else Desplazamiento[1]), FinZonaNoAfectadaY, LimiteAltoY])
+            Yy = np_array([0, ComienzoZonaNoAfectadaY, 0.5, FinZonaNoAfectadaY, 1])
 
             # Crear la función polinómica
-            polinomioX = np.poly1d(np.polyfit(Xx, Xy, 4))
-            polinomioY = np.poly1d(np.polyfit(Yx, Yy, 4))
+            polinomioX = np_poly1d(np_polyfit(Xx, Xy, 4))
+            polinomioY = np_poly1d(np_polyfit(Yx, Yy, 4))
 
             # Calcular el valor ponderado
-            return np.array([np.clip(polinomioX(mirada[0]), 0, 1), np.clip(polinomioY(mirada[1]), 0, 1)])
+            return np_array([np_clip(polinomioX(mirada[0]), 0, 1), np_clip(polinomioY(mirada[1]), 0, 1)])
 
         def calcular_distancia(mirada, esquina):
-            return np.sqrt((mirada[0] - esquina[0])**2 + (mirada[1] - esquina[1])**2)
+            return np_sqrt((mirada[0] - esquina[0])**2 + (mirada[1] - esquina[1])**2)
 
         # Definir las cuatro esquinas
         esquinas = []
@@ -818,16 +825,16 @@ class Modelo:
         distancias = [calcular_distancia(mirada, esquina) for esquina in esquinas]
 
         # Normalizar las distancias para obtener pesos de ponderación
-        pesos = np.array([1 / (distancia*2 + 1) for distancia in distancias])  # Cambio aquí
+        pesos = np_array([1 / (distancia*2 + 1) for distancia in distancias])  # Cambio aquí
 
         # Realizar normalizacion min-max de los pesos
-        pesos = (pesos - np.min(pesos)) / (np.max(pesos) - np.min(pesos))
+        pesos = (pesos - np_min(pesos)) / (np_max(pesos) - np_min(pesos))
 
         # Sumar los pesos
-        suma_pesos = np.sum(pesos)
+        suma_pesos = np_sum(pesos)
 
         # Ponderar las ponderaciones de acuerdo a las distancias
-        ponderacion_final = np.zeros_like(ponderaciones[0])
+        ponderacion_final = np_zeros_like(ponderaciones[0])
         for i, ponderacion_esquina in enumerate(ponderaciones):
             ponderacion_final += ponderacion_esquina * (pesos[i] / suma_pesos)
 
@@ -842,8 +849,8 @@ class Modelo:
         try:
             idioma = self.get_idioma()
             filename = f'./tableros/tableros_{idioma}.xlsx'
-            if os.path.isfile(filename):
-                wb = openpyxl.load_workbook(filename)
+            if os_isfile(filename):
+                wb = load_workbook(filename)
                 for sheet_name in wb.sheetnames:
                     ws = wb[sheet_name]
                     palabras_con_imagenes = []
@@ -890,7 +897,7 @@ class Modelo:
 
     def internet_available(self):
         try:
-            socket.create_connection(("8.8.8.8", 53))
+            create_connection(("8.8.8.8", 53))
             return True
         except OSError:
             return False
@@ -913,8 +920,8 @@ class Modelo:
                     "\n\nFrase: " + frase + "\nIdioma: " + self.get_idioma())
             if self.internet_available():
                 try:
-                    frase_mod = self.modelo_gemini.generate_content(prompt, request_options={'timeout': 5, 'retry': google.api_core.retry.Retry(initial=1, multiplier=2, maximum=1, timeout=5)}, generation_config={'temperature': 0.1})
-                except google.api_core.exceptions.RetryError as e:
+                    frase_mod = self.modelo_gemini.generate_content(prompt, request_options={'timeout': 5, 'retry': Retry(initial=1, multiplier=2, maximum=1, timeout=5)}, generation_config={'temperature': 0.1})
+                except RetryError as e:
                     pass
             else:
                 pass
@@ -976,8 +983,8 @@ class Modelo:
 
     def reentrenar(self):
         # Se obtienen los datos
-        self.input = np.array(self.input)
-        self.output = np.array(self.output)
+        self.input = np_array(self.input)
+        self.output = np_array(self.output)
 
         # Si los datos estan vacios se pone el porcentaje a 100
         if len(self.input) < 10:
@@ -996,25 +1003,25 @@ class Modelo:
                 contador += 1
                 personas.append(contador)
 
-        unique_persons = np.unique(personas)
+        unique_persons = np_unique(personas)
         input = self.input
 
         for person in unique_persons:
-            indices = np.where(personas == person)[0]
+            indices = np_where(personas == person)[0]
             for i in range(self.input.shape[1]-2):
                 input[indices, i] = gaussian_filter1d(self.input[indices, i], 5)
 
         # Se eliminan los datos con el ojo cerrado
-        index = np.where(self.input[:, -2] < self.input[:, -1])
-        input = np.delete(self.input, index, axis=0)
-        output = np.delete(self.output, index, axis=0)
+        index = np_where(self.input[:, -2] < self.input[:, -1])
+        input = np_delete(self.input, index, axis=0)
+        output = np_delete(self.output, index, axis=0)
 
         # Se obtiene el conjunto 
         input_conj = self.conjunto_1(input)
 
         # Se convierten a tensores
-        input_train = torch.from_numpy(input_conj).float()
-        output_train = torch.from_numpy(output).float()
+        input_train = torch_from_numpy(input_conj).float()
+        output_train = torch_from_numpy(output).float()
 
         # Se reentrena al modelo
         # Definir el optimizador
@@ -1072,7 +1079,7 @@ class Modelo:
         if self.numero_entrenamientos == 0:
             self.mensaje(self.get_string("mensaje_no_reentrenamientos"))
             return
-        self.modelo = torch.load(self.modelo_org)
+        self.modelo = torch_load(self.modelo_org)
         self.mensaje(self.get_string("mensaje_descartados"))
         self.numero_entrenamientos = 0
 
@@ -1091,7 +1098,7 @@ class Modelo:
     def optimizar_esquinas(self, input_opt, output_opt):
         # Se obtiene el conjunto y los tensores
         input_conj_opt = self.conjunto_1(input_opt)
-        input_conj_opt = torch.from_numpy(input_conj_opt).float()
+        input_conj_opt = torch_from_numpy(input_conj_opt).float()
 
         def objective(trial):
             # Definir los límites de las esquinas y el desplazamiento
@@ -1120,8 +1127,8 @@ class Modelo:
 
             
             # Calcular el error
-            output_tensor = torch.from_numpy(output_opt).float()
-            predicciones_tensor = torch.from_numpy(predicciones).float()
+            output_tensor = torch_from_numpy(output_opt).float()
+            predicciones_tensor = torch_from_numpy(predicciones).float()
 
             error = mse_loss(output_tensor, predicciones_tensor).item()
 
@@ -1147,7 +1154,7 @@ class Modelo:
         'DesplazamientoY': self.Desplazamiento_org[1]
         }
 
-        study = optuna.create_study(direction='minimize')
+        study = create_study(direction='minimize')
         study.enqueue_trial(initial_params)
         study.optimize(objective, n_trials=self.trials_opt, callbacks=[actualizar_progreso_opt],show_progress_bar=False, n_jobs=3)
 

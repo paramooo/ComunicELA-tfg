@@ -1,5 +1,4 @@
 from kivy.uix.screenmanager import Screen
-from KivyCustom.Custom import ButtonRnd
 from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
@@ -7,7 +6,6 @@ from kivy.graphics import Color, Ellipse
 from kivy.graphics import InstructionGroup
 from kivy.clock import Clock
 from kivy.uix.widget import Widget
-from kivy.graphics import RoundedRectangle
 from KivyCustom.PopUp import CustPopup
 
 class Reentrenar(Screen):
@@ -33,7 +31,6 @@ class Reentrenar(Screen):
 
     def on_pre_enter(self, *args):
         self.texto_explicativo.text = ""
-        #self.btn_inicio.disabled = True
 
 
     def on_enter(self, *args):

@@ -1,6 +1,7 @@
-import mediapipe as mp
-import numpy as np
-import cv2
+from mediapipe.python.solutions.face_mesh import FaceMesh
+from numpy import linalg as np_linalg, array as np_array, zeros as np_zeros, clip as np_clip
+from cv2 import solvePnP as cv2_solvePnP, Rodrigues as cv2_Rodrigues, decomposeProjectionMatrix as cv2_decomposeProjectionMatrix, \
+    hconcat as cv2_hconcat, SOLVEPNP_ITERATIVE as cv2_SOLVEPNP_ITERATIVE
 
 class Detector:
     def __init__(self):
@@ -14,7 +15,7 @@ class Detector:
         self.indices_orientacion = [4, 152, 263, 33, 287, 57]
 
         #Modelo de MediaPipe
-        self.deteccion_cara = mp.solutions.face_mesh.FaceMesh(max_num_faces=1,  
+        self.deteccion_cara = FaceMesh(max_num_faces=1,  
                                                             refine_landmarks=True,  #Para incluir la deteccion de las pupilas
                                                             min_detection_confidence=0.5)
         
@@ -71,9 +72,9 @@ class Detector:
     
     #Funcion individual para cada ojo
     def calcular_ear(self, coordenadas_ojo):
-        d_A = np.linalg.norm(np.array(coordenadas_ojo[1]) - np.array(coordenadas_ojo[5]))
-        d_B = np.linalg.norm(np.array(coordenadas_ojo[2]) - np.array(coordenadas_ojo[4]))
-        d_C = np.linalg.norm(np.array(coordenadas_ojo[0]) - np.array(coordenadas_ojo[3]))
+        d_A = np_linalg.norm(np_array(coordenadas_ojo[1]) - np_array(coordenadas_ojo[5]))
+        d_B = np_linalg.norm(np_array(coordenadas_ojo[2]) - np_array(coordenadas_ojo[4]))
+        d_C = np_linalg.norm(np_array(coordenadas_ojo[0]) - np_array(coordenadas_ojo[3]))
         ear = (d_A + d_B) / (2.0 * d_C)
         return ear
 
@@ -93,9 +94,9 @@ class Detector:
         distancias_izq = []
         distancias_der = []
         for i in range(1, len(coord_o_izq)):
-            distancias_izq.append(np.linalg.norm(np.array(coord_o_izq[0]) - np.array(coord_o_izq[i])))
+            distancias_izq.append(np_linalg.norm(np_array(coord_o_izq[0]) - np_array(coord_o_izq[i])))
         for i in range(1, len(coord_o_der)):
-            distancias_der.append(np.linalg.norm(np.array(coord_o_der[0]) - np.array(coord_o_der[i])))
+            distancias_der.append(np_linalg.norm(np_array(coord_o_der[0]) - np_array(coord_o_der[i])))
         return distancias_izq, distancias_der
 
     def calcular_eje_y(self, coord_ojo_izquierdo, coord_ojo_derecho):
@@ -109,13 +110,13 @@ class Detector:
         # Devolvemos la pendiente normalizada
         m = m*0.5 + 0.5
 
-        return np.clip(m, 0, 1)
+        return np_clip(m, 0, 1)
 
 
     # Funcion para detectar la posicion de la cabeza en la pantalla
     def get_orientacion_cabeza(self, coord_o, size):
         #Los puntos de referencia de la cabeza
-        image_points = np.array([
+        image_points = np_array([
             coord_o[0],     # Nariz
             coord_o[1],     # menton
             coord_o[2],     # ojo izquierdo
@@ -126,7 +127,7 @@ class Detector:
 
 
         # Los puntos en 3D
-        model_points = np.array([
+        model_points = np_array([
             (0.0, 0.0, 0.0),       # nariz
             (0, -63.6, -12.5),     # Menton
             (-43.3, 32.7, -26),    # ojo izquierdo
@@ -138,21 +139,21 @@ class Detector:
         # Camara
         focal_length = size[1]
         center = (size[1]/2, size[0]/2)
-        camera_matrix = np.array(
+        camera_matrix = np_array(
             [[focal_length, 0, center[0]],
             [0, focal_length, center[1]],
             [0, 0, 1]], dtype = "double"
         )
-        dist_coeffs = np.zeros((4,1)) # Se da por hecho que no hay 
+        dist_coeffs = np_zeros((4,1)) # Se da por hecho que no hay 
         # Estimamos la pose de la cabeza
-        (_, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
+        (_, rotation_vector, translation_vector) = cv2_solvePnP(model_points, image_points, camera_matrix, dist_coeffs, flags=cv2_SOLVEPNP_ITERATIVE)
 
         # Convertimos el vector de rotación a ángulos de Euler para obtener la orientación de la cabeza
-        (rot_mat, _) = cv2.Rodrigues(rotation_vector)
-        (_, _, _, _, _, _, euler_angles) = cv2.decomposeProjectionMatrix(cv2.hconcat((rot_mat, translation_vector)))
+        (rot_mat, _) = cv2_Rodrigues(rotation_vector)
+        (_, _, _, _, _, _, euler_angles) = cv2_decomposeProjectionMatrix(cv2_hconcat((rot_mat, translation_vector)))
         
         # Nos aseguramos de que los ángulos normalizados estén en el rango [0, 1]
-        euler_angles_normalized = np.clip((euler_angles / 90) + 0.5, 0, 1)
+        euler_angles_normalized = np_clip((euler_angles / 90) + 0.5, 0, 1)
 
         #Calculamos la horientacion en el eje y aqui:
         euler_angles_normalized[2,0] = self.calcular_eje_y(coord_o[2], coord_o[3])

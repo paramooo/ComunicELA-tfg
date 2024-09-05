@@ -1,5 +1,3 @@
-import os
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 from kivy.app import App
 from ModelViewPresenter.Modelo import Modelo
 from ModelViewPresenter.Vista import Vista

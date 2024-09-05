@@ -2,13 +2,12 @@ from kivy.lang import Builder
 from kivy.uix.button import Button
 from kivy.properties import ListProperty
 from kivy.uix.spinner import Spinner
-from kivy.uix.image import Image
 from kivy.properties import StringProperty
 from kivy.uix.label import Label
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import AsyncImage
-import os
+from os.path import isfile as os_isfile
 from kivy.uix.widget import Widget
 from kivy.core.window import Window
 from kivy.uix.textinput import TextInput
@@ -87,7 +86,7 @@ class CasillaTableroPicto(ButtonBehavior, BoxLayout):
         self.orientation = 'vertical'
         self.label = Label(text = self.text, size_hint_y=None, height=40, halign='center', valign='middle', font_name='Texto', font_size=32, color=(0, 0, 0, 1))
         #Comprobar la existencia de la imagen
-        if not os.path.isfile(self.source):
+        if not os_isfile(self.source):
             self.source = './imagenes/NOFOTO.png'
 
         self.image = AsyncImage(source=self.source )

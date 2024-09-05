@@ -1,5 +1,5 @@
 from kivy.clock import Clock
-import threading
+from threading import Thread
 
 class Presenter:
     def __init__(self, modelo, vista):
@@ -90,7 +90,7 @@ class Presenter:
     # ---------------------------------------------------------------------------------
     def obtener_camaras(self, stop=True):
         self.vista.inicio.camera_spinner.text = self.get_string('cargando_camara')
-        threading.Thread(target=self._obtener_camaras_aux, args=[stop]).start()
+        Thread(target=self._obtener_camaras_aux, args=[stop]).start()
     
 
     def _obtener_camaras_aux(self, stop=True):

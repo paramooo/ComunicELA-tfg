@@ -1,5 +1,5 @@
 import torch.nn as nn
-from torchvision import models
+from torchvision.models import resnet18, resnet34
 
 class CNNs:
   def __init__(self):
@@ -187,9 +187,9 @@ class CNNs:
 
   def crear_resnet(self, indice):
       if indice == 0:
-        modelo = models.resnet18(pretrained=True)
+        modelo = resnet18(pretrained=True)
       else:
-        modelo = models.resnet34(pretrained=True)
+        modelo = resnet34(pretrained=True)
       modelo.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
       modelo.fc = nn.Sequential(nn.Linear(modelo.fc.in_features, 2))
       return modelo

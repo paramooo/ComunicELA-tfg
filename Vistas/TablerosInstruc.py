@@ -2,8 +2,6 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.anchorlayout import AnchorLayout
-from kivy.graphics import Color, Line, Rectangle, InstructionGroup
 from KivyCustom.Custom import ButtonRnd
 from kivy.uix.widget import Widget
 

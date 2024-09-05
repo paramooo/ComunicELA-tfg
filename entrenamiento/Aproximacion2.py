@@ -2,13 +2,13 @@ from CNNs import CNNs
 from DatasetEntero import DatasetEntero
 from torch.utils.data import DataLoader
 from entrenamiento import entrenar_con_kfold
-import pandas as pd
-import numpy as np
+from pandas import DataFrame, Series, concat, read_excel
+from numpy import mean as np_mean, std as np_std
 
 
 def aproximacion2(i, model, lr, carpeta = "15-15-15"):
     # Crear un dataframe
-    df = pd.DataFrame(columns=['Modelo', 'Mean EMC Val', 'Std EMC Val', 'Mean EUC Loss', 'Std EUC Loss'])
+    df = DataFrame(columns=['Modelo', 'Mean EMC Val', 'Std EMC Val', 'Mean EUC Loss', 'Std EUC Loss'])
 
     dataset = DatasetEntero("con_imagenes", img_dir=f'./entrenamiento/datos/frames/byn/{carpeta}')
 
@@ -19,18 +19,18 @@ def aproximacion2(i, model, lr, carpeta = "15-15-15"):
     _, val_losses, euc_losses = entrenar_con_kfold(model, total_dataloader, epochs=250, lr=lr, ejecuciones_fold=5, graficas=True, ann=False)
 
     # Añadir los resultados al DataFrame
-    linea = pd.Series({'Modelo': f"{i}-{carpeta}", 'Mean EMC Val': np.mean(val_losses), 'Std EMC Val': np.std(val_losses), 'Mean EUC Loss': np.mean(euc_losses), 'Std EUC Loss': np.std(euc_losses)})
-    df = pd.concat([df, linea.to_frame().T])
+    linea = Series({'Modelo': f"{i}-{carpeta}", 'Mean EMC Val': np_mean(val_losses), 'Std EMC Val': np_std(val_losses), 'Mean EUC Loss': np_mean(euc_losses), 'Std EUC Loss': np_std(euc_losses)})
+    df = concat([df, linea.to_frame().T])
 
     # Imprimirlos por pantalla
     print("Modelo: ", i, "Carpeta: ", carpeta,
-        "\nMean EMC Val: ", np.mean(val_losses),
-        "\nStd EMC Val: ", np.std(val_losses),
-        "\nMean EUC Loss: ", np.mean(euc_losses),
-        "\nStd EUC Loss: ", np.std(euc_losses))
+        "\nMean EMC Val: ", np_mean(val_losses),
+        "\nStd EMC Val: ", np_std(val_losses),
+        "\nMean EUC Loss: ", np_mean(euc_losses),
+        "\nStd EUC Loss: ", np_std(euc_losses))
 
-    df_existente = pd.read_excel('./entrenamiento/resultados/Aproximacion2.xlsx')
-    df = pd.concat([df_existente, df])
+    df_existente = read_excel('./entrenamiento/resultados/Aproximacion2.xlsx')
+    df = concat([df_existente, df])
     df.to_excel('./entrenamiento/resultados/Aproximacion2.xlsx', index=False)
 
 if __name__ == "__main__":
