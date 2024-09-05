@@ -1,18 +1,14 @@
 # ComunicELA: Software de Asistencia para la Comunicación en Pacientes con Esclerosis Lateral Amiotrófica
 
-## Resumen
-La Esclerosis Lateral Amiotrófica (ELA) es una enfermedad neurodegenerativa irreversible que causa una pérdida gradual de neuronas, deteriorando progresivamente las funciones motrices, así como la capacidad de hablar, tragar y respirar.
+La Esclerosis Lateral Amiotrófica (ELA) es una enfermedad neurodegenerativa irreversible que resulta en la pérdida gradual de neuronas, deteriorando progresivamente las funciones motrices, así como la capacidad de hablar, tragar o respirar. Las personas con ELA que carecen de capacidad de comunicarse experimentan una mejora significativa en su calidad de vida cuando utilizan sistemas de comunicación aumentativa y alternativa (CAA). Sin embargo, muchos de estos sistemas no están específicamente adaptados a sus necesidades únicas, lo que limita su efectividad.
 
-La calidad de vida de las personas con ELA que carecen de la capacidad de comunicarse mejora considerablemente si utilizan algún sistema de comunicación aumentativa y alternativa (CAA). Este proyecto propone desarrollar un sistema que mejore significativamente la calidad de comunicación de las personas con esta enfermedad.
+Este proyecto, desarrollado en colaboración con la Asociación Galega de Afectados pola Esclerose Lateral Amiotrófica (AGAELA) y la Cátedra NTT DATA en Diversidad y Tecnología, propone un sistema basado en inteligencia artificial que mejora significativamente la calidad de comunicación de las personas con esta enfermedad. Gracias a la colaboración con AGAELA, se ha adaptado el diseño y las funcionalidades del sistema a las necesidades reales de los usuarios, asegurando su aplicabilidad y relevancia. La solución propuesta es una aplicación con una interfaz intuitiva, accesible, adaptable y sencilla, que facilita la comunicación mediante tableros personalizables controlados por movimientos oculares y parpadeo. Las frases formadas pueden ser reproducidas a través de síntesis de voz, mejorando la interacción y la autonomía de los pacientes.
 
-La idea central consiste en crear una aplicación con una interfaz intuitiva, accesible, adaptable y sencilla, que permita la comunicación a través de tableros de comunicación personalizables, controlados mediante movimientos oculares y parpadeo, formando frases que pueden ser reproducidas mediante síntesis de voz.
+El sistema fue validado tanto con un grupo control como con pacientes diagnosticados con ELA en diversas etapas de la enfermedad, cubriendo un amplio espectro de variaciones en sus habilidades de movilidad y comunicación. Este riguroso proceso de validación incluyó pruebas de usabilidad y efectividad, asegurando que el sistema funcione de manera efectiva bajo una variedad de condiciones y necesidades específicas.
 
-## Abstract
-Amyotrophic Lateral Sclerosis (ALS) is an irreversible neurodegenerative disease that causes a gradual loss of neurons, progressively deteriorating motor functions, as well as the ability to speak, swallow, or breathe.
+Este enfoque integrador y colaborativo no solo mejora la comunicación sino que también amplía la interacción social y la calidad de vida de los afectados por la ELA. Diseñado para adaptarse a futuras innovaciones en tecnologías asistenciales, el sistema facilita la integración con otros dispositivos y plataformas, ofreciendo soluciones más personalizadas. Así, el proyecto no solo atiende las necesidades actuales sino que también evoluciona y se adapta a los avances tecnológicos y médicos, contribuyendo continuamente a la mejora de la autonomía y el bienestar de los usuarios. 
 
-The quality of life for people with ALS who lack the ability to communicate improves considerably if they use some form of augmentative and alternative communication (AAC) system. This project proposes developing a system that significantly improves the quality of communication for people with this disease.
-
-The central idea is to create an application with an intuitive, accessible, adaptable, and simple interface, allowing communication through customizable communication boards controlled by eye movements and blinking, forming phrases that can be reproduced through voice synthesis.
+Además, al estar disponible como código libre, el sistema invita a desarrolladores y usuarios de todo el mundo a contribuir, promoviendo un entorno abierto y colaborativo que enriquece continuamente su desarrollo y aplicación.
 
 ## Requisitos
 El único componente a configurar para el uso de esta aplicación es la API de Google Gemini, utilizada para dar coherencia a las frases escritas por los pacientes en los tableros antes de ser reproducidas. En caso de no configurarla, el conjugador automático no estará disponible.
