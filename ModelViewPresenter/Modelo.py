@@ -30,6 +30,7 @@ from google.generativeai import configure as genai_configure, GenerativeModel as
 from win32com.client import Dispatch
 from socket import create_connection
 from scipy.ndimage import gaussian_filter1d
+from ajustes.utils import get_recurso
 
 class Modelo:
     def __init__(self):
@@ -54,7 +55,7 @@ class Modelo:
         self.text_to_speech =  Dispatch("SAPI.SpVoice")
 
         #Cargamos el config con la camara, corrector, idioma y voz
-        with open('./ajustes/config.json', 'r') as f:
+        with open(get_recurso('ajustes/config.json'), 'r') as f:
             config = json_load(f)
             if config["camara"] in self.camaras:
                 self.iniciar_camara(config["camara"])
@@ -71,11 +72,11 @@ class Modelo:
                         break
 
         # Cargar el archivo de idioma correspondiente
-        with open(f"./strings/{self.get_idioma()}.json", "r", encoding='utf-8') as f:
+        with open(get_recurso(f"strings/{self.get_idioma()}.json"), "r", encoding='utf-8') as f:
             self.strings = json_load(f)
 
         # Variables para el modelo de test
-        self.modelo_org = './Componentes/aprox1_9Final.pt'
+        self.modelo_org = get_recurso('Componentes/aprox1_9Final.pt')
         self.postprocs = True
 
         self.modelo = torch_load(self.modelo_org)
@@ -91,7 +92,7 @@ class Modelo:
         self.contador_p = 0
         self.suma_frames = 5 #Numero de frames que tiene que estar cerrado el ojo para que se considere un parpadeo
         self.calibrado = False
-        self.sonido_click = mixerSound('./sonidos/click.wav')
+        self.sonido_click = mixerSound(get_recurso('sonidos/click.wav'))
 
 
         # Variables para la recopilacion de datos 
@@ -119,8 +120,8 @@ class Modelo:
         self.frase = ""
         self.tablero = None
         self.bloqueado = False
-        self.sonido_alarma = mixerSound('./sonidos/alarm.wav')
-        self.sonido_lock = mixerSound('./sonidos/lock.wav')
+        self.sonido_alarma = mixerSound(get_recurso('sonidos/alarm.wav'))
+        self.sonido_lock = mixerSound(get_recurso('sonidos/lock.wav'))
         self.pictogramas = False
         
         #variables para las pruebas de la aplicacion
@@ -142,9 +143,12 @@ class Modelo:
         self.Desplazamiento = self.Desplazamiento_org
 
         # Aplicar un umbral
-        self.fondo_frame_editado = cv2_imread('./imagenes/fondo_marco_amp.png', cv2_IMREAD_GRAYSCALE)
-        self.mask_rgb = np_zeros((*self.fondo_frame_editado.shape, 3), dtype=np_uint8)
-        self.mask_rgb[self.fondo_frame_editado<50] = [50, 50, 50]
+        #self.fondo_frame_editado = cv2_imread(get_recurso('imagenes/fondo_marco_amp.png'), cv2_IMREAD_GRAYSCALE)
+        #self.fondo2_frame_editado = cv2_imread('./imagenes/fondo_marco_amp.png', cv2_IMREAD_GRAYSCALE)
+
+        self.fondo_frame_editado = Image.open(get_recurso('imagenes/fondo_marco_amp.png')).convert('L')
+        self.mask_rgb = np_zeros((*np_array(self.fondo_frame_editado).shape, 3), dtype=np_uint8)
+        self.mask_rgb[np_array(self.fondo_frame_editado)<50] = [50, 50, 50]
 
         #Variables para el reentrenamiento
         self.numero_entrenamientos = 0
@@ -201,28 +205,28 @@ class Modelo:
 
     # Cargamos la configuracion del tutorial
     def get_show_tutorial(self):    
-        with open('./ajustes/config.json', 'r') as f:
+        with open(get_recurso('ajustes/config.json'), 'r') as f:
             config = json_load(f)
             return config["mostrar_tutorial"]
 
         
     def set_show_tutorial(self, valor):
-        with open('./ajustes/config.json', 'r') as f:
+        with open(get_recurso('ajustes/config.json'), 'r') as f:
             config = json_load(f)
         config["mostrar_tutorial"] = valor
-        with open('./ajustes/config.json', 'w') as f:
+        with open(get_recurso('ajustes/config.json'), 'w') as f:
             json_dump(config, f)
 
     def cambiar_idioma(self):
         idioma = "gal_ES" if self.get_idioma() == "es_ES" else "es_ES"
-        with open('./ajustes/config.json', 'r') as f:
+        with open(get_recurso('ajustes/config.json'), 'r') as f:
             config = json_load(f)
         config["idioma"] = idioma
-        with open('./ajustes/config.json', 'w') as f:
+        with open(get_recurso('ajustes/config.json'), 'w') as f:
             json_dump(config, f)
 
         #Actualizar el idioma de los strings
-        with open(f"./strings/{idioma}.json", "r", encoding='utf-8') as f:
+        with open(get_recurso(f"strings/{idioma}.json"), "r", encoding='utf-8') as f:
             self.strings = json_load(f)
         #Actualizar el idioma de los tableros
         # self.cargar_tableros()
@@ -231,7 +235,7 @@ class Modelo:
 
     def get_idioma(self):
         try:
-            with open('./ajustes/config.json', 'r') as f:
+            with open(get_recurso('ajustes/config.json'), 'r') as f:
                 config = json_load(f)
                 return config["idioma"]
         except FileNotFoundError:
@@ -245,7 +249,7 @@ class Modelo:
         return idiomas.get(self.get_idioma(), "Galego")
 
     def get_idioma_imagen(self):
-        return f'./imagenes/idiomas/{self.get_idioma()}.png'
+        return get_recurso(f'imagenes/idiomas/{self.get_idioma()}.png')
     
 
 
@@ -266,10 +270,10 @@ class Modelo:
         if estado is not None:
             self.corrector_frases = not self.corrector_frases
             estado = self.corrector_frases
-            with open('./ajustes/config.json', 'r') as f:
+            with open(get_recurso('ajustes/config.json'), 'r') as f:
                 config = json_load(f)
             config["corrector_frases"] = self.corrector_frases
-            with open('./ajustes/config.json', 'w') as f:
+            with open(get_recurso('ajustes/config.json'), 'w') as f:
                 json_dump(config, f)
         return estado
 
@@ -324,10 +328,10 @@ class Modelo:
                 self.iniciar_camara(camara)
             self.camara_act = camara
             #giardar en el config
-            with open('./ajustes/config.json', 'r') as f:
+            with open(get_recurso('ajustes/config.json'), 'r') as f:
                 config = json_load(f)
             config["camara"] = camara
-            with open('./ajustes/config.json', 'w') as f:
+            with open(get_recurso('ajustes/config.json'), 'w') as f:
                 json_dump(config, f)
 
     def get_index_actual(self):
@@ -344,7 +348,7 @@ class Modelo:
             frame_pil = Image.fromarray(self.mask_rgb)
 
             # Seleccionar la fuente y el tamaño
-            font = ImageFont.truetype("./KivyCustom/fuentes/FrancoisOne-Regular.ttf", 30)
+            font = ImageFont.truetype(get_recurso("KivyCustom/fuentes/FrancoisOne-Regular.ttf"), 30)
 
             # Calcular el ancho del texto
             text = self.get_string('mensaje_frame_editado')
@@ -443,10 +447,10 @@ class Modelo:
             if voz.GetDescription() == voz_description:
                 self.text_to_speech.Voice = voz
                 #Apuntar la voz en el config
-                with open('./ajustes/config.json', 'r') as f:
+                with open(get_recurso('ajustes/config.json'), 'r') as f:
                     config = json_load(f)
                 config["voz"] = voz_description
-                with open('./ajustes/config.json', 'w') as f:
+                with open(get_recurso('ajustes/config.json'), 'w') as f:
                     json_dump(config, f)
                 break
 
@@ -848,7 +852,7 @@ class Modelo:
     def cargar_tableros(self):
         try:
             idioma = self.get_idioma()
-            filename = f'./tableros/tableros_{idioma}.xlsx'
+            filename = get_recurso(f'tableros/tableros_{idioma}.xlsx')
             if os_isfile(filename):
                 wb = load_workbook(filename)
                 for sheet_name in wb.sheetnames:

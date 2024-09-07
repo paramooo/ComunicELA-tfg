@@ -4,6 +4,7 @@ from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from KivyCustom.Custom import ButtonRnd
+from ajustes.utils import get_recurso
 
 
 class ReentrenarInstruc(Screen):
@@ -111,7 +112,7 @@ class ReentrenarInstruc(Screen):
 
         #Gif de reentrenamiento
         right_buttons.add_widget(Widget(size_hint_y=0.15))
-        imagen1 = Image(source='./imagenes/reentrenargif.zip', size_hint=(0.6, 0.25), anim_delay=0.06, pos_hint={'center_x': 0.5})
+        imagen1 = Image(source=get_recurso('imagenes/reentrenargif.zip'), size_hint=(0.6, 0.25), anim_delay=0.06, pos_hint={'center_x': 0.5})
         right_buttons.add_widget(imagen1)
 
         # Botón de Reentrenar

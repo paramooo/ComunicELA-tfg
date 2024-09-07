@@ -1,19 +1,16 @@
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.button import Button
-from kivy.uix.label import Label
 from KivyCustom.Custom import ButtonRnd, CustomTextInput
 from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.graphics import Color, Line
 from KivyCustom.Tablero import Tablero
-from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.image import Image
-from kivy.graphics import Rectangle
 from KivyCustom.PopUp import CustPopup
 from Vistas.Tableros import PantallaBloqueada
-import csv
+from csv import writer as csv_writer
+from ajustes.utils import get_recurso
 
 
 class TablerosPruebas(Screen):
@@ -393,8 +390,8 @@ class TablerosPruebas(Screen):
     # Evalúa la prueba realizada
     def evaluate_test(self):       
         # Guarda los resultados de la prueba en un archivo CSV
-        with open('./pruebas/pruebas2.csv', 'a', newline='') as f:
-            writer = csv.writer(f)
+        with open(get_recurso('pruebas/pruebas.csv'), 'a', newline='') as f:
+            writer = csv_writer(f)
 
             tiempo_total = self.controlador.get_cronometro()
             errores = self.controlador.get_errores()

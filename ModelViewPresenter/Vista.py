@@ -8,6 +8,7 @@ from Vistas.Reentrenar import Reentrenar
 from Vistas.TablerosInstruc import TablerosInstruc
 from Vistas.desarrollador.TablerosPruebas import TablerosPruebas
 from Vistas.ReentrenarInstruc import ReentrenarInstruc
+from ajustes.utils import get_recurso
 
 
 class Vista:
@@ -19,8 +20,8 @@ class Vista:
         self.calibrar = None
         self.test = None
         self.tableros = None
-        self.fondo = './imagenes/fondo_menus.jpg'
-        self.fondo2 = './imagenes/fondo_menus3.jpg'
+        self.fondo = get_recurso('imagenes/fondo_menus.jpg')
+        self.fondo2 = get_recurso('imagenes/fondo_menus3.jpg')
 
     def set_controlador(self, controlador):
         self.controlador = controlador

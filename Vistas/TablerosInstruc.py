@@ -4,6 +4,7 @@ from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
 from KivyCustom.Custom import ButtonRnd
 from kivy.uix.widget import Widget
+from ajustes.utils import get_recurso
 
 class TablerosInstruc(Screen):
     def __init__(self, controlador, **kwargs):
@@ -103,7 +104,7 @@ class TablerosInstruc(Screen):
         right_instructions = BoxLayout(orientation='vertical', size_hint=(0.5, 1))
 
         # Imagen 1
-        imagen1 = Image(source='./imagenes/tabpicto.png', size_hint=(0.6, 0.25), pos_hint={'center_x': 0.5})
+        imagen1 = Image(source=get_recurso('imagenes/tabpicto.png'), size_hint=(0.6, 0.25), pos_hint={'center_x': 0.5})
         right_instructions.add_widget(imagen1)
 
         # Botón de Comenzar
@@ -112,7 +113,7 @@ class TablerosInstruc(Screen):
         right_instructions.add_widget(Widget(size_hint_y=0.05))
 
         # Imagen 2
-        imagen2 = Image(source='./imagenes/tabletras.png', size_hint=(0.6, 0.25), pos_hint={'center_x': 0.5})
+        imagen2 = Image(source=get_recurso("imagenes/tabletras.png"), size_hint=(0.6, 0.25), pos_hint={'center_x': 0.5})
         right_instructions.add_widget(imagen2)
 
         # Botón de Comenzar2

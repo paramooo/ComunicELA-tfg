@@ -11,8 +11,9 @@ from os.path import isfile as os_isfile
 from kivy.uix.widget import Widget
 from kivy.core.window import Window
 from kivy.uix.textinput import TextInput
+from ajustes.utils import get_recurso
 
-Builder.load_file('./kivyCustom/custom.kv')
+Builder.load_file(get_recurso('kivyCustom/custom.kv'))
 class HoverBehavior(object):
     """Hover behavior.
     :Events:

@@ -1,6 +1,7 @@
 from kivy.uix.gridlayout import GridLayout
 from KivyCustom.Custom import CasillaTablero
 from KivyCustom.Custom import CasillaTableroPicto
+from ajustes.utils import get_recurso
 
 class Tablero(GridLayout):
     def __init__(self, palabras_con_imagenes, controlador, pictos, **kwargs):
@@ -14,7 +15,7 @@ class Tablero(GridLayout):
         for fila in palabras_con_imagenes:
             for imagen, palabra in fila:
                 if pictos:
-                    btn = CasillaTableroPicto(text=str(palabra), source=f'./tableros/pictogramas/{imagen}', on_press=self.on_button_press)
+                    btn = CasillaTableroPicto(text=str(palabra), source=get_recurso(f'tableros/pictogramas/{imagen}'), on_press=self.on_button_press)
                 else:
                     btn = CasillaTablero(text=str(palabra), on_press=self.on_button_press, font_name='Texto')
                 self.casillas.append(btn)

@@ -9,6 +9,7 @@ from kivy.uix.image import Image
 from kivy.graphics.texture import Texture
 from kivy.graphics import Rectangle
 from kivy.uix.widget import Widget
+from ajustes.utils import get_recurso
 
 
 class Calibrar(Screen):
@@ -54,7 +55,7 @@ class Calibrar(Screen):
         left_section.add_widget(Widget(size_hint_y=0.3))
 
         # Foto calibrar.png
-        self.image = Image(source='./imagenes/calibrar0.png', pos_hint={'center_x': 0.5}, size_hint=(1.8,1.8))
+        self.image = Image(source=get_recurso('imagenes/calibrar0.png'), pos_hint={'center_x': 0.5}, size_hint=(1.8,1.8))
         left_section.add_widget(self.image)
 
         # Texto explicativo
@@ -119,7 +120,7 @@ class Calibrar(Screen):
     # Función para actualizar la vista
     def update_view(self, estado):
         self.texto_explicativo.text = self.controlador.get_string(f'mensaje_calibracion_{estado+1}')
-        self.image.source = f'./imagenes/calibrar{estado}.png'
+        self.image.source = get_recurso(f'imagenes/calibrar{estado}.png')
 
         if estado == 1:
             # Calcular la posición central

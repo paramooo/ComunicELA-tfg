@@ -5,6 +5,8 @@ from ModelViewPresenter.Presenter import Presenter
 from kivy.core.window import Window
 from kivy.core.text import LabelBase
 from kivy.config import Config
+from ajustes.utils import get_recurso
+
 
 Window.fullscreen = 'auto'
 
@@ -13,9 +15,9 @@ Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 class MyApp(App):
     def build(self):
         self.title = 'ComunicELA'  
-        self.icon = './imagenes/logo.png'  
-        LabelBase.register(name='Titulo', fn_regular='./KivyCustom/fuentes/Orbitron-Regular.ttf')
-        LabelBase.register(name='Texto', fn_regular='./KivyCustom/fuentes/FrancoisOne-Regular.ttf')
+        self.icon = get_recurso("imagenes/logo.png")  
+        LabelBase.register(name='Titulo', fn_regular=get_recurso('KivyCustom/fuentes/Orbitron-Regular.ttf'))
+        LabelBase.register(name='Texto', fn_regular=get_recurso('KivyCustom/fuentes/FrancoisOne-Regular.ttf'))
 
         self.modelo = Modelo()
         vista = Vista()
