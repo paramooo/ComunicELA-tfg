@@ -1,7 +1,14 @@
 import numpy as np
-class Conjuntos:
 
-# --------------- FUNCIONES AUXILIARES ----------------
+
+class Conjuntos:
+    """
+    Clase que contiene los diferentes preprocesados de datos que se utilizan para entrenar las redes neuronales
+
+    """
+
+
+
 # Funcion para transformar los datos a array
     def datos_as_array(datos):
         distancias_izq, distancias_der, or_x, or_y, or_z, ear, umbral_ear, coord_cab, _ = datos
@@ -9,9 +16,7 @@ class Conjuntos:
         return datos_transformados
 
 
-#----------------CONJUNTOS PARA EL INPUT 0 ----------------
-# ------------ CONJUNTO 1 ----------------
-# Funcion para transformar el input.txt
+# ------------ PRE-PROCESADO INICIAL ----------------
     def conjunto_1(data):
         """
         Entradas: 39 -> TODOS LOS DATOS (NORMALIZAR MIN MAX DISTANCIAS)
@@ -29,8 +34,7 @@ class Conjuntos:
 
         return data
 
-# ------------ CONJUNTO 2 ----------------
-# Funcion para transformar el input.txt           
+# ------------ PRE-PROCESADO A ----------------
     def conjunto_2(data):
         """
         Entradas: 23
@@ -41,7 +45,7 @@ class Conjuntos:
         [19-20] Coordenadas del centro de la cara
         [21-22] EAR y umbral EAR      
         """
-        # Hace la media de los dos ojos y lo pone como si fuera solo un ojo
+        # Hace la media de los dos ojos 
         for i in range(0, 16):
             data[:, i] = (data[:, i] + data[:, i + 16]) / 2
         data = np.delete(data, np.s_[16:32], axis=1)
@@ -54,7 +58,7 @@ class Conjuntos:
 
 
 
-        
+# ------------ PRE-PROCESADO B ----------------
     def conjunto_3(data):
         """
         Entradas: 39
@@ -78,7 +82,7 @@ class Conjuntos:
         return data
 
 
-
+# ------------ PRE-PROCESADO C ----------------
     def conjunto_4(data):
         """
             Entradas: 37

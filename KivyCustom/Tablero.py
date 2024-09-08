@@ -4,6 +4,12 @@ from KivyCustom.Custom import CasillaTableroPicto
 from ajustes.utils import get_recurso
 
 class Tablero(GridLayout):
+
+    """
+    Esta clase crea un tablero con las palabras y las imágenes correspondientes
+    Patron de diseño: Composite
+    """
+
     def __init__(self, palabras_con_imagenes, controlador, pictos, **kwargs):
         super(Tablero, self).__init__(**kwargs)
         self.controlador = controlador
@@ -21,6 +27,7 @@ class Tablero(GridLayout):
                 self.casillas.append(btn)
                 self.add_widget(btn)
 
+    # Función que se ejecuta al pulsar una casilla
     def on_button_press(self, instance):
         if self.pictos:
             self.controlador.on_casilla_tab(instance.label.text)

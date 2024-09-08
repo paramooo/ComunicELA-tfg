@@ -1,10 +1,26 @@
 import torch.nn as nn
 
 class ANNs:
+    """
+    Modelos de redes neuronales artificiales (ANNs/RNAs)
+    
+    """
+
     def __init__(self):
         pass
 
     def crear_ann(self, entradas, topology, salidas=2):
+        """
+        Función para crear un modelo de red neuronal artificial (ANN) con una topología dada.
+
+        Args:
+            entradas (int): Número de entradas de la red.
+            topology (list): Lista con la cantidad de neuronas en cada capa oculta.
+            salidas (int): Número de salidas de la red.
+
+        Returns:
+            nn.Sequential: Modelo de red neuronal artificial.
+        """
         model = nn.Sequential()
         model.add_module("dense_in", nn.Linear(entradas, topology[0]))  # Entrada
         model.add_module("relu_in", nn.ReLU())
@@ -19,7 +35,7 @@ class ANNs:
         return model
 
 
-    # Primera sub-aproximacion con todos los datos como conjunto de entrenamiento PARA SABER QUE ARQUITECTURA ES LA MEJOR
+    # Modelos aproximación inicial
     def crear_ann_1_1(self):
         return self.crear_ann(39, [50])
 
@@ -35,8 +51,10 @@ class ANNs:
     def crear_ann_1_5(self):
         return self.crear_ann(39, [100, 300, 400, 500, 100])
 
-    # Al ser el mejor el modelo 3, probamos estructuras semejantes
-
+    
+    
+    
+    # Modelos aproximación 1
     def crear_ann_1_6(self):
         return self.crear_ann(39, [70, 100])
 
@@ -55,20 +73,21 @@ class ANNs:
 
 
 
-    # La mejor aproximacion es la del modelo 9 ya que ha sido el mejor de todos
+    # Pe-procesado A
     def crear_ann_2_9(self):
         return self.crear_ann(23, [80, 100, 80])
 
 
-    # Como los resultados han empeorado, mantenemos las caracteristicas del conjunto1 pero recortando a 0.3-0.7 los ultimos (por probar)
+    # Pre-procesado B
     def crear_ann_3_9(self):
         return self.crear_ann(39, [80, 100, 80])
 
 
-    # Como la mejor es la 3_7 pues probamos ahora con el conjunto 4
+    # Pre-procesado C
     def crear_ann_4_9(self):
         return self.crear_ann(37, [80, 100, 80])
     
+    # Probar si empeora los resultados la sigmoidal, pero no
     def crear_ann_9_sinsigmoid(self):
         model = nn.Sequential()
         model.add_module("dense_in", nn.Linear(39, 80))
@@ -82,7 +101,7 @@ class ANNs:
 
 
 
-    #ANNS PARA LA FUSION NET
+    #Modelos para la aproximación 3 (hibridas)
     def crear_ann_f_1(self):
             return self.crear_ann(39, [80, 100], salidas=80)
     

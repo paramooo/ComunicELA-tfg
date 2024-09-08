@@ -7,11 +7,10 @@ from numpy import zeros as np_zeros, zeros_like as np_zeros_like, uint8 as np_ui
     max as np_max, clip as np_clip, sqrt as np_sqrt, pi as np_pi, median as np_median, mean as np_mean, \
     polyfit as np_polyfit, poly1d as np_poly1d, sum as np_sum, unique as np_unique, where as np_where, \
     delete as np_delete, arctan2 as np_arctan2, cos as np_cos, sin as np_sin, pi as np_pi
-from os import getenv
-from os.path import isfile as os_isfile
+from os import getenv, path as os_path, makedirs as os_makedirs
 from kivy.app import App
 from KivyCustom.Mensajes import Mensajes
-from cv2 import imread as cv2_imread, IMREAD_GRAYSCALE as cv2_IMREAD_GRAYSCALE, addWeighted as cv2_addWeighted, \
+from cv2 import addWeighted as cv2_addWeighted, \
     circle as cv2_circle, line as cv2_line, copyMakeBorder as cv2_copyMakeBorder, resize as cv2_resize, \
     BORDER_REPLICATE as cv2_BORDER_REPLICATE, INTER_AREA as cv2_INTER_AREA, imwrite as cv2_imwrite
 from torch import from_numpy as torch_from_numpy, load as torch_load
@@ -34,15 +33,27 @@ from ajustes.utils import get_recurso
 
 class Modelo:
     def __init__(self):
-        # Para el sonido del click
-        mixerInit(buffer=4096)
-
         # Se inicializa el detector
         self.detector = Detector()
         self.camara = Camara()
         self.camara_act = None
         self.desarrollador = False
         self.camaras = self.obtener_camaras()
+
+        # Crear el archivo de configuración de la aplicación para guardar los datos
+        app_data_dir = getenv('LOCALAPPDATA')
+        self.config_path = os_path.join(app_data_dir, 'ComunicELA', 'config.json')
+        os_makedirs(os_path.dirname(self.config_path), exist_ok=True)
+        if not os_path.exists(self.config_path):
+            config = {
+                "mostrar_tutorial": True,
+                "idioma": "gal_ES",
+                "corrector_frases": True,
+                "camara": None,
+                "voz": None,
+            }
+            with open(self.config_path, 'w') as config_file:
+                json_dump(config, config_file)
 
         # Iniciacion de gemini
         api_key = getenv('GOOGLE_API_KEY')
@@ -54,8 +65,11 @@ class Modelo:
         # Inicializar el sintetizador de voz
         self.text_to_speech =  Dispatch("SAPI.SpVoice")
 
+        # Para los sonidos
+        mixerInit(buffer=4096)
+
         #Cargamos el config con la camara, corrector, idioma y voz
-        with open(get_recurso('ajustes/config.json'), 'r') as f:
+        with open(self.config_path, 'r') as f:
             config = json_load(f)
             if config["camara"] in self.camaras:
                 self.iniciar_camara(config["camara"])
@@ -159,6 +173,9 @@ class Modelo:
         self.progreso_opt = 0
         self.trials_opt = 70
 
+        
+
+
     #Funcion para reiniciar los datos despues de cada escaneo (se aprovecha para inicializarlos tambien)
     def reiniciar_datos_r(self):
         self.recopilar = False #Variable para saber si se esta recopilando datos
@@ -205,24 +222,24 @@ class Modelo:
 
     # Cargamos la configuracion del tutorial
     def get_show_tutorial(self):    
-        with open(get_recurso('ajustes/config.json'), 'r') as f:
+        with open(self.config_path, 'r') as f:
             config = json_load(f)
             return config["mostrar_tutorial"]
 
         
     def set_show_tutorial(self, valor):
-        with open(get_recurso('ajustes/config.json'), 'r') as f:
+        with open(self.config_path, 'r') as f:
             config = json_load(f)
         config["mostrar_tutorial"] = valor
-        with open(get_recurso('ajustes/config.json'), 'w') as f:
+        with open(self.config_path, 'w') as f:
             json_dump(config, f)
 
     def cambiar_idioma(self):
         idioma = "gal_ES" if self.get_idioma() == "es_ES" else "es_ES"
-        with open(get_recurso('ajustes/config.json'), 'r') as f:
+        with open(self.config_path, 'r') as f:
             config = json_load(f)
         config["idioma"] = idioma
-        with open(get_recurso('ajustes/config.json'), 'w') as f:
+        with open(self.config_path, 'w') as f:
             json_dump(config, f)
 
         #Actualizar el idioma de los strings
@@ -235,7 +252,7 @@ class Modelo:
 
     def get_idioma(self):
         try:
-            with open(get_recurso('ajustes/config.json'), 'r') as f:
+            with open(self.config_path, 'r') as f:
                 config = json_load(f)
                 return config["idioma"]
         except FileNotFoundError:
@@ -270,10 +287,10 @@ class Modelo:
         if estado is not None:
             self.corrector_frases = not self.corrector_frases
             estado = self.corrector_frases
-            with open(get_recurso('ajustes/config.json'), 'r') as f:
+            with open(self.config_path, 'r') as f:
                 config = json_load(f)
             config["corrector_frases"] = self.corrector_frases
-            with open(get_recurso('ajustes/config.json'), 'w') as f:
+            with open(self.config_path, 'w') as f:
                 json_dump(config, f)
         return estado
 
@@ -328,10 +345,10 @@ class Modelo:
                 self.iniciar_camara(camara)
             self.camara_act = camara
             #giardar en el config
-            with open(get_recurso('ajustes/config.json'), 'r') as f:
+            with open(self.config_path, 'r') as f:
                 config = json_load(f)
             config["camara"] = camara
-            with open(get_recurso('ajustes/config.json'), 'w') as f:
+            with open(self.config_path, 'w') as f:
                 json_dump(config, f)
 
     def get_index_actual(self):
@@ -447,10 +464,10 @@ class Modelo:
             if voz.GetDescription() == voz_description:
                 self.text_to_speech.Voice = voz
                 #Apuntar la voz en el config
-                with open(get_recurso('ajustes/config.json'), 'r') as f:
+                with open(self.config_path, 'r') as f:
                     config = json_load(f)
                 config["voz"] = voz_description
-                with open(get_recurso('ajustes/config.json'), 'w') as f:
+                with open(self.config_path, 'w') as f:
                     json_dump(config, f)
                 break
 
@@ -853,7 +870,7 @@ class Modelo:
         try:
             idioma = self.get_idioma()
             filename = get_recurso(f'tableros/tableros_{idioma}.xlsx')
-            if os_isfile(filename):
+            if os_path.isfile(filename):
                 wb = load_workbook(filename)
                 for sheet_name in wb.sheetnames:
                     ws = wb[sheet_name]

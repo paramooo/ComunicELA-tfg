@@ -10,12 +10,16 @@ from kivy.uix.checkbox import CheckBox
 from kivy.graphics import Line
 
 class CustPopup(ModalView):
+    """
+    Clase que muestra un popup personalizado con un mensaje y botones para continuar, volver o saltar
+    Es variable para cada pantalla y se puede personalizar con las funciones que se le pasen, añadiendo botones o no
+    """
     def __init__(self, message, func_continuar, pos, controlador, show_switch=False, func_volver=None, func_saltar=None, bt_empez=False, **kwargs):
         super(CustPopup, self).__init__(**kwargs)
         self.controlador = controlador
-        self.size_hint = (0.3, 0.2)  # Tamaño del popup
+        self.size_hint = (0.3, 0.2)  
         self.auto_dismiss = False  # No permitir que se cierre al pulsar fuera
-        self.pos_hint = {'center_x': pos[0], 'center_y': pos[1]}  # Posición del popup
+        self.pos_hint = {'center_x': pos[0], 'center_y': pos[1]} 
 
         # Funciones a ejecutar al pulsar los botones
         self.func_volver = func_volver
@@ -25,17 +29,18 @@ class CustPopup(ModalView):
         # Crea un layout con un fondo semi-transparente
         layout = BoxLayout(orientation='vertical', padding=[10, 10, 10, 10])
         with layout.canvas.before:
-            Color(0.7, 0.7, 0.7, 1)  # color negro con alpha a 0.7
+            Color(0.7, 0.7, 0.7, 1)  
             self.rect = Rectangle(size=layout.size, pos=layout.pos)
-            Color(0, 0, 0, 1)  # color de borde negro
+            Color(0, 0, 0, 1)  
             self.line = Line(rectangle=(layout.x, layout.y, layout.width, layout.height), width=2)
         layout.bind(size=self._update_rect, pos=self._update_rect)
 
         # Añade un Label con el mensaje del tutorial
         label = Label(text=message, font_size=24, halign='center', valign='middle', font_name='Texto', color=(0, 0, 0, 1))
-        label.bind(size=label.setter('text_size'))  # Para que el texto se ajuste al tamaño del Label
+        label.bind(size=label.setter('text_size'))  
         layout.add_widget(label)
 
+        # Añade un checkbox para no volver a mostrar el tutorial
         if show_switch:
             checkbox_layout = BoxLayout(orientation='horizontal', size_hint=(1, 0.2))
             checkbox_label = Label(text=self.controlador.get_string('no_volver_mostrar'), color=(0, 0, 0, 1), font_name='Texto')
@@ -57,8 +62,7 @@ class CustPopup(ModalView):
 
         # PARTE PARA LAS PRUEBAS
         if func_volver or func_saltar:
-            self.size_hint = (0.3, 0.35)  # Tamaño del popup
-            #Espacio entre los botones
+            self.size_hint = (0.3, 0.35) 
             layout.add_widget(Widget(size_hint_y=0.1))
             layout_botones = BoxLayout(orientation='horizontal', size_hint=(1, 0.3))
             
@@ -82,12 +86,13 @@ class CustPopup(ModalView):
         self.add_widget(layout)
         self.call_on_dismiss = True
 
-    
+    # Actualiza el tamaño y posición del rectángulo
     def _update_rect(self, instance, value):
         self.rect.pos = instance.pos
         self.rect.size = instance.size
         self.line.rectangle = (instance.x, instance.y, instance.width, instance.height)
 
+    # Al pulsar el botón de continuar
     def on_continuar(self, instance):
         # Guarda la configuración cuando se cierre el popup
         if hasattr(self, 'tutorial_checkbox'):
@@ -96,12 +101,13 @@ class CustPopup(ModalView):
             self.func_continuar()
         self.dismiss()
 
-
+    # Al pulsar el botón de saltar
     def on_saltar(self, instance):
         if self.func_saltar:
             self.func_saltar()
         self.dismiss()
 
+    # Al pulsar el botón de volver
     def on_volver(self, instance):
         if self.func_volver:
             self.func_volver()

@@ -6,6 +6,12 @@ from DatasetEntero import DatasetEntero
 from torch.utils.data import DataLoader
 import torch
 
+"""
+Fichero que se encarga de entrenar el modelo final con el dataset entero
+
+"""
+
+
 if __name__ == '__main__':
     
     modelo = ANNs().crear_ann_1_9()

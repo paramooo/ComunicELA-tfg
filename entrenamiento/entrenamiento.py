@@ -8,59 +8,88 @@ import numpy as np
 import matplotlib.pyplot as plt
 import copy
 import inspect
-
-
-
-# Semilla
+torch.backends.cudnn.benchmark = True
+# Semilla (para las pruebas, en el entrenamiento final no se usa)
 # seed = 42
 # torch.cuda.manual_seed(seed)
 # torch.manual_seed(seed)
 # np.random.seed(seed)
 
-#Activar optimizacion cudnn
-torch.backends.cudnn.benchmark = True
+
+"""
+Fichero que contiene las diferentes funciones necesarias para el entrenamiento de las redes neuronales
+
+"""
 
 
-##################################### FUNCION DE LOSS EUCLIDEA ############################################ (sin usar)
-# Distancia euclídea
 def euclidean_loss(y_true, y_pred):
+    """
+    Función que calcula la distancia euclídea entre dos tensores
+
+    Args:
+        y_true (torch.Tensor): Tensor con las coordenadas reales
+        y_pred (torch.Tensor): Tensor con las coordenadas predichas
+
+    Returns:
+        torch.Tensor: Distancia euclídea media entre los tensores
+    
+    """
     return torch.sqrt(torch.sum((y_pred - y_true) ** 2, dim=-1)).mean()
 
 
-###############################################    GRAFICAR PERDIDAS    ########################################################
-
-def graficar_perdidas_vt(train_losses, val_losses, test_losses):
-  plt.figure(figsize=(10,5))
-  plt.plot(train_losses, label='Entrenamiento', color='blue')
-  plt.plot(val_losses, label='Validación', color='green')
-  plt.plot(test_losses, label='Prueba', color='red')
-  plt.title('Pérdida durante el entrenamiento')
-  plt.xlabel('Época')
-  plt.ylabel('Pérdida')
-  plt.legend()
-  plt.show()
 
 def graficar_perdidas(train_losses, val_losses, test_losses, euc_losses, indice):
-  plt.figure(figsize=(10,5))
-  plt.plot(train_losses, label='Entrenamiento', color='green')
-  plt.plot(val_losses, label='Validación', color='orange')
-  if test_losses is not None:
-    plt.plot(test_losses, label='Test', color='red')
-  if euc_losses is not None:
-    plt.plot(euc_losses, label='Euc Loss', color='purple')
-  plt.axvline(x=indice, color='purple', linestyle='--', label='Indice')
-  plt.title('Pérdida durante el entrenamiento')
-  plt.xlabel('Época')
-  plt.ylabel('Pérdida')
-  plt.legend()
-  plt.show()
+    """
+    Función que grafica las pérdidas de entrenamiento, validación y test
 
+    Args:
+        train_losses (list): Lista con las pérdidas de entrenamiento
+        val_losses (list): Lista con las pérdidas de validación
+        test_losses (list): Lista con las pérdidas de test
+        euc_losses (list): Lista con las pérdidas euclídeas
+        indice (int): Índice para marcar la época
+    
+    """
+    plt.figure(figsize=(10,5))
+    plt.plot(train_losses, label='Entrenamiento', color='green')
+    plt.plot(val_losses, label='Validación', color='orange')
+    if test_losses is not None:
+        plt.plot(test_losses, label='Test', color='red')
+    if euc_losses is not None:
+        plt.plot(euc_losses, label='Euc Loss', color='purple')
+    plt.axvline(x=indice, color='purple', linestyle='--', label='Indice')
+    plt.title('Pérdida durante el entrenamiento')
+    plt.xlabel('Época')
+    plt.ylabel('Pérdida')
+    plt.legend()
+    plt.show()
 
-
-###############################################    ENTRENAR    ########################################################
 
 
 def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, lr, ann=None, graficas=False, final = False):
+    """
+    Entrena un modelo de red neuronal
+
+    Args:
+        model (torch.nn.Module): Modelo de red neuronal
+        train_dataloader (torch.utils.data.DataLoader): Dataloader de entrenamiento
+        val_dataloader (torch.utils.data.DataLoader): Dataloader de validación
+        test_dataloader (torch.utils.data.DataLoader): Dataloader de test (no obligatorio)
+        epochs (int): Número de épocas máximas
+        lr (float): Learning rate
+        ann (bool): Indica si el modelo es una red neuronal artificial para diferenciar de las cnn
+        graficas (bool): Indica si se quieren mostrar las gráficas en tiempo real
+        final (bool): Indica si se quiere guardar el modelo en cada época
+    
+    Returns:
+        list: Lista con los modelos guardados
+        list: Lista con las pérdidas de entrenamiento
+        list: Lista con las pérdidas de validación
+        list: Lista con las pérdidas de test
+        list: Lista con las pérdidas euclídeas de validación
+        int: Índice de la mejor época
+    """
+    # Se inicializan las variables necesarias
     model = model.to("cuda")
     optimizer = optim.AdamW(model.parameters(), lr=lr)
     scaler = torch.cuda.amp.GradScaler()
@@ -70,17 +99,14 @@ def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, l
     euc_losses_val = []
     ecu_losses_test = []
     models = []
-
     loss_function = nn.MSELoss()
     loss_euclidean = euclidean_loss
-
     early_stopping_rounds = 30
-
     best_val_loss = float('inf')
     rounds_without_improvement = 0
 
     if graficas:
-        plt.ion()  # Activa el modo interactivo de matplotlib
+        plt.ion() 
         fig, ax = plt.subplots()
 
     # Comprobar el número de argumentos que requiere la función de predicción del modelo
@@ -89,7 +115,9 @@ def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, l
     # Ajuste del learning rate
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=20, threshold=0.001) 
 
+
     def calculate_loss(data, model, loss_function, num_args, ann):
+        # Calcular la pérdida en función del número de argumentos 
         if num_args == 2:
             predictions = model(data[0], data[1])
         elif num_args == 3:
@@ -107,7 +135,7 @@ def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, l
         euc_loss_total_val = 0
         euc_loss_total_test = 0
 
-        # # Entrenamiento
+        # Entrenamiento
         model.train()
         for data in train_dataloader:
             optimizer.zero_grad()
@@ -177,19 +205,12 @@ def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, l
             ax.clear()
             ax.plot(np.clip(train_losses[:], 0, 0.2), label='Train Loss', color='blue')
             ax.plot(np.clip(val_losses[:], 0, 0.2), label='Validation Loss', color='orange')
-            #ax.plot(np.clip(euc_losses_val, 0, 0.2), label='Euc Loss Val', color='purple')
             if test_dataloader is not None:
                 ax.plot(np.clip(test_losses[:], 0, 1), label='Test Loss', color='red')
-                #ax.plot(np.clip(ecu_losses_test, 0, 1), label='Euc Loss Test', color='pink')
             ax.legend()
             plt.draw()
             plt.pause(0.001)
 
-        # if test_dataloader is not None:
-        #     print(f"Epoch: {epoch}, Train Loss: {train_loss_avg}, Val Loss: {val_loss_avg}, Test Loss: {test_loss_avg}, Euc Loss Val: {euc_loss_avg_val}, Euc Loss Test: {euc_loss_avg_test}")
-        # else:
-        #     print(f"Epoch: {epoch}, Train Loss: {train_loss_avg}, Val Loss: {val_loss_avg}, Euc Loss Val: {euc_loss_avg_val}")
-    
     indice = val_losses.index(best_val_loss)
 
     if graficas:
@@ -201,19 +222,49 @@ def entrenar(model, train_dataloader, val_dataloader, test_dataloader, epochs, l
 
     return models, train_losses, val_losses, test_losses, euc_losses_val , indice
 
+
+
 def weights_init(m):
+    """
+    Inicializa los pesos de una capa
+
+    Args:
+        m (torch.nn.Module): Capa de la red neuronal
+    
+    """
     if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
         nn.init.xavier_uniform_(m.weight)
         if m.bias is not None:
             nn.init.zeros_(m.bias)
 
 
+
 def entrenar_con_kfold(modelo, dataloader, epochs, lr, ejecuciones_fold, ann=None, graficas=False):
+    """
+    Entrena un modelo con validación cruzada
+
+    Args:
+        modelo (torch.nn.Module): Modelo de red neuronal
+        dataloader (torch.utils.data.DataLoader): Dataloader
+        epochs (int): Número de épocas
+        lr (float): Learning rate
+        ejecuciones_fold (int): Número de ejecuciones
+        ann (bool): Indica si el modelo es una red neuronal artificial para diferenciar de las cnn
+        graficas (bool): Indica si se quieren mostrar las gráficas en tiempo real
+    
+    Returns:
+        list: Lista con las pérdidas de entrenamiento
+        list: Lista con las pérdidas de validación
+        list: Lista con las pérdidas euclídeas
+    
+    """
     losses_train = []
     losses_val = []
     losses_euc = []
     cambios_de_persona = dataloader.dataset.get_indices_persona()
     numero_de_persona = len(np.unique(cambios_de_persona))
+
+    # Leave-One-Out
     for i in range(numero_de_persona):
         # Obtener los índices de entrenamiento y prueba para esta persona
         train_indices = [idx for idx, persona in enumerate(cambios_de_persona) if persona != i+1]
@@ -228,12 +279,13 @@ def entrenar_con_kfold(modelo, dataloader, epochs, lr, ejecuciones_fold, ann=Non
             # Modelo nuevo para cada fold
             model = modelo()
 
+            # Inicializar los pesos del modelo si es cnn o hibrida
             if not ann:
               model.apply(weights_init)
 
+            # Crear los dataloaders para este fold
             train_subsampler = torch.utils.data.SubsetRandomSampler(train_indices)
             val_subsampler = torch.utils.data.SubsetRandomSampler(val_indices)
-
             train_dataloader = torch.utils.data.DataLoader(dataloader.dataset, batch_size=dataloader.batch_size, sampler=train_subsampler)
             val_dataloader = torch.utils.data.DataLoader(dataloader.dataset, batch_size=dataloader.batch_size, sampler=val_subsampler)
 

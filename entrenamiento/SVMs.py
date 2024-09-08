@@ -7,24 +7,63 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVR
 from DatasetEntero import DatasetEntero
 
+"""
+Fichero donde se evalúa mediante una busqueda de hiperparámetros el modelo de SVMs que mejor se ajusta a los datos
+
+"""
+
 class SVMs:
+    """
+    Clase que contiene los modelos de SVMs que se van a entrenar
+    
+    """
     def __init__(self):
         pass
 
     def crear_svm(self, kernel='rbf', C=1.0, epsilon=1):
-        # Crear un pipeline que estandariza los datos y luego aplica el SVM
+        """
+        Crea un modelo de SVM con los hiperparámetros dados
+
+        Args:
+            kernel (str): Tipo de kernel a utilizar.
+            C (float): Parámetro de regularización.
+            epsilon (float): Parámetro de la función de pérdida.
+
+        Returns:
+            Pipeline: Modelo de SVM.
+        """
+        # Se crean dos modelos, uno para cada salida
         model = make_pipeline(StandardScaler(), MultiOutputRegressor(SVR(kernel=kernel, C=C, epsilon=epsilon)))
         return model
 
-    # Primera sub-aproximacion con todos los datos como conjunto de entrenamiento PARA SABER QUE ARQUITECTURA ES LA MEJOR
-    def crear_svm_1_1(self):
-        return self.crear_svm()
+
 
 def euclidean_loss(y_true, y_pred):
+    """
+    Calcula la pérdida euclidiana entre dos vectores
+    
+    Args:
+        y_true (np.array): Vector verdadero
+        y_pred (np.array): Vector predicho
+
+    Returns:
+        float: Pérdida euclidiana
+    """
     return np.sqrt(np.sum((y_pred - y_true) ** 2, axis=-1)).mean()
 
 
+
 def filtrar_parametros(param_grid):
+    """
+    Evita que haya combinaciones redundantes de parámetros ya que algunos parámetros no pueden estar juntos
+
+    Args:
+        param_grid (dict): Parámetros a combinar
+    
+    Returns:
+        list: Lista de combinaciones de parámetros sin redundancias
+
+    """
     combinaciones = list(ParameterGrid(param_grid))
     combinaciones_filtradas = []
 
@@ -46,13 +85,26 @@ def filtrar_parametros(param_grid):
     return combinaciones_filtradas
 
 
+
 def entrenar_con_kfold_grid_search(modelo, dataset, param_grid):
+    """
+    Entrena un modelo con validación cruzada y búsqueda de hiperparámetros
+
+    Args:
+        modelo (function): Función que crea un modelo de SVM.
+        dataset (DatasetEntero): Dataset con los datos.
+        param_grid (dict): Parámetros a combinar.
+
+    Returns:
+        list: Lista con los resultados de cada combinación de parámetros.
+
+    """
     cambios_de_persona = dataset.get_indices_persona()
     numero_de_persona = len(np.unique(cambios_de_persona))
     resultados = []
 
-    # Convertir todo el dataset a numpy arrays
-    reductor = 15
+    # Rebaja la cantidad de datos para que sea más rápida la búsqueda
+    reductor = 5
     X, y = dataset[:]
     X = X.cpu().numpy()[::reductor]
     y = y.cpu().numpy()[::reductor]
@@ -73,9 +125,9 @@ def entrenar_con_kfold_grid_search(modelo, dataset, param_grid):
             X_train, y_train = X[train_indices], y[train_indices]
             X_val, y_val = X[val_indices], y[val_indices]
 
+            # Entrenar y evaluar
             model.set_params(**params)
             model.fit(X_train, y_train)
-
             y_val_pred = model.predict(X_val)
             fold_mse_losses.append(mean_squared_error(y_val, y_val_pred))
             fold_euclidean_losses.append(euclidean_loss(y_val, y_val_pred))
@@ -111,5 +163,5 @@ if __name__ == '__main__':
     # Filtrar los parámetros para que no haya combinaciones redundantes
     param_grid_filtrado = filtrar_parametros(param_grid)
 
-    # Entrenar 
-    entrenar_con_kfold_grid_search(SVMs().crear_svm_1_1, dataset, param_grid_filtrado)
+    # Buscar los mejores parámetros 
+    entrenar_con_kfold_grid_search(SVMs().crear_svm, dataset, param_grid_filtrado)

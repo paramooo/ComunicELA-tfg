@@ -5,14 +5,12 @@ from torch.utils.data import DataLoader
 from entrenamiento import entrenar_con_kfold
 from ANNs import ANNs
 
-def aproximacion1(i, model, conjunto):  # Crear un dataframe
+def aproximacion1(i, model, conjunto):  
 
   df = DataFrame(columns=['Modelo', 'Mean EMC Val', 'Std EMC Val', 'Mean EUC Loss', 'Std EUC Loss'])
 
   #Crear un Dataset
   dataset = DatasetEntero("texto_solo")
-
-  #Crear un DataLoader
   total_dataloader = DataLoader(dataset, batch_size=6000, num_workers=2, pin_memory=True)
 
   print("Empezando con el modelo: ", i, " del conjunto: ", conjunto)
@@ -29,7 +27,7 @@ def aproximacion1(i, model, conjunto):  # Crear un dataframe
       "\nMean EUC Loss: ", np_mean(euc_losses),
       "\nStd EUC Loss: ", np_std(euc_losses))
 
-  #Si no existe el archivo, lo crea
+  # Guardar los resultados en un archivo Excel
   path = './entrenamiento/resultados/Aproximacion1.xlsx'
   df_existente = read_excel(path)
   df = concat([df_existente, df])

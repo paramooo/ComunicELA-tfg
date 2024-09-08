@@ -2,6 +2,11 @@ import torch.nn as nn
 from torchvision.models import resnet18, resnet34
 
 class CNNs:
+  """
+  Modelos de redes neuronales convolucionales (CNNs)
+
+  """
+
   def __init__(self):
       pass
 
@@ -9,7 +14,11 @@ class CNNs:
       return int(ancho/div), int(alto/div)
 
 
-  # -------------------------------------------------- PRIMERAS OBSERVACIONES --------------------------------------------------
+  """
+
+  Modelos utilizados en las primeras observaciones
+
+  """
   def crear_cnn_1(self):
     ancho, alto = (210,120)
     model = nn.Sequential()
@@ -81,7 +90,12 @@ class CNNs:
 
 
 
-# -------------------------------------------------- SEGUNDAS OBSERVACIONES --------------------------------------------------
+
+  """
+
+  Modelos utilizados en las segundas observaciones
+
+  """
   def crear_cnn_2_1(self):
     ancho, alto = (210,120)
     model = nn.Sequential()
@@ -107,8 +121,6 @@ class CNNs:
     model.add_module('relu3', nn.ReLU())
     model.add_module('fc2', nn.Linear(100, 2))
     return model
-
-
 
   def crear_cnn_3_aux(self, ancho, alto, salidas=2):
         model = nn.Sequential()
@@ -148,7 +160,11 @@ class CNNs:
       return self.crear_cnn_2_4_aux(ancho, alto)
 
 
-# ------------------------------------------------------- TERCERAS OBSERVACIONES -----------------------------------
+  """
+  
+  Modelos utilizados en las terceras observaciones
+  
+  """
 
 
   def crear_cnn_3_3(self):
@@ -168,22 +184,11 @@ class CNNs:
     return self.crear_cnn_4_aux(ancho, alto)
 
 
-#----------------------------PARA LA FUSIONET-------------------------------------------
-
-
-  def crear_cnn_f_1(self):
-          ancho, alto = (200, 50)
-          return self.crear_cnn_3_aux(ancho, alto, salidas=80)
-
-  def crear_cnn_f_2(self):
-          ancho, alto = (200, 50)
-          return self.crear_cnn_3_aux(ancho, alto, salidas=50)
+  """
   
-  def crear_cnn_f_3(self):
-          ancho, alto = (200, 50)
-          return self.crear_cnn_3_aux(ancho, alto, salidas=15)
-  
+  Modelos ResNet
 
+  """
 
   def crear_resnet(self, indice):
       if indice == 0:
@@ -200,3 +205,27 @@ class CNNs:
 
   def crear_resnet34(self):
       return self.crear_resnet(1)
+  
+
+
+
+  
+  """
+  
+  Modelos utilizados en la tercera aproximación (híbridas)
+  
+  """
+
+
+  def crear_cnn_f_1(self):
+          ancho, alto = (200, 50)
+          return self.crear_cnn_3_aux(ancho, alto, salidas=80)
+
+  def crear_cnn_f_2(self):
+          ancho, alto = (200, 50)
+          return self.crear_cnn_3_aux(ancho, alto, salidas=50)
+  
+  def crear_cnn_f_3(self):
+          ancho, alto = (200, 50)
+          return self.crear_cnn_3_aux(ancho, alto, salidas=15)
+  

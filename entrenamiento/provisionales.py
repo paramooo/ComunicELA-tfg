@@ -1,4 +1,9 @@
-#Funciones provisionales para la creacion de la memoria del proyecto
+"""
+Fichero que contiene funciones para la visualización de datos y modelos, 
+Solamente es utilizado para el desarrollo y la creación de la memoria
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter1d
@@ -78,11 +83,6 @@ def mostrar_graficas_suavizado_datos():
     plt.show()
 
 
-
-#----------------------------------------------------------------------------
-# No es una buena manera de evaluar ya que los puntos que estan en el borde entre dos zonas logicamente no los va a acertar
-# bien siempre, entonces va a dar una media mas baja de la que realmente tendría, hay que evaluar con metricas como las de loss, error medio, etc.
-#----------------------------------------------------------------------------
 # Funcion para evaluar por zonas en pantalla la precision de un modelo
 def evaluar_zonas(conjunto, model, hor_div, ver_div):
     # Cargar los datos
@@ -128,8 +128,6 @@ def evaluar_zonas(conjunto, model, hor_div, ver_div):
 
 
 #---------------- FUNCIONES PARA LA PONDERACION ----------------
-#--------------------------------------------------------------
-
 #Funcion de ponderar por cuadrantes
 def ponderar_graficas():
     def ponderar1d(x, LimiteBajo, LimiteAlto, Centro):
@@ -531,36 +529,6 @@ def grafica_calor(posiciones_t, miradas_t, lower_limit, upper_limit):
     plt.yticks([0, filas], [0, 1])
     plt.show()
 
-# ----------------------------       COMPROBAR NEURONAS MUERTAS      -------------------------------------
-
-# def check_dead_neurons(model, data_loader):
-#     dead_neurons = []
-
-#     for i, layer in enumerate(model.modules()):
-#         if isinstance(layer, nn.ReLU):
-#             inputs = next(iter(data_loader))[0]
-#             outputs = layer(inputs)
-#             num_dead_neurons = (outputs == 0).sum().item()
-#             dead_neurons.append((i, num_dead_neurons))
-
-#     return dead_neurons
-
-#COMPROBAR NEURNAS MUERTAS-------------------------------------
-
-    # model = torch.load('./anns/pytorch/modeloRELU.pth')
-    # input, output = cargar_datos()
-    # input = Conjuntos.conjunto_2(input)
-
-    # # cREATE A DATALOADER
-    # input = torch.from_numpy(input).float()
-    # output = torch.from_numpy(output).float()
-    # dataset = torch.utils.data.TensorDataset(input, output)
-    # data_loader = DataLoader(dataset, batch_size=32, shuffle=True)
-    # dead_neurons = check_dead_neurons(model, data_loader)
-    # print(dead_neurons)
-
-#0.984375, 0.5583333333333333 -> 574
-# 0.0, 0.5583333333333333 -> 639
 
 def grafico_ojos():
     input, output = cargar_datos("memoria")

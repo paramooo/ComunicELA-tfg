@@ -7,15 +7,13 @@ from numpy import mean as np_mean, std as np_std
 
 
 def aproximacion2(i, model, lr, carpeta = "15-15-15"):
-    # Crear un dataframe
     df = DataFrame(columns=['Modelo', 'Mean EMC Val', 'Std EMC Val', 'Mean EUC Loss', 'Std EUC Loss'])
 
+    #Crear un Dataset
     dataset = DatasetEntero("con_imagenes", img_dir=f'./entrenamiento/datos/frames/byn/{carpeta}')
-
     total_dataloader = DataLoader(dataset, batch_size=100, num_workers=2, pin_memory=True)
 
     print("Empezando con el modelo: ", i, " de la carpeta: ", carpeta)
-
     _, val_losses, euc_losses = entrenar_con_kfold(model, total_dataloader, epochs=250, lr=lr, ejecuciones_fold=5, graficas=True, ann=False)
 
     # Añadir los resultados al DataFrame
@@ -29,12 +27,13 @@ def aproximacion2(i, model, lr, carpeta = "15-15-15"):
         "\nMean EUC Loss: ", np_mean(euc_losses),
         "\nStd EUC Loss: ", np_std(euc_losses))
 
-    df_existente = read_excel('./entrenamiento/resultados/Aproximacion2.xlsx')
+    # Guardar los resultados en un archivo Excel
+    path = './entrenamiento/resultados/Aproximacion2.xlsx'
+    df_existente = read_excel(path)
     df = concat([df_existente, df])
-    df.to_excel('./entrenamiento/resultados/Aproximacion2.xlsx', index=False)
+    df.to_excel(path, index=False)
 
 if __name__ == "__main__":
-    #Modelo
     models_t = [{
             "20-35-55":[CNNs().crear_cnn_2_1, CNNs().crear_cnn_2, CNNs().crear_cnn_3, CNNs().crear_cnn_4],
             "15-15-15":[CNNs().crear_cnn_3_3, CNNs().crear_cnn_3_4],

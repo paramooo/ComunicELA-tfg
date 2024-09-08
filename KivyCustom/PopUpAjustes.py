@@ -8,6 +8,10 @@ from KivyCustom.PopUp import CustPopup
 from kivy.graphics import Line
 
 class PopUpAjustes(ModalView):
+    """
+    PopUp que muestra el menú flotante de los ajustes de la aplicación.
+    
+    """
     def __init__(self, camera_spinner, voz_spinner, boton_gemini,show_tutorial, controlador, **kwargs):
         super(PopUpAjustes, self).__init__(**kwargs)
         self.controlador = controlador
@@ -74,14 +78,17 @@ class PopUpAjustes(ModalView):
 
         self.add_widget(layout)
 
+    # Actualiza el tamaño y posicion del rectángulo
     def _update_rect(self, instance, value):
         self.rect.pos = instance.pos
         self.rect.size = instance.size
         self.line.rectangle = (instance.x, instance.y, instance.width, instance.height)
 
+    # Al pulsar el botón de información
     def on_info(self, instance):
         CustPopup(self.controlador.get_string('info_gemini'), func_continuar=self.on_dismiss, pos = (0.5, 0.5), controlador=self.controlador).open()
 
+    # Al pulsar el botón de tutorial
     def on_tutorial(self, instance):
         self.dismiss()
         self.show_tutorial()

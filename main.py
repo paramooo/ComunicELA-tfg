@@ -6,7 +6,8 @@ from kivy.core.window import Window
 from kivy.core.text import LabelBase
 from kivy.config import Config
 from ajustes.utils import get_recurso
-
+from json import load as json_load, dump as json_dump
+import os
 
 Window.fullscreen = 'auto'
 
@@ -31,5 +32,5 @@ class MyApp(App):
             # Detiene la cámara antes de cerrar la aplicación
             self.modelo.detener_camara()
 
-if __name__ == '__main__':
+if __name__ == '__main__':        
     MyApp().run()

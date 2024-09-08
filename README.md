@@ -10,11 +10,10 @@ Este enfoque integrador y colaborativo no solo mejora la comunicación sino que 
 
 Además, al estar disponible como código libre, el sistema invita a desarrolladores y usuarios de todo el mundo a contribuir, promoviendo un entorno abierto y colaborativo que enriquece continuamente su desarrollo y aplicación.
 
-## Requisitos
-El único componente a configurar para el uso de esta aplicación es la API de Google Gemini, utilizada para dar coherencia a las frases escritas por los pacientes en los tableros antes de ser reproducidas. En caso de no configurarla, el conjugador automático no estará disponible.
 
-### Configuración de la API de Google Gemini
-1. **Obtener una clave API:** Obtener clave API
+## Configuración de la API de Google Gemini
+Este paso es esencial para poder activar el conjugador automático de las frases y proporcionar una forma más fluida de comunicación.
+1. **Obtener una clave API:** [Obtener clave API](https://aistudio.google.com/app/apikey)
 2. **Establecer una variable de entorno:**
     - Abre el menú de inicio de Windows y busca "variables de entorno".
     - Selecciona "Editar las variables de entorno del sistema".
@@ -24,16 +23,38 @@ El único componente a configurar para el uso de esta aplicación es la API de G
     - En el campo del valor, introduce la clave obtenida del enlace anterior.
 3. **Reiniciar el sistema:** Puede ser necesario un reinicio del sistema para aplicar los cambios.
 
-## Edición de Tableros
 
+
+
+
+
+
+## Ejecución de la Aplicación
+
+1. **Descarga** el archivo comprimido `ComunicELA.zip` disponible en el siguiente [enlace.](https://drive.google.com/file/d/1ly-fBQTh3I30p7BFrTMlSRBhE76WCO7A/view?usp=sharing)
+2. **Extrae** el contenido del archivo zip.
+3. Dentro de la carpeta extraída `ComunicELA`, encontrarás:
+   - La carpeta `tableros`, donde puedes personalizar los tableros según tus necesidades como se explica más adelante.
+   - El archivo `ComunicELA.exe`.
+
+Para abrir la aplicación, simplemente **ejecuta** el archivo `ComunicELA.exe`.
+
+
+
+
+
+
+## Edición de Tableros
 ### Estructura de Carpetas
-- **Carpeta "tableros":** Contiene los archivos de los tableros comunicativos.
 - **Carpeta "pictogramas":** Contiene todas las fotografías utilizadas en las casillas con pictogramas. Estas fotografías son genéricas para todos los idiomas.
 
-### Archivos de Tableros
-- Los tableros son archivos con extensión `.xlsx`, cada uno nombrado según el idioma correspondiente.
-- Dentro de cada archivo, los diferentes tableros se distribuyen en hojas. El primer tablero que aparece al abrir el archivo es el de la primera hoja, llamada `TAB. INICIAL`.
-
+- **Archivos "tablero_XX_XX":**
+    - Los tableros son archivos con extensión `.xlsx`, cada uno nombrado según el idioma correspondiente.
+    - Dentro de cada archivo, los diferentes tableros se distribuyen en hojas. El primer tablero que aparece al abrir el archivo es el de la primera hoja, llamada `TAB. INICIAL`.
+    - Los códigos de idioma siguen el formato XX_XX, donde:
+        - es_ES corresponde a español de España.
+        - gal_ES corresponde a gallego de España.
+        - Por el momento son los dos idiomas soportados.
 ### Personalización de Casillas
 - Cada casilla tiene dos columnas reservadas:
     - **Primera columna:** Nombre de la fotografía correspondiente de la carpeta de pictogramas.
@@ -41,14 +62,8 @@ El único componente a configurar para el uso de esta aplicación es la API de G
 - Para personalizar una casilla, añade la fotografía con el nombre deseado a la carpeta de pictogramas y escribe este nombre en la primera columna reservada para la casilla que quieras modificar.
 
 ### Enlaces a Otros Tableros
-- Si la palabra de la casilla comienza por `TAB. `, el software la reconoce como un enlace a otro tablero (otra hoja del archivo).
+- Si la palabra de la casilla comienza por `"TAB. "`, el software la reconoce como un enlace a otro tablero (otra hoja del archivo).
 - Por ejemplo, si en la palabra de una casilla se escribe `TAB. RÁPIDO`, al pulsar esta casilla se abrirá el tablero correspondiente a la hoja `TAB. RÁPIDO`.
 
 ### Consejo Adicional
-- Es recomendable incluir en cada tablero (excepto en el inicial) una casilla que permita volver al tablero inicial. Esto facilita la navegación entre los diferentes tableros.
-
-## Ejecución de la Aplicación
-Actualmente se está trasladando a Docker, pero por el momento puedes ejecutarla con los siguientes comandos:
-```bash
-pip install -r requirements.txt
-python3 main.py
+- Es recomendable incluir en cada tablero (excepto en el inicial) una casilla que permita volver al tablero inicial. Esto posibilita la navegación entre los diferentes tableros.

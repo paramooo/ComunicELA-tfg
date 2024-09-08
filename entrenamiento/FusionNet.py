@@ -3,6 +3,12 @@ import torch.nn as nn
 from ANNs import ANNs
 from CNNs import CNNs
 
+"""
+Fichero que contiene las definiciones de las redes híbridas
+
+"""
+
+
 class FusionNet(nn.Module):
     def __init__(self, ann, cnn):
         super(FusionNet, self).__init__()
