@@ -12,6 +12,9 @@ from KivyCustom.Custom import CustomSpinner
 from KivyCustom.PopUp import CustPopup
 
 class Recopilar(Screen):
+    """
+    Clase que muestra la pantalla de recopilación de datos.
+    """
     def __init__(self, controlador, **kwargs):
         super(Recopilar, self).__init__(**kwargs)
         self.controlador = controlador
