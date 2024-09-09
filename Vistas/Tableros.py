@@ -11,6 +11,9 @@ from kivy.uix.image import Image
 from kivy.graphics import Rectangle
 
 class PantallaBloqueada(BoxLayout):
+    """
+    Fondo semitransparente que se superpone a la pantalla para bloquear la interacción con los elementos.
+    """
     def __init__(self, controlador, **kwargs):
         super(PantallaBloqueada, self).__init__(**kwargs)
         self.controlador = controlador
@@ -23,11 +26,17 @@ class PantallaBloqueada(BoxLayout):
         self.add_widget(Label(text=self.controlador.get_string("mensaje_descanso"), color=(1, 1, 1, 1)))
 
     def _update_rect(self, instance, value):
+        """
+        Actualiza el tamaño al de la pantalla
+        """
         self.rect.pos = instance.pos
         self.rect.size = instance.size
 
 
 class Tableros(Screen):
+    """
+    Tableros interactivos de la aplicación.
+    """
     def __init__(self, controlador, **kwargs):
         super(Tableros, self).__init__(**kwargs)
         self.controlador = controlador
@@ -41,11 +50,6 @@ class Tableros(Screen):
         # Layout principal
         self.layout_principal = BoxLayout(orientation='vertical')  # Cambia la orientación a vertical
         self.add_widget(self.layout_principal)
-        
-        # Tablero
-        # self.tablero = Tablero(self.controlador.obtener_tablero(self.controlador.obtener_tablero_inicial()), self.controlador, size_hint=(1, 0.8), pictos = self.controlador.get_pictogramas())
-        # self.layout_principal.add_widget(self.tablero)
-
                 
         # Añade un espacio en blanco 
         espacio_blanco = BoxLayout(size_hint=(1, .03))
@@ -109,27 +113,32 @@ class Tableros(Screen):
         self.botones = [self.btn_inicio, self.btn_borrar_palabra, self.btn_borrar_todo, self.btn_reproducir, self.btn_alarma]
         self.dibujos_mirada = []
     
-    # TextInput siempre muestre la última línea de texto
     def on_text(self, instance, value):
+        """
+        Hace que el texto se desplace hacia arriba cuando se añade una nueva línea
+        """
         instance.scroll_y = 0
 
-    # Cambia el tablero antes de entrar para evitar el salto de la vista
     def on_pre_enter(self, *args):
+        """
+        Establece el tablero inicial antes de entrar en la pantalla.
+        """
         tab_incial = self.controlador.obtener_tablero_inicial()
-        print(tab_incial)
         self.cambiar_tablero(self.controlador.obtener_tablero(tab_incial))
         self.label.text = self.controlador.get_frase()
 
-
-    # Funcion para escanear al entrar
     def on_enter(self, *args):
-        # Añade la tarea de actualización al reloj
+        """
+        Cuando entra, se añade la tarea de actualización al reloj, se activa el escaneo y desactiva el bloqueo.
+        """
         Clock.schedule_interval(self.update, 1.0 / 30.0)  
         self.controlador.set_escanear(True)
         self.controlador.set_bloqueado(False)
 
-    # Parar de escanear al salir
     def on_inicio(self, instance):
+        """
+        Cambia a la pantalla de inicio.
+        """
         self.controlador.set_escanear(False)
         self.controlador.borrar_todo()
         tab_incial = self.controlador.obtener_tablero_inicial()
@@ -138,27 +147,43 @@ class Tableros(Screen):
         Clock.unschedule(self.update)
 
     def on_label_touch_down(self, instance, touch):
+        """
+        Al tocar sobre el boton de reproducir, se activa la reproducción del texto.
+        """
         self.on_reproducir(instance)
 
-        
-    # Funciones de los botones
     def on_borrar_palabra(self, instance):
+        """
+        Notifica al controlador que se ha pulsado el botón de borrar palabra.
+        """
         self.controlador.borrar_palabra()
 
     def on_borrar_todo(self, instance):
+        """
+        Notifica al controlador que se ha pulsado el botón de borrar todo.
+        """
         self.controlador.borrar_todo()
 
     def on_reproducir(self, instance):
-        #Aqui leer el texto en alto
+        """
+        Notifica al controlador que se ha pulsado el botón de reproducir.
+        """
         self.controlador.reproducir_texto()
     
     def on_alarma(self, instance):
+        """
+        Notifica al controlador que se ha pulsado el botón de alarma.
+        """
         self.controlador.reproducir_alarma()
 
 
-    # Cambia el tablero
     def cambiar_tablero(self, palabras):
-        # Elimina el tablero actual solo si el widget ya esta añadido al layout
+        """
+        Cambia el tablero actual por el que se le pasa por parámetro.
+
+        Args:
+            palabras (list): Lista de palabras a mostrar en el tablero
+        """
         if hasattr(self, 'tablero'):
             self.layout_principal.remove_widget(self.tablero)
         self.tablero = Tablero(palabras, self.controlador, size_hint=(1, 0.8), pictos=self.controlador.get_pictogramas())
@@ -166,8 +191,10 @@ class Tableros(Screen):
         self.layout_principal.do_layout()
 
 
-    # Actualiza la posición de la mirada
     def update(self, dt):
+        """
+        Se encarga de actualizar la pantalla, emulando el movimiento y clic de la mirada.
+        """
         # Obtener la frase actual
         self.label.text = self.controlador.get_frase()
         
@@ -226,7 +253,10 @@ class Tableros(Screen):
 
 
 
-    def emular_movimiento_y_clic(self, x, y, click):        
+    def emular_movimiento_y_clic(self, x, y, click):  
+        """
+        Emula el movimiento y clic de la mirada en el tablero.
+        """      
         if y > 0.17:
             casilla_ancho = 1 / self.tablero.cols
             casilla_alto = 0.8 / self.tablero.rows  # Quita el 0.2 inferior

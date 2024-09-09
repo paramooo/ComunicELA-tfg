@@ -8,6 +8,9 @@ from ajustes.utils import get_recurso
 
 
 class ReentrenarInstruc(Screen):
+    """
+    Pantalla que muestra las instrucciones para reentrenar el modelo.
+    """
     def __init__(self, controlador, **kwargs):
         super(ReentrenarInstruc, self).__init__(**kwargs)
         self.controlador = controlador
@@ -123,22 +126,35 @@ class ReentrenarInstruc(Screen):
         instrucciones_layout.add_widget(right_buttons)
 
     def on_enter(self, *args):
-        self.btn_descartar.text=self.controlador.get_string('descartar_ree')
+        """
+        Al entrar en la pantalla, se actualiza el idioma de los elementos       
+        """
         self.update_idioma()
 
-    # Función para el botón de Descartar
+
     def on_descartar(self, *args):
+        """
+        Descarta los reentrenamientos realizados
+        """
         self.controlador.descartar_reentrenamientos()
 
-    # Función para el botón de Reentrenar
     def on_reentrenar(self, *args):
+        """
+        Abre la pantalla de reentrenamiento, la de recopilar los datos
+        """
         self.controlador.change_screen('reentrenar')
     
-    # Función para el botón de Inicio
     def on_inicio(self, *args):
+        """
+        Abre la pantalla de inicio
+        """
         self.controlador.change_screen('inicio')
 
+
     def update_idioma(self):
+        """
+        Actualiza el idioma de los elementos de la pantalla
+        """
         self.btn_descartar.text = self.controlador.get_string('descartar_ree')
         self.btn_reentrenar.text = self.controlador.get_string('reentrenar')
         self.btn_inicio.text = self.controlador.get_string('inicio')

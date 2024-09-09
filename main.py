@@ -6,14 +6,15 @@ from kivy.core.window import Window
 from kivy.core.text import LabelBase
 from kivy.config import Config
 from ajustes.utils import get_recurso
-from json import load as json_load, dump as json_dump
-import os
-
 Window.fullscreen = 'auto'
-
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
+
 class MyApp(App):
+    """
+    Clase principal de la aplicación, se encarga de inicializar el modelo, la vista y el presenter.
+    Es la encargada de iniciar la aplicación y construirla.    
+    """
     def build(self):
         self.title = 'ComunicELA'  
         self.icon = get_recurso("imagenes/logo.png")  
@@ -29,8 +30,8 @@ class MyApp(App):
         return vista.sm
     
     def on_stop(self):
-            # Detiene la cámara antes de cerrar la aplicación
-            self.modelo.detener_camara()
+        # Detiene la cámara antes de cerrar la aplicación
+        self.modelo.detener_camara()
 
 if __name__ == '__main__':        
     MyApp().run()

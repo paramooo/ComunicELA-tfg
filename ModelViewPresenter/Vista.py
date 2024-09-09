@@ -12,6 +12,9 @@ from ajustes.utils import get_recurso
 
 
 class Vista:
+    """
+    Clase que se encarga de gestionar las pantallas de la aplicación.
+    """
     def __init__(self):
         self.controlador = None
         self.sm = ScreenManager()
@@ -24,9 +27,16 @@ class Vista:
         self.fondo2 = get_recurso('imagenes/fondo_menus3.jpg')
 
     def set_controlador(self, controlador):
+        """
+        Establece el presenter del MVP
+        """
         self.controlador = controlador
 
+
     def crear_pantallas(self):
+        """
+        Crea las pantallas de la aplicación
+        """
         self.inicio = Inicio(self.controlador, name='inicio')
         self.sm.add_widget(self.inicio)
 
@@ -54,14 +64,33 @@ class Vista:
         self.tablerosprueb = TablerosPruebas(self.controlador, name='tablerosprueb')
         self.sm.add_widget(self.tablerosprueb)
 
+
     def change_screen(self, nombre):
+        """
+        Cambia la pantalla actual por la que se le pasa por parámetro
+
+        Args:
+            nombre (str): Nombre de la pantalla a la que se quiere cambiar
+        """
         self.sm.current = nombre
 
+
     def get_screen(self):
+        """
+        Devuelve la pantalla actual en la que se encuentra la aplicación
+        """
         return self.sm.current 
     
+
     def get_fondo(self):
+        """
+        Devuelve el fondo 1 de la aplicación
+        """
         return self.fondo
     
+
     def get_fondo2(self):
+        """
+        Devuelve el fondo 2 de la aplicación
+        """
         return self.fondo2 

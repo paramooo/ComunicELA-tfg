@@ -7,6 +7,9 @@ from kivy.uix.widget import Widget
 from ajustes.utils import get_recurso
 
 class TablerosInstruc(Screen):
+    """
+    Muestra las instrucciones para el uso de los tableros y permite al usuario elegir si desea usar pictogramas o texto.
+    """
     def __init__(self, controlador, **kwargs):
         super(TablerosInstruc, self).__init__(**kwargs)
         self.controlador = controlador
@@ -123,27 +126,41 @@ class TablerosInstruc(Screen):
 
         instrucciones_layout.add_widget(right_instructions)
 
-    # Función para el botón de Inicio
+
     def on_inicio(self, *args):
+        """
+        Cambia a la pantalla de inicio.
+        """
         self.controlador.change_screen('inicio')
 
-    # Función para el botón de Comenzar
+
     def on_comenzar(self, *args):
+        """
+        Entra en los tableros con pictogramas.
+        """
         if self.controlador.cargar_tableros():
             self.controlador.set_pictogramas(True)
             self.controlador.change_screen('tableros')
         
 
-    # Función para el botón de Comenzar2
     def on_comenzar2(self, *args):
+        """
+        Entra en los tableros con texto.
+        """
         if self.controlador.cargar_tableros():
             self.controlador.set_pictogramas(False)
             self.controlador.change_screen('tableros')
 
     def on_pre_enter(self, *args):
+        """
+        Antes de entrar hay que actualizar el idioma de los elementos.
+        """
         self.actualizar_idioma()
 
     def actualizar_idioma(self):
+        """
+        Actualiza el idioma de los elementos de la pantalla.
+        """
         self.btn_inicio.text = self.controlador.get_string('inicio')
         self.btn_comenzar.text = self.controlador.get_string('comenzar_con_pic')
         self.btn_comenzar2.text = self.controlador.get_string('comenzar_con_texto')

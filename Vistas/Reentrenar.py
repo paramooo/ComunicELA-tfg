@@ -9,6 +9,9 @@ from kivy.uix.widget import Widget
 from KivyCustom.PopUp import CustPopup
 
 class Reentrenar(Screen):
+    """
+    Pantalla de reentrenamiento de la aplicación.
+    """
     def __init__(self, controlador, **kwargs):
         super(Reentrenar, self).__init__(**kwargs)
         self.controlador = controlador
@@ -30,15 +33,21 @@ class Reentrenar(Screen):
         self.lanzado = False
 
     def on_pre_enter(self, *args):
+        """
+        Establece el texto explicativo a vacío antes de entrar en la pantalla
+        """
         self.texto_explicativo.text = ""
 
 
     def on_enter(self, *args):
+        """
+        Una vez dentro, se reinician los datos de reentrenamiento y se añade la tarea de actualización al reloj
+        """
         self.escaneado = False
         self.controlador.reiniciar_datos_r()
         self.controlador.reiniciar_datos_ree()
         # Añade la tarea de actualización al reloj
-        Clock.schedule_interval(self.update, 1.0 / 30.0)  # 30 FPS  
+        Clock.schedule_interval(self.update, 1.0 / 30.0) 
         # Se crea el circulo rojo y se añade
         self.circulo = Ellipse(pos=(0,0), size=(50, 50))
         with self.canvas:
@@ -54,7 +63,9 @@ class Reentrenar(Screen):
 
 
     def on_inicio(self, *args):
-        # Cambia a la pantalla de inicio
+        """
+        Cambia a la pantalla de inicio
+        """
         self.controlador.change_screen('inicio')
         self.circulo_instr.clear()
         self.controlador.set_reentrenando(False)
@@ -63,12 +74,17 @@ class Reentrenar(Screen):
         
 
     def on_leave(self, *args):
-        # Elimina la tarea de actualización del reloj
+        """
+        Al salir de la pantalla, se elimina la tarea de actualización del reloj
+        """
         Clock.unschedule(self.update)
 
 
 
     def update(self, dt):
+        """
+        Realiza las actualizaciones de la pantalla y del círculo rojo
+        """
         # Si se está recopilando datos
         if self.controlador.get_recopilando():
             # Actualiza el texto explicativo con el contador del controlador

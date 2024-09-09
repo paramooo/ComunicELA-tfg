@@ -13,6 +13,9 @@ from ajustes.utils import get_recurso
 
 
 class Calibrar(Screen):
+    """
+    Pantalla de calibración de la aplicación.
+    """
     def __init__(self, controlador, **kwargs):
         super(Calibrar, self).__init__(**kwargs)
         self.controlador = controlador
@@ -83,16 +86,20 @@ class Calibrar(Screen):
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)
 
 
-    # Función para dibujar la línea divisoria del layout
     def on_enter(self, *args):
+        """
+        Acciones a realizar al entrar en la pantalla de calibración.
+        """
         self.update_idioma()
         self.update_divisoria()
-        # Schedule the update of the image box every 1/30 seconds
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)
-
         self.update_view(self.controlador.cambiar_estado_calibracion(0))
 
+
     def update_divisoria(self):
+        """
+        Actualiza la divisoria de la pantalla para ajustarla al tamaño de la pantalla.
+        """
         with self.layout.canvas:
             Color(1, 1, 1)
             self.divisoria = Rectangle(size=(2, self.height / 1.7), pos=(self.center_x, self.center_y - self.height / 4))
@@ -101,24 +108,34 @@ class Calibrar(Screen):
             if self.divisoria_instr not in self.layout.canvas.children:
                 self.layout.canvas.add(self.divisoria_instr)
 
-    # Función para el botón continuar
+
     def on_continuar(self, *args):
+        """
+        Se acciona al pulsar el botón de continuar, cambia el estado de la calibración.
+        """
         menu = self.controlador.cambiar_estado_calibracion()
         if(menu == 0):
             self.controlador.change_screen('inicio')
         elif menu != None:
             self.update_view(menu)
 
-    # Función para el botón inicio
+
     def on_inicio(self, *args):
+        """
+        Vuelve al inicio de la aplicación, se acciona al pulsar el botón de inicio.
+        """
         self.controlador.cambiar_estado_calibracion(0)
         self.controlador.change_screen('inicio')
-
-        # Se detiene la cámara y se limpia el círculo
         self.circulo_instr.clear()
 
-    # Función para actualizar la vista
+
     def update_view(self, estado):
+        """
+        Establece el texto y la imagen de la pantalla de calibración según el estado.
+
+        Args:
+            estado (int): Estado de la calibración
+        """
         self.texto_explicativo.text = self.controlador.get_string(f'mensaje_calibracion_{estado+1}')
         self.image.source = get_recurso(f'imagenes/calibrar{estado}.png')
 
@@ -139,7 +156,11 @@ class Calibrar(Screen):
 
         self.update_divisoria()
 
+
     def update_image_box(self, dt):
+        """
+        Actualiza la imagen de la cámara en la pantalla de calibración.
+        """
         frame = self.controlador.get_frame_editado()
         if frame is None:
             return
@@ -152,10 +173,17 @@ class Calibrar(Screen):
         texture.flip_vertical()
         self.image_box.texture = texture
 
+
     def on_leave(self, *args):
+        """
+        Al salir de la pantalla de calibración, se detiene la actualización de la imagen de la cámara.
+        """
         Clock.unschedule(self.update_image_box)
 
     def update_idioma(self):
+        """
+        Al actualizar el idioma cambia los textos correspondientes.
+        """
         self.btn_comenzar.text = self.controlador.get_string('continuar')
         self.texto_explicativo.text = self.controlador.get_string(f'mensaje_calibracion_1')
         self.btn_inicio.text = self.controlador.get_string('inicio')

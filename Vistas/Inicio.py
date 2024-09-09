@@ -15,6 +15,9 @@ from KivyCustom.PopUpAjustes import PopUpAjustes
 
 
 class Inicio(Screen):
+    """
+    Pantalla de inicio de la aplicación.
+    """
     def __init__(self, controlador, **kwargs):
         super(Inicio, self).__init__(**kwargs)
         self.controlador = controlador
@@ -144,6 +147,9 @@ class Inicio(Screen):
 
 
     def show_tutorial(self, *args):
+        """
+        Muestra los Popups de tutorial
+        """
         if self.indice_tut < len(self.tutorial_buttons):
             button, message_tut = self.tutorial_buttons[self.indice_tut]
             message = self.controlador.get_string(message_tut)
@@ -163,6 +169,9 @@ class Inicio(Screen):
             self.indice_tut = 0
 
     def on_corrector(self):
+        """
+        Cambia el estado del conjugador de las frases
+        """
         estado = self.controlador.cambiar_estado_corrector()
         if estado is None:        
             textoboton =(self.controlador.get_string('nodisp'))
@@ -173,11 +182,18 @@ class Inicio(Screen):
 
 
     def _keyboard_closed(self):
+        """
+        Limpia el teclado al cerrar la aplicación.
+        """
         if self._keyboard is not None:
             self._keyboard.unbind(on_key_down=self._on_keyboard_down)
             self._keyboard = None
 
+
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        """
+        Se acciona al pulsar una tecla, permite salir de la aplicación pulsando escape y activar el modo desarrollador pulsando d.
+        """
         if keycode[1] == 'd':
             if self.controlador.get_desarrollador() == False:
                 self.Izquierda.add_widget(self.btn_tst) 
@@ -197,24 +213,24 @@ class Inicio(Screen):
         return True
     
     def on_enter(self, *args):
-        # Menu de seleccion de camara una vez dentro para asi poder actualizar las camaras
+        """
+        Se acciona al entrar en la pantalla de inicio.
+        """
         if self.primera:
             self.controlador.obtener_camaras(stop = False)
             self.get_voces()          
             self.primera = False
             if self.controlador.get_show_tutorial():
                 Clock.schedule_once(self.show_tutorial, 1)
-
-        # Schedule the update of the image box every 1/30 seconds
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)
-
-        # Llamar al método show_tutorial después de que la vista inicial se haya completado
-
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
 
     def seleccionar_camara(self, _, text):
+        """
+        Se acciona al seleccionar una cámara, actualiza la cámara seleccionada.
+        """
         if text.startswith(self.controlador.get_string('camara')):
             camara = text.split(' ')[1]
             if camara == self.controlador.get_string('principal'):
@@ -227,12 +243,18 @@ class Inicio(Screen):
             pass
 
     def gestionar_spinner_voces(self, spinner, text):
+        """
+        Controla el spinner de las voces, actualiza la voz seleccionada.
+        """
         if text == self.controlador.get_string('actualizar_voces'):
             self.get_voces()
         elif text != self.controlador.get_string('btn_inicioDes_seleccionarVoz'):
             self.seleccionar_voz(spinner, text)
     
     def get_voces(self):
+        """
+        Obtiene las voces disponibles y las muestra en el spinner.
+        """
         self.voz_spinner.text = self.controlador.get_string('cargando_voces')
         self.voz_spinner.values = self.controlador.get_voces()
         voz = self.controlador.get_voz_seleccionada()
@@ -243,11 +265,20 @@ class Inicio(Screen):
 
 
     def seleccionar_voz(self, _, text):
+        """
+        Selecciona una voz de las disponibles.
+
+        Args:
+            text (str): Descripción de la voz seleccionada
+        """
         self.controlador.seleccionar_voz(text)
         self.voz_spinner.text = text
         
         
     def update_image_box(self, dt):
+        """
+        Actualiza la imagen de la cámara en la pantalla de inicio.
+        """
         frame = self.controlador.get_frame_editado()
         if frame is None:
             return
@@ -261,11 +292,17 @@ class Inicio(Screen):
         self.image_box.texture = texture
 
     def on_leave(self, *args):
+        """
+        Se acciona al salir de la pantalla de inicio.
+        """
         Clock.unschedule(self.update_image_box)
         self._keyboard_closed()
 
 
     def on_idioma_click(self, *args):
+        """
+        Actualiza el idioma al hacer clic en el icono del mismo.
+        """
         self.controlador.cambiar_idioma()
         imagen = self.controlador.get_idioma_imagen()
         self.imagenIdioma.background_normal = imagen
