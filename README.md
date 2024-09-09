@@ -11,9 +11,13 @@ Este enfoque integrador y colaborativo no solo mejora la comunicación sino que 
 Además, al estar disponible como código libre, el sistema invita a desarrolladores y usuarios de todo el mundo a contribuir, promoviendo un entorno abierto y colaborativo que enriquece continuamente su desarrollo y aplicación.
 
 
-## Configuración de la API de Google Gemini
-Este paso es esencial para poder activar el conjugador automático de las frases y proporcionar una forma más fluida de comunicación.
-1. **Obtener una clave API:** [Obtener clave API](https://aistudio.google.com/app/apikey)
+## Ejecución de la Aplicación
+
+La configuración de la API de Google Gemini es opcional, pero se recomienda encarecidamente para aprovechar la funcionalidad del conjugador automático. Este conjugador permite a los usuarios crear frases con infinitivos, que luego se conjugan y reproducen de manera fluida y natural. Sigue estos pasos para configurar la API, si no deseas esta característica salta al paso 3.
+
+1. **Obtener una clave API:**
+    - Ve a [obtener clave API](https://aistudio.google.com/app/apikey) y apunta la clave obtenida.
+
 2. **Establecer una variable de entorno:**
     - Abre el menú de inicio de Windows y busca "variables de entorno".
     - Selecciona "Editar las variables de entorno del sistema".
@@ -21,24 +25,18 @@ Este paso es esencial para poder activar el conjugador automático de las frases
     - En la sección "Variables de usuario", haz clic en "Nueva" para agregar la nueva variable de entorno.
     - Introduce el nombre: `GOOGLE_API_KEY`.
     - En el campo del valor, introduce la clave obtenida del enlace anterior.
-3. **Reiniciar el sistema:** Puede ser necesario un reinicio del sistema para aplicar los cambios.
+    - Reinicia el sistema si es necesario para aplicar los cambios.
 
+3. **Descargar y extraer la aplicación:**
+    - Descarga el archivo comprimido `ComunicELA.zip` disponible en el siguiente [enlace](https://drive.google.com/file/d/1ly-fBQTh3I30p7BFrTMlSRBhE76WCO7A/view?usp=sharing).
+    - Extrae el contenido del archivo zip.
+    - Dentro de la carpeta extraída `ComunicELA`, encontrarás:
+        - La carpeta `tableros`, donde puedes personalizar los tableros según tus necesidades como se explica más adelante.
+        - El archivo `ComunicELA.exe`.
 
-
-
-
-
-
-## Ejecución de la Aplicación
-
-1. **Descarga** el archivo comprimido `ComunicELA.zip` disponible en el siguiente [enlace.](https://drive.google.com/file/d/1ly-fBQTh3I30p7BFrTMlSRBhE76WCO7A/view?usp=sharing)
-2. **Extrae** el contenido del archivo zip.
-3. Dentro de la carpeta extraída `ComunicELA`, encontrarás:
-   - La carpeta `tableros`, donde puedes personalizar los tableros según tus necesidades como se explica más adelante.
-   - El archivo `ComunicELA.exe`.
-
-Para abrir la aplicación, simplemente **ejecuta** el archivo `ComunicELA.exe`.
-
+4. **Ejecución de la aplicación:**
+    - Para abrir la aplicación, simplemente ejecuta el archivo `ComunicELA.exe`.
+    - Asegúrate de que la carpeta `tableros` y el archivo `ComunicELA.exe` permanezcan en la misma carpeta. Si se encuentran en ubicaciones diferentes, el software no podrá encontrar los tableros.
 
 
 
