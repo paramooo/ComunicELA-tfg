@@ -12,6 +12,9 @@ from kivy.uix.slider import Slider
 from kivy.uix.scatter import Scatter
 
 class Pelota(Scatter):
+    """
+    Clase que representa los puntos verdes que manejan el postprocesado de la mirada.
+    """
     def __init__(self, esquina, controlador, size_sc, label, **kwargs):
         super(Pelota, self).__init__(**kwargs)
         self.esquina = esquina
@@ -21,6 +24,9 @@ class Pelota(Scatter):
         self.label = label
 
     def update_limites(self, *args):
+        """
+        Cuando se mueve la pelota, se actualizan los límites del postprocesado.
+        """
         valor_x = self.center_x / self.size_sc[0]
         valor_y = self.center_y / self.size_sc[1]
         self.controlador.set_limite(valor_x, self.esquina, 0)
@@ -30,6 +36,9 @@ class Pelota(Scatter):
 
 
 class Test(Screen):
+    """
+    Clase que representa la pantalla de test de la aplicación.
+    """
     def __init__(self, controlador, **kwargs):
         super(Test, self).__init__(**kwargs)
         self.controlador = controlador
@@ -60,8 +69,10 @@ class Test(Screen):
 
 
 
-    # Funcion para dibujar el circulo amarillo una vez abierta la ventana(para centrarlo bien)
     def on_enter(self, *args):  
+        """
+        Al entrar en la pantalla, se reinician los datos de la pantalla y se añade la tarea de actualización al reloj.
+        """
         # Se crea el circulo rojo y se añade
         self.circulo = Ellipse(pos=self.center, size=(50, 50))
         with self.canvas:
@@ -98,18 +109,27 @@ class Test(Screen):
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)
         Clock.schedule_interval(self.update, 1.0 / 30.0)  
 
-    # Funcion para dejar de escanear y volver al inicio
+
     def on_inicio(self, *args):
+        """
+        Cambia a la pantalla de inicio.
+        """
         self.controlador.change_screen('inicio')
 
+
     def on_leave(self, *args):
+        """
+        Para el escaneo y elimina las tareas de actualización al reloj.
+        """
         self.controlador.set_escanear(False)
         self.circulo_instr.clear()
         Clock.unschedule(self.update_image_box)
         Clock.unschedule(self.update)
 
-    # Funcion para actualizar la posición del círculo y el color
     def update(self, dt):
+        """
+        Actualiza la posición del círculo en función de la posición de la mirada.
+        """
         # Si se ha activado el escaneo y estamso en esta pantalla
         if self.controlador.get_escanear() and self.controlador.get_screen() == 'test':
             # Obtiene la posición de la mirada y el ear
@@ -135,14 +155,17 @@ class Test(Screen):
 
 
     def update_image_box(self, dt):
-            # Only update the image box in calibration state 0
-            frame = self.controlador.get_frame_editado()
+        """
+        Actualiza la imagen de la cámara.
+        """
+        # Only update the image box in calibration state 0
+        frame = self.controlador.get_frame_editado()
 
-            # Convert the frame to a texture
-            texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
-            texture.blit_buffer(frame.tostring(), colorfmt='bgr', bufferfmt='ubyte')
+        # Convert the frame to a texture
+        texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+        texture.blit_buffer(frame.tostring(), colorfmt='bgr', bufferfmt='ubyte')
 
-            # Invertir la imagen verticalmente
-            texture.flip_vertical()
-            self.image_box.texture = texture
+        # Invertir la imagen verticalmente
+        texture.flip_vertical()
+        self.image_box.texture = texture
 

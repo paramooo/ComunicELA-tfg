@@ -1159,8 +1159,10 @@ class Modelo:
                             fila.append((imagen_celda.value, palabra_celda.value))
                         palabras_con_imagenes.append(fila)
                     self.tableros[sheet_name] = palabras_con_imagenes
-
-            return True
+                return True
+            else:
+                self.mensaje(self.get_string("mensaje_error_tableros"))
+                return False
         except:
             self.mensaje(self.get_string("mensaje_error_tableros"))
             return False

@@ -14,6 +14,9 @@ from ajustes.utils import get_recurso
 
 
 class TablerosPruebas(Screen):
+    """
+    Pantalla de las pruebas automatizadas de ComunicELA.
+    """
     def __init__(self, controlador, **kwargs):
         super(TablerosPruebas, self).__init__(**kwargs)
         self.controlador = controlador
@@ -100,27 +103,39 @@ class TablerosPruebas(Screen):
         self.palabras_y_coordenadas = []  # Lista de tuplas (palabra, coordenadas, tiempo, indice_casilla)
 
 
-    # TextInput siempre muestre la última línea de texto
     def on_text(self, instance, value):
+        """
+        Mantiene la vista en la parte superior del texto.
+        """
         instance.scroll_y = 0
 
-    # Cambia el tablero antes de entrar para evitar el salto de la vista
     def on_pre_enter(self, *args):
+        """
+        Antes de entrar en la pantalla, se cargan los tableros y se establecen las configuraciones iniciales.
+        """
         self.controlador.cargar_tableros()
         self.controlador.set_pictogramas(False)
         #Las primeras pruebas son dentro del tablero rapido (pruebas de seleccionar una palabra solo)
         self.cambiar_tablero(self.controlador.obtener_tablero('TAB. RÁPIDO'))
 
-    # Función para escanear al entrar
     def on_enter(self, *args):
+        """
+        Al entrar en la pantalla, se inician las pruebas.
+        """
         self.pruebas_mensajes()
         
 
     def on_label_touch_down(self, instance, touch):
+        """
+        Al tocar el texto, se reproduce el audio.
+        """
         self.on_reproducir(instance)
 
 
     def establecer_configuracion(self):
+        """
+        Establece la configuración para cada prueba.
+        """
         # Pruebas NIVEL BASICO sin pictogramas y en el tablero rapido
         if self.indice_prueba < 5:
             self.controlador.set_pictogramas(False)
@@ -141,8 +156,10 @@ class TablerosPruebas(Screen):
             self.controlador.set_pictogramas(False)
             self.cambiar_tablero(self.controlador.obtener_tablero('TAB. INICIAL'))
 
-    # Automatización de las pruebas
     def pruebas_mensajes(self, *args):
+        """
+        Establece los mensajes para cada prueba.
+        """
         if self.pruebas:
             #Establecemos el tablero y las configuraciones necesarias
             self.establecer_configuracion()
@@ -182,6 +199,9 @@ class TablerosPruebas(Screen):
 
 
     def pruebas_indices(self, *args):
+        """
+        Establece los índices de las pruebas.
+        """
         self.controlador.borrar_todo()
         if self.indice_prueba == 0:
             self.indice_prueba += 1
@@ -189,23 +209,37 @@ class TablerosPruebas(Screen):
         else:
             self.start_test()
     
+
     def saltar_prueba(self, *args):
+        """
+        Salta la prueba actual.
+        """
         self.indice_prueba += 1
         self.pruebas_mensajes()
     
+
     def volver_anterior(self, *args):
+        """
+        Vuelve a la prueba anterior.
+        """
         self.indice_prueba -= 1
         self.pruebas_mensajes()
 
+
     def start_test(self):
+        """
+        Se inicia cuando empieza la prueba, inicia el escaneo y el cronometro.
+        """
         self.controlador.set_escanear(True)
         self.controlador.set_bloqueado(False)
         Clock.schedule_interval(self.update, 1.0 / 30.0)
         self.controlador.reiniciar_cronometro()
         self.controlador.iniciar_cronometro()
 
-    # Parar de escanear al salir
     def on_inicio(self, *args):
+        """
+        Al tocar sobre el boton de inicio, se cambia a la pantalla de inicio y se limpian los datos de la pantalla.
+        """
         self.controlador.set_escanear(False)
         self.controlador.borrar_todo()
         self.cambiar_tablero(self.controlador.obtener_tablero('TAB. INICIAL'))
@@ -216,19 +250,27 @@ class TablerosPruebas(Screen):
         self.pruebas_coordenadas = {}
         self.controlador.reiniciar_cronometro()
 
-    # Funciones de los botones
     def on_borrar_palabra(self, instance):
+        """
+        Al borrar palabra, borra tambien esta de la lista que se guarda para el resultado de la prueba
+        """
         self.controlador.borrar_palabra()
         # Elimina la última palabra de las coordenadas
         if self.palabras_y_coordenadas:
             self.palabras_y_coordenadas.pop()
 
     def on_borrar_todo(self, instance):
+        """
+        Borra todo el texto y las palabras de la lista que se guarda para el resultado de la prueba
+        """
         self.controlador.borrar_todo()
         self.palabras_y_coordenadas.clear()
 
 
     def on_reproducir(self, instance):
+        """
+        Al tocar sobre reproducir, se guardan los resulados de las pruebas si se ha completado correctamente.
+        """
         self.controlador.reproducir_texto()
         if self.label.text.strip() == self.pruebas[self.indice_prueba]:
             self.indice_prueba += 1
@@ -241,13 +283,17 @@ class TablerosPruebas(Screen):
             self.on_borrar_todo(instance)
 
     
-        
-
     def on_alarma(self, instance):
+        """
+        Cuando se toca sobre el botón de alarma, se reproduce la alarma.
+        """
         self.controlador.reproducir_alarma()
 
-    # Cambia el tablero
+
     def cambiar_tablero(self, palabras):
+        """
+        Cambia el tablero actual por uno nuevo.
+        """
         if palabras is None:
             palabras = []
         if self.tablero:
@@ -255,7 +301,11 @@ class TablerosPruebas(Screen):
         self.tablero = Tablero(palabras, self.controlador, size_hint=(1, 0.8), pictos=self.controlador.get_pictogramas())
         self.layout_principal.add_widget(self.tablero, index=1)
 
+
     def update(self, dt):
+        """
+        Actualiza la pantalla de las pruebas.
+        """
         # Obtener la frase actual
         self.label.text = self.controlador.get_frase()
         
@@ -310,7 +360,10 @@ class TablerosPruebas(Screen):
                 # Añade los dibujos a la lista para eliminarlos en la próxima actualización
                 self.dibujos_mirada.extend([cruz1, cruz2, circulo])
 
-    def emular_movimiento_y_clic(self, x, y, click):        
+    def emular_movimiento_y_clic(self, x, y, click):       
+        """
+        Encargada de emular el movimiento y clic del usuario.
+        """
         #Si la y es mayor que 0.2, casillas:
         if y > 0.17:
             casilla_ancho = 1 / self.tablero.cols
@@ -387,9 +440,10 @@ class TablerosPruebas(Screen):
         
 
 
-    # Evalúa la prueba realizada
     def evaluate_test(self):       
-        # Guarda los resultados de la prueba en un archivo CSV
+        """
+        Guarda los resultados de la prueba en un archivo CSV.
+        """
         with open(get_recurso('pruebas/pruebas.csv'), 'a', newline='') as f:
             writer = csv_writer(f)
 

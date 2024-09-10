@@ -13,10 +13,10 @@ Además, al estar disponible como código libre, el sistema invita a desarrollad
 
 ## Ejecución de la Aplicación
 
-La configuración de la API de Google Gemini es opcional, pero se recomienda encarecidamente para aprovechar la funcionalidad del conjugador automático. Este conjugador permite a los usuarios crear frases con infinitivos, que luego se conjugan y reproducen de manera fluida y natural. Sigue estos pasos para configurar la API, si no deseas esta característica salta al paso 3.
+La configuración de la API de Google Gemini es opcional, pero se recomienda encarecidamente para aprovechar la funcionalidad del conjugador automático. Este conjugador permite que las frases creadas con infinitivos en los tableros se conjuguen antes de ser reproducidas en alto, proporcionado una comunicación más fluida y natural. Sigue estos pasos para configurar la API, si no deseas esta característica salta al paso 3.
 
 1. **Obtener una clave API:**
-    - Ve a [obtener clave API](https://aistudio.google.com/app/apikey) y apunta la clave obtenida.
+    - Ve a [obtener clave API](https://aistudio.google.com/app/apikey) y apunta la clave.
 
 2. **Establecer una variable de entorno:**
     - Abre el menú de inicio de Windows y busca "variables de entorno".
@@ -25,7 +25,7 @@ La configuración de la API de Google Gemini es opcional, pero se recomienda enc
     - En la sección "Variables de usuario", haz clic en "Nueva" para agregar la nueva variable de entorno.
     - Introduce el nombre: `GOOGLE_API_KEY`.
     - En el campo del valor, introduce la clave obtenida del enlace anterior.
-    - Reinicia el sistema si es necesario para aplicar los cambios.
+    - Si en la configuración de la aplicación el conjugador aún aparece como "No disponible", reinicia el sistema.
 
 3. **Descargar y extraer la aplicación:**
     - Descarga el archivo comprimido `ComunicELA.zip` disponible en el siguiente [enlace](https://drive.google.com/file/d/1ly-fBQTh3I30p7BFrTMlSRBhE76WCO7A/view?usp=sharing).

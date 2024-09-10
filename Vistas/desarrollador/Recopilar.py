@@ -13,7 +13,7 @@ from KivyCustom.PopUp import CustPopup
 
 class Recopilar(Screen):
     """
-    Clase que muestra la pantalla de recopilación de datos.
+    Pantalla de de recopilación de datos de la aplicación.
     """
     def __init__(self, controlador, **kwargs):
         super(Recopilar, self).__init__(**kwargs)
@@ -51,6 +51,9 @@ class Recopilar(Screen):
         self.lanzado = False
 
     def on_enter(self, *args):
+        """
+        Al entrar en la pantalla, se reinician los datos de la pantalla y se añade la tarea de actualización al reloj.
+        """
         self.escaneado = False
         self.controlador.reiniciar_datos_r()
         # Añade la tarea de actualización al reloj
@@ -63,30 +66,34 @@ class Recopilar(Screen):
             self.circulo_instr.add(self.circulo)
             if self.circulo_instr not in self.layout.canvas.children:
                 self.layout.canvas.add(self.circulo_instr)
-        # Schedule the update of the image box every 1/30 seconds
         Clock.schedule_interval(self.update_image_box, 1.0 / 30)
-        self.image_box.opacity = 1  # Show the image box
+        self.image_box.opacity = 1  
         self.btn_recopilar.disabled = False
 
     def on_inicio(self, *args):
+        """
+        Se ejecuta al presionar el boton de inicio, cambia a la pantalla de inicio y limpia los datos de la pantalla.
+        """
         Clock.unschedule(self.update)
         Clock.unschedule(self.update_image_box)
-        # Cambia a la pantalla de inicio
         self.controlador.change_screen('inicio')
-        # Limpia las instrucciones de gráficos del círculo
         self.circulo_instr.clear()
-        # Borra los posibles datos recopilados
         self.descartar_datos()
 
 
-    # Funcion para el boton recopilar, pone recopilar a true e inicia la cuanta atras
     def on_recopilar(self, *args):
-        self.image_box.opacity = 0  # Hide the image box
+        """
+        Al presionar en recopilar, se quita la imagen de la camara y se inicia la recopilación de datos.
+        """
+        self.image_box.opacity = 0  
         self.btn_recopilar.disabled = True
 
         self.controlador.on_recopilar()
 
     def update(self, dt):
+        """
+        Encargada de actualizar la pantalla de recopilación de datos segun el estado actual
+        """
         #Si recopilar, actualiza el texto explicativo a la cuenta atras
         if self.controlador.get_recopilando():
             # Actualiza el texto explicativo con el contador del controlador
@@ -118,7 +125,6 @@ class Recopilar(Screen):
             if not self.lanzado:
                 self.lanzado = True
                 #popup con opcion para guardar o descartar
-                #self.controlador.guardar
                 CustPopup("¡Gracias por su colaboración!", self.guardar_datos, (0.5,0.5), self.controlador, func_saltar=self.descartar_datos).open()
 
         else:
@@ -126,11 +132,17 @@ class Recopilar(Screen):
             self.texto_explicativo.text = self.textos[0]
 
     def guardar_datos(self, *args):
+        """
+        Guarda los datos finalmente.
+        """
         self.controlador.guardar_final()
         self.escaneado = False
         self.lanzado = False
     
     def descartar_datos(self, *args):
+        """
+        Descarta los datos recopilados.
+        """
         self.controlador.descartar_datos()
         self.escaneado = False
         self.lanzado = False
@@ -138,18 +150,17 @@ class Recopilar(Screen):
 
 
     def update_image_box(self, dt):
-            # Only update the image box in calibration state 0
-            frame = self.controlador.get_frame_editado()
-            if frame is None:
-                return
-            
-            # Convert the frame to a texture
-            texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
-            texture.blit_buffer(frame.tostring(), colorfmt='bgr', bufferfmt='ubyte')
+        """
+        Actualiza la imagen de la cámara 
+        """
+        frame = self.controlador.get_frame_editado()
+        if frame is None:
+            return
+        
+        texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+        texture.blit_buffer(frame.tostring(), colorfmt='bgr', bufferfmt='ubyte')
+        texture.flip_vertical()
+        self.image_box.texture = texture
 
-            # Invertir la imagen verticalmente
-            texture.flip_vertical()
-            self.image_box.texture = texture
 
 
-    
